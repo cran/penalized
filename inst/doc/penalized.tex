@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{penalized}
+%\VignetteIndexEntry{Penalized user guide}
 
 \documentclass[a4paper]{article}
 \usepackage{natbib}
@@ -294,7 +294,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -259.6017
+[1] -256.2541
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -337,7 +337,7 @@ A "breslow" object with 144 survival curves and 51 time points.
 [31]  4.2190281  4.4462697  4.6214921  4.6625599  4.9719370  5.1170431
 [37]  6.5653662  6.9952088  8.1286790  8.3039014  8.5284052  8.5612594
 [43]  8.9253936  8.9883641  9.9986311 11.2114990 11.7399042 12.4654346
-[49] 14.0123203 17.2402464 17.6591376
+[49] 14.0123203 17.4209446 17.6591376
 \end{Soutput}
 \begin{Sinput}
 > as.data.frame(basesurv(fit$fullfit))[1:10, ]
@@ -452,13 +452,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.147047
+[1] 2.159248
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -258.9205
+[1] -259.2635
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}
@@ -470,7 +470,7 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 
 \section{A note on standard errors and confidence intervals}
 
-It is a very natural question to ask for standard errors of regression coefficients or other estimated quantities. In principle such standard errors can easily be calculated, e.g.\ using the bootstrap. 
+It is a very natural question to ask for standard errors of regression coefficients or other estimated quantities. In principle such standard errors can easily be calculated, e.g.\ using the bootstrap.
 
 Still, this package deliberately does not provide them. The reason for this is that standard errors are not very meaningful for strongly biased estimates such as arise from penalized estimation methods. Penalized estimation is a procedure that reduces the variance of estimators by introducing substantial bias. The bias of each estimator is therefore a major component of its mean squared error, whereas its variance may contribute only a small part.
 

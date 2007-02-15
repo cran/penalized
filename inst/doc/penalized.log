@@ -1,7 +1,7 @@
-This is pdfTeX, Version 3.141592-1.40.3 (MiKTeX 2.6) (preloaded format=pdflatex 2007.10.31)  21 DEC 2007 15:32
+This is pdfTeX, Version 3.141592-1.40.3 (MiKTeX 2.6) (preloaded format=pdflatex 2007.10.31)  16 FEB 2008 23:20
 entering extended mode
-**C:/penalized/inst/doc/penalized.tex
-(C:\penalized\inst\doc\penalized.tex
+**M:/R/packages/penalized/inst/doc/penalized.tex
+(M:\R\packages\penalized\inst\doc\penalized.tex
 LaTeX2e <2005/12/01>
 Babel <v3.8g> and hyphenation patterns for english, dumylang, nohyphenation, ge
 rman, ngerman, french, loaded.
@@ -234,12 +234,12 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
  ) 
 Here is how much of TeX's memory you used:
  2506 strings out of 95294
- 31452 string characters out of 1185001
+ 31485 string characters out of 1185001
  76049 words of memory out of 1076165
  5539 multiletter control sequences out of 60000
  33846 words of font info for 69 fonts, out of 1000000 for 2000
  14 hyphenation exceptions out of 8191
- 35i,6n,24p,1229b,284s stack positions out of 5000i,500n,10000p,200000b,32768s
+ 35i,6n,24p,1240b,284s stack positions out of 5000i,500n,10000p,200000b,32768s
 <C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmbx10.pfb><C:/Program Fi
 les/MiKTeX 2.6/fonts/type1/bluesky/cm/cmbx12.pfb><C:/Program Files/MiKTeX 2.6/f
 onts/type1/bluesky/cm/cmmi10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/blues
@@ -249,7 +249,7 @@ MiKTeX 2.6/fonts/type1/bluesky/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.6/fonts/t
 ype1/bluesky/cm/cmsltt10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/c
 m/cmti10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmti7.pfb><C:/
 Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmtt10.pfb>
-Output written on penalized.pdf (14 pages, 479607 bytes).
+Output written on penalized.pdf (14 pages, 477855 bytes).
 PDF statistics:
  128 PDF objects out of 300000 (max. 8388607)
  0 named destinations out of 300000 (max. 131072)

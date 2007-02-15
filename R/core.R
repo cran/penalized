@@ -444,7 +444,7 @@
 
   # Additional column due to L1-penalization
   if (!free1) {          
-    P[n+m+1,1:(p-m)] <- (lambda1*signbeta/lambda2)[!free2]
+    P[n+m+1,m + seq_len(p-m)] <- (lambda1*signbeta/lambda2)[!free2]
   }
   
   # Numerical stabilization          

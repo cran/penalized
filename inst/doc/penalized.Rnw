@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{penalized}
+%\VignetteIndexEntry{Penalized user guide}
 
 \documentclass[a4paper]{article}
 \usepackage{natbib}
@@ -307,7 +307,7 @@ opt2 <- optL2(Surv(time,event), nki70[,50:70], fold=fit2$fold)
 
 \section{A note on standard errors and confidence intervals}
 
-It is a very natural question to ask for standard errors of regression coefficients or other estimated quantities. In principle such standard errors can easily be calculated, e.g.\ using the bootstrap. 
+It is a very natural question to ask for standard errors of regression coefficients or other estimated quantities. In principle such standard errors can easily be calculated, e.g.\ using the bootstrap.
 
 Still, this package deliberately does not provide them. The reason for this is that standard errors are not very meaningful for strongly biased estimates such as arise from penalized estimation methods. Penalized estimation is a procedure that reduces the variance of estimators by introducing substantial bias. The bias of each estimator is therefore a major component of its mean squared error, whereas its variance may contribute only a small part.
 
