@@ -1,0 +1,9 @@
+importFrom(survival, Surv, coxph, basehaz)
+
+importFrom(stats, coefficients, fitted.values, residuals)
+
+exportClasses(penfit)
+
+exportMethods(show, residuals, coefficients, penalty, basehaz, penalty, loglik)
+
+export(penalized, cvl, optL1, optL2, plotpath, contr.none, contr.diff)
