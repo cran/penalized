@@ -359,6 +359,14 @@
   if (!length(lambda2) %in% c(1, ncol(penalized)))
     stop("The length of \"lambda2\" (", length(lambda2), ") should be either 1 or ", ncol(penalized), call.=FALSE)
 
+  # orthogonalize penalized with respect to unpenalized
+  if (ncol(unpenalized) > 0) {
+    orthogonalizer <- solve(crossprod(unpenalized), crossprod(unpenalized, penalized))
+    penalized <- penalized - unpenalized %*% orthogonalizer
+  } else {
+    orthogonalizer <- matrix(,0,ncol(penalized))
+  }
+
   # Join penalized and unpenalized together
   X <- cbind(unpenalized, penalized)
   n <- nrow(X)
@@ -389,7 +397,7 @@
   }
   beta[beta != 0] <- beta[beta != 0] * sds[beta != 0]
 
-  return(list(X = X, beta = beta, weights = sds, lambda1 = lambda1, lambda2 = lambda2))
+  return(list(X = X, beta = beta, weights = sds, lambda1 = lambda1, lambda2 = lambda2, orthogonalizer = orthogonalizer))
 }
    
    

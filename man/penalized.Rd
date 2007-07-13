@@ -13,19 +13,19 @@ and/or L2 (ridge) penalties, or a combination of the two.}
 
 penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, data, 
     model = c("cox", "logistic", "linear"), startbeta, startgamma, steps = 1, 
-    epsilon = 1e-10, maxiter, standardize = TRUE, trace = TRUE) 
+    epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) 
 
 cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, data, 
     model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
-    groups, epsilon = 1e-8, maxiter, standardize = TRUE, trace = TRUE) 
+    groups, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) 
 
 optL1 (response, penalized, unpenalized, lambda2 = 0, data, 
     model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
-    groups, epsilon = 1e-8, maxiter, standardize = TRUE, trace = TRUE, accuracy = 1e-3) 
+    groups, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE, accuracy = 1e-3) 
 
 optL2 (response, penalized, unpenalized, lambda1 = 0, startlambda2 = 1, data, 
     model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
-    groups, epsilon = 1e-8, maxiter, standardize = TRUE, trace = TRUE, accuracy = 1e-3) 
+    groups, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE, accuracy = 1e-3) 
 
 } 
 

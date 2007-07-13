@@ -2,7 +2,7 @@
 # Fits the penalized regression model
 ####################################                                    
 penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, data, model = c("cox", "logistic", "linear"),
-  startbeta, startgamma, steps =1, epsilon = 1e-10, maxiter, standardize = TRUE, trace = TRUE) {
+  startbeta, startgamma, steps =1, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) {
 
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data)
@@ -21,7 +21,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
     if (is(response, "Surv")) model <- "cox"
     else if (all(response %in% 0:1)) model <- "logistic"
     else if (is.numeric(response)) model <- "linear"
-    else error("Model could not be determined from the input. Please specify the model.")
+    else stop("Model could not be determined from the input. Please specify the model.")
   }
   model <- match.arg(model)
   
@@ -58,7 +58,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
       logistic = .logitgamma(response, unpenalized, data),
       linear = .lmgamma(response, unpenalized, data))
   }
-  
+
   intercept <- (model != "cox")
   if (is(unpenalized, "formula")) intercept <- intercept && (attr(terms(unpenalized), "intercept") == 1)
 
@@ -72,6 +72,8 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
   lambda2 <- prepared$lambda2
   weights <- prepared$weights
   beta <- prepared$beta
+  orthogonalizer <- prepared$orthogonalizer
+  rm(prepared)
   p <- ncol(X)
 
   # Prepare the model
@@ -81,6 +83,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
     linear = .lmfit(response)$fit
   )
 
+  # If a steps argument is given, determine where to start
   if (steps > 1) {
     nullgamma <- switch(model, 
       cox = .coxgamma(response, unpenalized, data),
@@ -98,6 +101,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
   lambda1s <- as.list(seq(from, 1, length.out=steps+1))
   if (steps == 1) lambda1s <- lambda1s[-1]
 
+  # fit the model for all lambdas
   outs <- lapply(lambda1s, function(rellambda) {
     if (!all(lambda1 == 0)) {
       if (all(lambda2 == 0)) {
@@ -130,14 +134,18 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
     out$beta <- out$beta / weights
     out
   })
+  
+  # put the output in a penfit object
   outs <- sapply(1:length(outs), function(nr) {
     thislambda1 <- inputlambda1 * lambda1s[[nr]]
-    .makepenfit(outs[[nr]], length(startgamma), model, thislambda1, inputlambda2)
+    .makepenfit(outs[[nr]], length(startgamma), model, thislambda1, inputlambda2, orthogonalizer)
   })
+
   if(length(outs)==1) 
     outs <- outs[[1]]
   else
     names(outs) <- paste("lambda1 =", unlist(lambda1s) * inputlambda1)
+
   outs
 }
 
@@ -146,7 +154,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
 ######################################
 cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data, 
   model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, groups, 
-  epsilon = 1e-8, maxiter, standardize = TRUE, trace = TRUE) {
+  epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) {
 
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data)
@@ -164,7 +172,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data,
     if (is(response, "Surv")) model <- "cox"
     else if (all(response %in% 0:1)) model <- "logistic"
     else if (is.numeric(response)) model <- "linear"
-    else error("Model could not be determined from the input. Please specify the model.")
+    else stop("Model could not be determined from the input. Please specify the model.")
   }
   model <- match.arg(model)
   
@@ -215,6 +223,8 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data,
   lambda2 <- prepared$lambda2
   weights <- prepared$weights
   beta <- prepared$beta
+  orthogonalizer <- prepared$orthogonalizer
+  rm(prepared)
   p <- ncol(X)
 
   # Prepare the model
@@ -234,7 +244,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data,
   
   res <- .cvl(X, lambda1, lambda2, beta, fit=fit$fit, cvl=fit$cvl, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = trace)
   out <- res["cvl"]
-  return(list(cvl = res$cvl, fullfit = .makepenfit(res$fit, length(startgamma), model, inputlambda1, inputlambda2)))
+  return(list(cvl = res$cvl, fullfit = .makepenfit(res$fit, length(startgamma), model, inputlambda1, inputlambda2, orthogonalizer)))
 }
 
 ######################################
@@ -242,7 +252,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data,
 ######################################
 optL1 <- function(response, penalized, unpenalized, lambda2 = 0, data, 
   model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, groups, 
-  epsilon = 1e-8, maxiter = Inf, standardize = TRUE, trace = TRUE, 
+  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, trace = TRUE, 
   accuracy = 1e-3) {
 
   # determine the response
@@ -261,7 +271,7 @@ optL1 <- function(response, penalized, unpenalized, lambda2 = 0, data,
     if (is(response, "Surv")) model <- "cox"
     else if (all(response %in% 0:1)) model <- "logistic"
     else if (is.numeric(response)) model <- "linear"
-    else error("Model could not be determined from the input. Please specify the model.")
+    else stop("Model could not be determined from the input. Please specify the model.")
   }
   model <- match.arg(model)
   
@@ -310,6 +320,8 @@ optL1 <- function(response, penalized, unpenalized, lambda2 = 0, data,
   lambda2 <- prepared$lambda2
   weights <- prepared$weights
   beta <- prepared$beta
+  orthogonalizer <- prepared$orthogonalizer
+  rm(prepared)
   p <- ncol(X)
 
   # Prepare the model
@@ -373,7 +385,7 @@ optL1 <- function(response, penalized, unpenalized, lambda2 = 0, data,
   #optimize it
   opt <- opt.brent(thiscvl, c(0, 1.1*maxlambda), maximum = TRUE, tol = accuracy)
 
-  return(list(lambda = opt$argmax, cvl = opt$max, fullfit = .makepenfit(bestfit, length(startgamma), model, opt$argmax, inputlambda2)))
+  return(list(lambda = opt$argmax, cvl = opt$max, fullfit = .makepenfit(bestfit, length(startgamma), model, opt$argmax, inputlambda2, orthogonalizer)))
 }
 
 ######################################
@@ -381,7 +393,7 @@ optL1 <- function(response, penalized, unpenalized, lambda2 = 0, data,
 ######################################
 optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 1, data, 
   model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, groups, 
-  epsilon = 1e-8, maxiter = Inf, standardize = TRUE, trace = TRUE, 
+  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, trace = TRUE, 
   accuracy = 1e-3) {
 
   # determine the response
@@ -400,7 +412,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 
     if (is(response, "Surv")) model <- "cox"
     else if (all(response %in% 0:1)) model <- "logistic"
     else if (is.numeric(response)) model <- "linear"
-    else error("Model could not be determined from the input. Please specify the model.")
+    else stop("Model could not be determined from the input. Please specify the model.")
   }
   model <- match.arg(model)
   
@@ -450,6 +462,8 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 
   lambda2 <- prepared$lambda2
   weights <- prepared$weights
   beta <- prepared$beta
+  orthogonalizer <- prepared$orthogonalizer
+  rm(prepared)
   p <- ncol(X)
 
   # Prepare the model
@@ -475,9 +489,11 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 
       epsilon=epsilon, maxiter=maxiter, trace = FALSE)
     nullcvl <- nullfit$cvl
     nullfit <- nullfit$fit
+    nullgamma <- nullfit$fit$beta
   } else {
     nullcvl <- fit$cvl(numeric(n), !logical(n))
     nullfit <- list()
+    nullgamma <- numeric(0)
     nullfit$fit <- fit$fit(numeric(n))
     nullfit$iterations <- 1
     nullfit$converged <- TRUE
@@ -554,5 +570,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 
     } 
   }
 
-  return(list(lambda = opt$argmax, cvl = opt$max, fullfit = .makepenfit(bestfit, length(startgamma), model, inputlambda1, opt$argmax)))
+  return(list(lambda = opt$argmax, cvl = opt$max, fullfit = .makepenfit(bestfit, length(startgamma), model, inputlambda1, opt$argmax, orthogonalizer)))
 }
+
+

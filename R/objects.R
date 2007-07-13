@@ -14,12 +14,12 @@ setClass("penfit",
   )
 )
 
-.makepenfit <- function(object, unpenalized, model, lambda1, lambda2) {
+.makepenfit <- function(object, unpenalized, model, lambda1, lambda2, orthogonalizer) {
   out <- new("penfit")
   
   beta <- object$beta[unpenalized + seq_len(length(object$beta) - unpenalized)]
-  gamma <- object$beta[seq_len(unpenalized)]
-  
+  gamma <- object$beta[seq_len(unpenalized)] - as.vector(orthogonalizer %*% beta)
+   
   out@unpenalized <- gamma
   out@penalized <- beta
   
