@@ -69,12 +69,13 @@ setMethod("show", "penfit", function(object) {
   }
 })
 
-setMethod("coefficients", "penfit", function(object, which = c("all", "penalized", "unpenalized")) {
+setMethod("coefficients", "penfit", function(object, which = c("nonzero", "all", "penalized", "unpenalized")) {
   which <- match.arg(which)
   switch(which, 
     all = c(object@unpenalized, object@penalized),
     penalized = object@penalized,
-    unpenalized = object@unpenalized)
+    unpenalized = object@unpenalized,
+    nonzero = c(object@unpenalized, object@penalized[object@penalized != 0]))
 })
 
 setMethod("residuals", "penfit", function(object, ...) {

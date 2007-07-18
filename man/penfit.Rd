@@ -40,7 +40,8 @@
     \item{show}{(penfit): Summarizes the test result.}
     \item{residuals}{(penfit): Returns the residuals.}
     \item{coefficients}{(penfit): Returns the regression coefficients. Accepts a second argument "which", that takes
-    values "all" (the default), "penalized" or "unpenalized" for extracting only the penalized or unpenalized regression coeffiicents.}
+    values "nonzero" (the default), "all", "penalized" or "unpenalized" for extracting only the non-zero, the penalized 
+    or the unpenalized regression coeffiicents.}
     \item{basehaz}{(penfit): Returns the baseline hazard if a cox model was fitted, \code{NULL} otherwise.}
     \item{penalty}{(penfit): Returns the L1 and L2 penalties of the fitted model.}
     \item{loglik}{(penfit): Returns the log likelihood of the fitted model.}    
