@@ -114,7 +114,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
     } else {
       if (m > n) {
         P <- .makeP(X, lambda2)
-        gams <- solve(crossprod(t(P)), P %*% beta)
+        gams <- .solve(crossprod(t(P)), P %*% beta)
         PX <- P %*% t(X)
         Pl <- P * matrix(sqrt(lambda2), nrow(P), ncol(P), byrow = TRUE)
         PlP <- crossprod(t(Pl))

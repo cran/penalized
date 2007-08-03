@@ -34,7 +34,7 @@
   nvar <- m
 
   tryNR <- FALSE
-  NRfailed <- FALSE
+  NRfailed <- FALSE   
   whereNR <- NULL
 
   finished <- FALSE
@@ -56,7 +56,7 @@
       if (is.na(localfit$loglik)) {
         if (trace) {
           cat(rep("\b", trunc(log10(nvar))+1), sep ="")
-          cat("Model does not converge: please increase lambda.\n")
+          warning("Model does not converge: please increase lambda.", call.=FALSE)
         }
         converged <- FALSE
         break
@@ -85,7 +85,7 @@
     direction[nzb] <- grad[nzb] - lambda[nzb] * sign(beta[nzb])
     newb <- (!nzb) & (abs(grad) > lambda)
     direction[newb] <- grad[newb] - lambda[newb] * sign(grad[newb])
-    oldactive <- active
+    oldactive <- active   
     active <- nzb | newb
     activebeta <- beta[active]
     activedir <- direction[active]
@@ -111,7 +111,7 @@
           if (is.null(whereNR) || any(xor(whereNR, active))) {
             whereNR <- active
             P <- .makeP(activeX, lambda2[active], lambda[active], sign(activebeta))
-            gams <- solve(crossprod(t(P)), P %*% activebeta)
+            gams <- .solve(crossprod(t(P)), P %*% activebeta)
             PX <- P %*% t(activeX)
             Pl <- P * matrix(sqrt(lambda2[active]), nrow(P), ncol(P), byrow = TRUE)
             PlP <- crossprod(t(Pl))
@@ -125,15 +125,7 @@
             hessian <- -crossprod(t(PX)) - PlP
           }
           Pgrad <- P %*% direction[active]
-          shg <- try(as.vector(solve(hessian, Pgrad)), silent = TRUE)
-          if (is(shg, "try-error")) {
-            converged <- FALSE
-            if (trace) {
-              cat(rep("\b", 24 + trunc(log10(oldnvar))+1), sep ="")
-              cat("Model does not converge: please increase lambda.\n")
-            }
-            break
-          }
+          shg <- as.vector(.solve(hessian, Pgrad))
           gams <- gams - shg
           NRbeta <- as.vector(crossprod(P, gams))
         } else { 
@@ -146,8 +138,8 @@
             hessian <- -crossprod(activeX)
           } 
           if (enet) diag(hessian) <- diag(hessian) - lambda2[active]
-          NRbeta <- activebeta - as.vector(solve(hessian, direction[active]))
-        }
+          NRbeta <- activebeta - as.vector(.solve(hessian, direction[active]))
+        }   
         NRfailed <- !all(sign(NRbeta) == sign(activebeta))
         if (!NRfailed) { 
           beta[active] <- NRbeta
@@ -181,10 +173,10 @@
 
         # recalculate beta
         if (tedge[wmin] + cumsteps < topt) {
-          beta[active] <- activebeta + tedge[wmin] * activedir
+          beta[active] <- activebeta + tedge[wmin] * activedir   
           beta[wmin] <- 0 # avoids round-off errors
           cumsteps <- cumsteps + tedge[wmin]
-          newfit <- (cumsteps > retain * topt) || (nvar == 1)
+          newfit <- (cumsteps > retain * topt) || (nvar == 1)  
           NRfailed <- FALSE
           tryNR <- FALSE
         } else {
@@ -200,7 +192,7 @@
       cat(rep("\b", max(1,trunc(log10(oldnvar))+1)), sep ="")
       cat(nvar)
       flush.console()
-    }
+    }  
   }
   
   return(list(beta = beta, fit = localfit, penalty = c(L1 = penalty1, L2 = penalty2), iterations = iter, converged = converged))
@@ -260,7 +252,7 @@
     if (is.na(localfit$loglik) || iter == maxiter) {
       if (trace) {
         cat(rep("\b", trunc(log10(iter))+1), sep ="")
-        cat("Model does not converge: please increase lambda.\n")
+        warning("Model does not converge: please increase lambda.", call.=FALSE)
       }
       converged <- FALSE
       break
@@ -300,16 +292,8 @@
       } else {
         diag(Hess) <- diag(Hess) - Lambda
       }
-      shg <- try(as.vector(solve(Hess, grad)), silent = TRUE)
-      if (is(shg, "try-error")) {
-        converged <- FALSE
-        if (trace) {
-          cat(rep("\b", trunc(log10(iter))+1), sep ="")
-          cat("Model does not converge: please increase lambda.\n")
-        }
-        break
-      }
-      beta <- beta - shg
+      shg <- as.vector(.solve(Hess, grad))
+      beta <- beta - shg       
       eta <- as.vector(X %*% beta)
       if (is.matrix(Lambda)) {
         penalty <- as.numeric(0.5 * sum(beta * (Lambda %*% beta)))
@@ -431,7 +415,7 @@
       cvfit <- function(leftout, beta) {
         subfit <- function(lp) fit(lp, leftout)
         leftoutP <- c(rep(FALSE, nrow(P) - length(leftout)), leftout)
-        gams <- solve(crossprod(t(P[!leftoutP,,drop=FALSE])), P[!leftoutP,,drop=FALSE] %*% beta)
+        gams <- .solve(crossprod(t(P[!leftoutP,,drop=FALSE])), P[!leftoutP,,drop=FALSE] %*% beta)
         PlP <- crossprod(t(Pl[!leftoutP,,drop=FALSE]))
         out <- .ridge(beta = gams, Lambda = PlP, X = t(PX[!leftoutP,!leftout,drop = FALSE]), 
           fit = subfit, ...)
@@ -519,8 +503,15 @@
   }
   
   # Numerical stabilization          
-  P <- P / matrix(apply(P, 1, sd), nrow(P), ncol(P), byrow=F)
+  #P <- P / matrix(apply(P, 1, sd), nrow(P), ncol(P), byrow=F)
 
   return(P)
 }
 
+#######################################
+# a solve() function that does not complain about near-singularity
+# often dangerous, sometimes useful
+#######################################
+.solve <- function(a,b) {
+  qr.coef(qr(a, LAPACK=TRUE), b)
+}

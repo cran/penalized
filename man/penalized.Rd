@@ -101,7 +101,9 @@ and \code{fullfit}, a \code{link{penfit}} object with the
 full data fit at the optimal lambda value.}
 
 \note{The functions also accept formula input as in \code{\link{lm}}. The input 
-\code{penalized(y~x)} is equivalent to \code{penalized(y, ~x)}.}
+\code{penalized(y~x)} is equivalent to \code{penalized(y, ~x)}.
+
+In case of tied survival times, all functions use Breslow's version of the partial likelihood.}
 
 \author{Jelle Goeman: \email{j.j.goeman@lumc.nl}} 
 

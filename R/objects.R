@@ -25,7 +25,7 @@ setClass("penfit",
   
   out@residuals <- object$fit$residuals
   
-  out@loglik <- object$fit$loglik
+  out@loglik <- if (is.na(object$fit$loglik)) -Inf else object$fit$loglik
   out@penalty <- object$penalty
   
   out@iterations <- object$iter
