@@ -75,6 +75,8 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
   orthogonalizer <- prepared$orthogonalizer
   rm(prepared)
   p <- ncol(X)
+  if ((p >= n) && all(inputlambda1 == 0) && all(inputlambda2 == 0)) 
+    stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
 
   # Prepare the model
   fit <- switch(model,
@@ -226,6 +228,8 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data,
   orthogonalizer <- prepared$orthogonalizer
   rm(prepared)
   p <- ncol(X)
+  if ((p >= n) && all(inputlambda1 == 0) && all(inputlambda2 == 0)) 
+    stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
 
   # Prepare the model
   fit <- switch(model,
@@ -241,10 +245,16 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data,
       groups <- sample(n) %% fold + 1
     }
   }
+  names(groups) <- rownames(X)
   
-  res <- .cvl(X, lambda1, lambda2, beta, fit=fit$fit, cvl=fit$cvl, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = trace)
-  out <- res["cvl"]
-  return(list(cvl = res$cvl, fullfit = .makepenfit(res$fit, length(startgamma), model, inputlambda1, inputlambda2, orthogonalizer)))
+  res <- .cvl(X, lambda1, lambda2, beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = trace)
+  res$predictions <- switch(model, 
+    cox = .coxmerge(res$predictions),
+    logistic = .logitmerge(res$predictions),
+    linear = .lmmerge(res$predictions)
+  )
+
+  return(list(cvl = res$cvl, predictions = res$predictions, folds = groups, fullfit = .makepenfit(res$fit, length(startgamma), model, inputlambda1, inputlambda2, orthogonalizer)))
 }
 
 ######################################
@@ -339,6 +349,7 @@ optL1 <- function(response, penalized, unpenalized, lambda2 = 0, data,
       groups <- sample(n) %% fold + 1
     }
   }
+  names(groups) <- rownames(X)
   
   # Find the highest interesting value of lambda
   nullgamma <- switch(model, 
@@ -356,14 +367,14 @@ optL1 <- function(response, penalized, unpenalized, lambda2 = 0, data,
   # The function to be optimized
   betas <- NULL
   maxcvl <- -Inf
-  bestfit <- NULL
+  best <- NULL
   thiscvl <- function(rellambda) {
     if (trace) {
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(X, rellambda*lambda1, lambda2, beta, fit=fit$fit, cvl=fit$cvl, groups=groups, 
-      epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
+    out <- .cvl(X, rellambda*lambda1, lambda2, beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, 
+      groups=groups, epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
     if (trace) cat("cvl=", out$cvl, "\n")
     beta <<- out$fit$beta
     if (is.null(betas)) {
@@ -377,15 +388,22 @@ optL1 <- function(response, penalized, unpenalized, lambda2 = 0, data,
     }
     if (out$cvl > maxcvl) {
       maxcvl <<- out$cvl
-      bestfit <<- out$fit
+      best <<- out
     }
     out$cvl
   }
   
   #optimize it
   opt <- opt.brent(thiscvl, c(0, 1.1*maxlambda), maximum = TRUE, tol = accuracy)
+  
+  best$predictions <- switch(model, 
+    cox = .coxmerge(best$predictions),
+    logistic = .logitmerge(best$predictions),
+    linear = .lmmerge(best$predictions)
+  )
 
-  return(list(lambda = opt$argmax, cvl = opt$max, fullfit = .makepenfit(bestfit, length(startgamma), model, opt$argmax, inputlambda2, orthogonalizer)))
+
+  return(list(lambda = opt$argmax, cvl = opt$max, predictions = best$predictions, folds = groups, fullfit = .makepenfit(best$fit, length(startgamma), model, opt$argmax, inputlambda2, orthogonalizer)))
 }
 
 ######################################
@@ -481,35 +499,39 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 
       groups <- sample(n) %% fold + 1
     }
   }
+  names(groups) <- rownames(X)
 
   # benchmark: cvl at infinite penalty
   g <- length(startgamma)
   if (g > 0) {
-    nullfit <- .cvl(X[,1:g, drop=FALSE], lambda1 = rep(0,g), lambda2 = rep(0,g), startgamma, fit=fit$fit, cvl=fit$cvl, groups=groups, 
-      epsilon=epsilon, maxiter=maxiter, trace = FALSE)
-    nullcvl <- nullfit$cvl
-    nullfit <- nullfit$fit
-    nullgamma <- nullfit$fit$beta
+    null <- .cvl(X[,1:g, drop=FALSE], lambda1 = rep(0,g), lambda2 = rep(0,g), startgamma, fit=fit$fit, cvl=fit$cvl,
+      prediction = fit$prediction, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
+    nullgamma <- null$fit$fit$beta
   } else {
-    nullcvl <- fit$cvl(numeric(n), !logical(n))
-    nullfit <- list()
+    null <- list()
+    null.lp <- numeric(n)
+    names(null.lp) <- rownames(X)
+    null$cvl <- fit$cvl(numeric(n), !logical(n))
+    null$fit <- list()
     nullgamma <- numeric(0)
-    nullfit$fit <- fit$fit(numeric(n))
-    nullfit$iterations <- 1
-    nullfit$converged <- TRUE
+    null$fit$beta <- c(numeric(m))
+    names(null$fit$beta) <- colnames(X)
+    null$fit$fit <- fit$fit(null.lp)
+    null$predictions <- lapply(as.list(null.lp), fit$prediction, nuisance= null$fit$fit$nuisance)
+    null$fit$iterations <- 1
+    null$fit$converged <- TRUE
   }
   
   # The function to be optimized
   betas <- NULL
-  maxcvl <- nullcvl
-  bestfit <- nullfit
+  best <- null
   thiscvl <- function(rellambda) {
     if (trace) {
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
     out <- .cvl(X, lambda1, rellambda*lambda2, beta, fit=fit$fit, cvl=fit$cvl, groups=groups, 
-      epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
+      prediction = fit$prediction, epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
     if (trace) cat("cvl=", out$cvl, "\n")
     if (out$cvl > - Inf) {
       beta <<- out$fit$beta
@@ -522,9 +544,8 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 
       } else {
         betas <<- out$betas
       }
-      if (out$cvl >= maxcvl) {
-        maxcvl <<- out$cvl
-        bestfit <<- out$fit
+      if (out$cvl >= best$cvl) {
+        best <<- out
       }
     }
     out$cvl
@@ -541,7 +562,8 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 
     high <- left; highcvl <- leftcvl; low <- right; lowcvl <- rightcvl; fac <- 0.1
   }
   ready <- FALSE
-  infmax <- ((abs(lowcvl - nullcvl) / abs(nullcvl + 0.1) < epsilon) && (abs(highcvl - nullcvl) / abs(nullcvl + 0.1) < epsilon))
+  # infmax: the maximum is (numerically) at infinite penalty; infmin: the maximum is (numerically) at zero penalty
+  infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
   infmin <- FALSE
   while (!ready && !infmax) {
     nxt <- high*fac
@@ -550,27 +572,32 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, startlambda2 = 
     if (!ready) {
       high <- nxt; highcvl <- nxtcvl; low <- high; lowcvl <- highcvl
     }
-    infmax <- ((abs(lowcvl - nullcvl) / abs(nullcvl + 0.1) < epsilon) && (abs(highcvl - nullcvl) / abs(nullcvl + 0.1) < epsilon))
+    infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
     infmin <- (fac < 1) && (abs(lowcvl - nxtcvl) / abs(nxtcvl + 0.1) < epsilon) 
   }
   
   # phase 2: optimize lambda within the order of magnitude found
-  if (!infmax && ! infmin) {
+  if (!infmax && !infmin) {
     opt <- opt.brent(thiscvl, sort(c(low,nxt)), maximum = TRUE, tol = accuracy)
   } else {
     if (infmax) {
-      opt <- list(argmax = Inf, max = nullcvl)
-      bestfit$beta <- c(nullgamma, numeric(m))
-      names(bestfit$beta) <- colnames(X)
-      bestfit$penalty <- c(L1 = 0, L2 = Inf)
+      opt <- list(argmax = Inf, max = null$cvl)
+      names(best$fit$beta) <- colnames(X)
+      best$fit$penalty <- c(L1 = 0, L2 = Inf)
     } else {
-      maxcvl <- -Inf    # clears bestfit
-      bestcvl <- thiscvl(0)
-      opt <- list(argmax = 0, max = bestcvl) 
+      best$cvl <- -Inf    # clears bestfit
+      best$cvl <- thiscvl(0)
+      opt <- list(argmax = 0, max = best$cvl) 
     } 
   }
 
-  return(list(lambda = opt$argmax, cvl = opt$max, fullfit = .makepenfit(bestfit, length(startgamma), model, inputlambda1, opt$argmax, orthogonalizer)))
+  best$predictions <- switch(model, 
+    cox = .coxmerge(best$predictions),
+    logistic = .logitmerge(best$predictions),
+    linear = .lmmerge(best$predictions)
+  )
+
+  return(list(lambda = opt$argmax, cvl = opt$max, predictions = best$predictions, folds = groups, fullfit = .makepenfit(best$fit, length(startgamma), model, inputlambda1, opt$argmax, orthogonalizer)))
 }
 
 

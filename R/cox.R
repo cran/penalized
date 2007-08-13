@@ -50,17 +50,24 @@
     diag(W) <- diag(W) + breslow * ws
     
     # The fitted baseline
-    baseline <- function() {
-      dtimes <- time[status==1]
-      basecumhaz <- cumsum(breslows[status==1][sort.list(dtimes)])
-      basesurv <- c(1,exp(-basecumhaz))
+    dtimes <- time[status==1]
+    basesurv <- cumprod(1-breslows[status==1][sort.list(dtimes)])
+    if (max(dtimes) < max(time)) {
+      basetimes <- c(0, sort(dtimes), max(time))
+      basesurv <- c(1, basesurv, basesurv[length(basesurv)])
+    } else {
       basetimes <- c(0, sort(dtimes))
-      return(data.frame(time = basetimes, surv = basesurv))
+      basesurv <- c(1, basesurv)
     }
+    
+    baseline <- new("breslow")
+    baseline@time <- basetimes
+    baseline@curves <- matrix(basesurv,1,byrow=TRUE)
 
-    return(list(residuals = residuals, loglik = loglik, W = W, lp = lp, baseline = baseline))
+    return(list(residuals = residuals, loglik = loglik, W = W, lp = lp, fitted = exp(lp), nuisance = list(baseline = baseline)))
   }
   
+  #cross-validated likelihood
   cvl <- function(lp, leftout)
   { 
     ws <- exp(lp)
@@ -73,7 +80,14 @@
     return(sum(cvls[leftout]))
   }
  
-  return(list(fit = fit, cvl = cvl))
+  # mapping from the linear predictor lp to an actual prediction
+  prediction <- function(lp, nuisance) {
+    out <- nuisance$baseline
+    out@curves <- nuisance$baseline@curves ^ exp(lp)
+    out
+  }
+ 
+  return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
 
 
@@ -91,6 +105,27 @@
     startgamma <- coefficients(coxph(form, data = data, method = "breslow"))
   }
 }
+
+                                        
+# merges predicted survival curves with different time points
+.coxmerge <- function(predictions) {
+  times <- sort(unique(unlist(lapply(predictions, time))))
+  curves <- sapply(predictions, function(pred) {
+    res <- rep(NA, length(pred@time))
+    res[times %in% time(pred)] <- pred@curves[1,]
+    res <- sapply(1:length(res), function(i) {
+      if (is.na(res[i]) && any(!is.na(res[-(1:i)])))
+        res[min(which(!is.na(res) & (1:length(res)>i)))]
+      else
+        res[i]
+    })
+  })
+  out <- new("breslow")
+  out@time <- times
+  out@curves <-  t(curves)
+  out
+}
+
 
 
 

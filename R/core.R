@@ -388,7 +388,7 @@
 ###################################
 # Workhorse function for cross-validated likelihood
 ###################################
-.cvl <- function(X, lambda1, lambda2, beta, fit, cvl,
+.cvl <- function(X, lambda1, lambda2, beta, fit, cvl, prediction,
     groups, trace = FALSE, betas = NULL, ...)  {
 
   n <- nrow(X)
@@ -396,12 +396,7 @@
 
   # find the right fitting procedure
   useP <- FALSE
-  if (all(lambda2 == 0)) {
-    cvfit <- function(leftout, beta) {
-      subfit <- function(lp) fit(lp, leftout)
-      .steplasso(beta = beta, lambda = lambda1, X = X[!leftout,,drop = FALSE], fit = subfit, ...)
-    }
-  } else if (all(lambda1 == 0)) {
+  if (all(lambda1 == 0)) {
     if (m <= n) {
       cvfit <- function(leftout, beta) {
         subfit <- function(lp) fit(lp, leftout)
@@ -423,6 +418,11 @@
         out
       }
     } 
+  } else if (all(lambda2 == 0)) {
+    cvfit <- function(leftout, beta) {
+      subfit <- function(lp) fit(lp, leftout)
+      .steplasso(beta = beta, lambda = lambda1, X = X[!leftout,,drop = FALSE], fit = subfit, ...)
+    }
   } else {
     cvfit <- function(leftout, beta) {
       subfit <- function(lp) fit(lp, leftout)
@@ -444,6 +444,8 @@
   
   # True cross-validation starts here
   failed <- FALSE
+  predictions <- vector("list", n)
+  names(predictions) <- rownames(X)
   cvls <- sapply(1:fold, function(i) {
     if (!failed) {
       if (trace) {
@@ -456,6 +458,7 @@
       lin.pred <- numeric(n)
       lin.pred[leaveout] <- X[leaveout, foldfit$beta != 0, drop=FALSE] %*% foldfit$beta[foldfit$beta != 0]
       lin.pred[!leaveout] <- foldfit$fit$lp
+      predictions[leaveout] <<- lapply(lin.pred[leaveout], prediction, nuisance = foldfit$fit$nuisance)
       betas[,i] <<- foldfit$beta
       if (trace) cat(rep("\b", trunc(log10(i))+1), sep ="")
   
@@ -470,14 +473,14 @@
 
   if (failed) cvls <- -Inf
 
-  list(cvl = sum(cvls), fit = fullfit, betas = betas)
+  list(cvl = sum(cvls), fit = fullfit, betas = betas, predictions = predictions)
 }
 
 #######################################
 # makes a reduced basis for L2-penalized newton-raphson in the p > n case
 #######################################
 .makeP <- function(X, lambda2, lambda1 = 0, signbeta) {
-  
+
   n <- nrow(X)
   p <- ncol(X)
                                                       
@@ -493,9 +496,9 @@
 
   # First columns: free variables in case of no L2-penalization
   for (i in seq_len(m)) P[i, i] <- 1 
-  
+                                                
   # Next n columns: column span of X
-  P[m + 1:n, m + 1:(p-m)] <- X[,!free2,drop=FALSE] * matrix(1/lambda2[!free2], n, p-m, byrow=TRUE)         
+  P[m + 1:n, m + seq_len(p-m)] <- X[,!free2,drop=FALSE] * matrix(1/lambda2[!free2], n, p-m, byrow=TRUE)         
 
   # Additional column due to L1-penalization
   if (!free1) {          

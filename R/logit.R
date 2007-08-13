@@ -15,7 +15,7 @@
     loglik <- sum(log(probs[response == 1])) + sum(log(1-probs[response == 0]))
     if (!is.na(loglik) && (loglik == - Inf)) loglik <- NA
 
-    return(list(residuals = residuals, loglik = loglik, W = ws, lp = lp))
+    return(list(residuals = residuals, loglik = loglik, W = ws, lp = lp, fitted = probs, nuisance = list()))
   }
 
   cvl <- function(lp, leftout) {
@@ -23,7 +23,14 @@
     return(sum(log(probs[response == 1 & leftout])) + sum(log(1-probs[response == 0 & leftout])))
   }
 
-  return(list(fit = fit, cvl = cvl))
+  # mapping from the linear predictor lp to an actual prediction
+  prediction <- function(lp, nuisance) {
+    out <- exp(lp) / (1+exp(lp))
+    out
+  }
+
+
+  return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
 
 
@@ -42,4 +49,10 @@
     startgamma <- coefficients(glm(form, data = data, family = binomial))
   }
   return(startgamma)
+}
+
+# merges predicted probalities
+.logitmerge <- function(predictions) {
+  out <- unlist(predictions)
+  out
 }

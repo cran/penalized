@@ -92,13 +92,14 @@ of the other penalty parameter is given. }
 or a list of such objects if \code{steps > 1}. 
 
 \code{cvl} returns a list with elements
-\code{cvl}, the cross-validated likelihood and, \code{fullfit}, a \code{link{penfit}} 
+\code{cvl}, the cross-validated likelihood, \code{predictions}, the cross-validated 
+predicted values, \code{folds}, a vector that shows which subjects have been left out 
+together during the cross-validation steps, and \code{fullfit}, a \code{\link{penfit}} 
 object with the full data fit. 
 
-\code{optL1} and \code{optL2} each return a list with elements \code{lambda}, the 
-optimal penalty parameter, \code{cvl}, the associated cross-validated likelihood, 
-and \code{fullfit}, a \code{link{penfit}} object with the 
-full data fit at the optimal lambda value.}
+\code{optL1} and \code{optL2} each return a list with elements \code{lambda}, which 
+is the optimal value found, and all the information also returned by \code{cvl}, 
+evaluated at the optimal \code{lambda}.}
 
 \note{The functions also accept formula input as in \code{\link{lm}}. The input 
 \code{penalized(y~x)} is equivalent to \code{penalized(y, ~x)}.

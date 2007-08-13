@@ -6,6 +6,7 @@
 \alias{show,penfit-method}
 \alias{coefficients,penfit-method}
 \alias{residuals,penfit-method}
+\alias{fitted.values,penfit-method}
 \alias{penalty,penfit-method}
 \alias{loglik,penfit-method}
 \alias{basehaz,penfit-method}
