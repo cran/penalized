@@ -1,12 +1,9 @@
 \name{Penalized generalized linear models} 
 \alias{penalized} 
-\alias{cvl} 
-\alias{optL1} 
-\alias{optL2} 
 
 \title{Penalized regression} 
 
-\description{Fitting and cross-validating generalized linear models with L1 (lasso) 
+\description{Fitting generalized linear models with L1 (lasso) 
 and/or L2 (ridge) penalties, or a combination of the two.} 
 
 \usage{ 
@@ -14,18 +11,6 @@ and/or L2 (ridge) penalties, or a combination of the two.}
 penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, data, 
     model = c("cox", "logistic", "linear"), startbeta, startgamma, steps = 1, 
     epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) 
-
-cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, data, 
-    model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
-    groups, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) 
-
-optL1 (response, penalized, unpenalized, lambda2 = 0, data, 
-    model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
-    groups, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE, accuracy = 1e-3) 
-
-optL2 (response, penalized, unpenalized, lambda1 = 0, startlambda2 = 1, data, 
-    model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
-    groups, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE, accuracy = 1e-3) 
 
 } 
 
@@ -71,44 +56,24 @@ unit central L2-norm before applying penalization.}
 
 \item{trace}{If \code{TRUE}, prints progress information. Note that setting 
 \code{trace=TRUE} may slow down the algorithm up to 30 percent (but it often feels quicker)} 
-
-\item{fold}{The fold for cross-validation. Leave-one-out (n-fold) is the default.} 
-
-\item{groups}{Forces the allocation of samples into cross-validation folds. 
-Specified as a length \code{n} vector with values in \code{1:fold}.} 
-
-\item{accuracy}{Target relative precision of the optimal L1 or L2 penalty parameter.} 
-
-\item{startlambda2}{The starting value for optimizing lambda2.}
 } 
 
 \details{The \code{penalized} function fits  regression models for a given 
-combination of L1 and L2 penalty parameters. \code{cvl} calculates the corresponding 
-cross-validated likelihood. the twin functions \code{optL1} and \code{optL2} find optimal 
-cross-validated values of the L1 and L2 penalty parameter, respectively, when the value 
-of the other penalty parameter is given. } 
+combination of L1 and L2 penalty parameters.} 
 
 \value{\code{penalized} returns a \code{link{penfit}} object when \code{steps = 1} 
-or a list of such objects if \code{steps > 1}. 
-
-\code{cvl} returns a list with elements
-\code{cvl}, the cross-validated likelihood, \code{predictions}, the cross-validated 
-predicted values, \code{folds}, a vector that shows which subjects have been left out 
-together during the cross-validation steps, and \code{fullfit}, a \code{\link{penfit}} 
-object with the full data fit. 
-
-\code{optL1} and \code{optL2} each return a list with elements \code{lambda}, which 
-is the optimal value found, and all the information also returned by \code{cvl}, 
-evaluated at the optimal \code{lambda}.}
+or a list of such objects if \code{steps > 1}.} 
 
 \note{The functions also accept formula input as in \code{\link{lm}}. The input 
 \code{penalized(y~x)} is equivalent to \code{penalized(y, ~x)}.
 
-In case of tied survival times, all functions use Breslow's version of the partial likelihood.}
+In case of tied survival times, the function uses Breslow's version of the partial likelihood.}
 
 \author{Jelle Goeman: \email{j.j.goeman@lumc.nl}} 
 
-\seealso{\code{\link{penfit}}, \code{\link{plotpath}}.} 
+\seealso{\code{\link{penfit}} for the \code{penfit} object returned, \code{\link{plotpath}} 
+for plotting the solution path, and \code{\link{cvl}} for cross-validation and 
+optimizing the tunung parameters.} 
 
 \examples{ 
 
@@ -124,13 +89,9 @@ basehaz(pen)
 # A single lasso fit using using the clinical risk factors 
 pen <- penalized(Surv(time, event), penalized = ~ER+Age+Diam+N+Grade, data = nki70, lambda1=10, standardize=TRUE)
 
-# Find the associated leave-one-out-cross-validated likelihood
-cvl(Surv(time, event), penalized = ~ER+Age+Diam+N+Grade, data = nki70, lambda1=10, standardize=TRUE)
-
-# Finding an optimal crossvalidated likelihood
-attach(nki70)
-pen <- optL1(Surv(time, event), penalized = nki70[,8:77], fold = 10)
-coefficients(pen$fullfit)
+# using steps
+pen <- penalized(Surv(time, event), penalized = nki70[,8:77], data = nki70, lambda1 = 1, steps = 20)
+plotpath(pen)
 } 
 
 \keyword{multivariate} \keyword{regression} 

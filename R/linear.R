@@ -6,7 +6,7 @@
       response <- response[!leftout]
 
     # The residuals
-    residuals <- response - lp
+    residuals <- as.vector(response - lp)
 
     # The loglikelihood
     ss <- sum(residuals * residuals)

@@ -108,7 +108,9 @@
 
                                         
 # merges predicted survival curves with different time points
+# input: a list of breslow objects
 .coxmerge <- function(predictions) {
+
   times <- sort(unique(unlist(lapply(predictions, time))))
   curves <- sapply(predictions, function(pred) {
     res <- rep(NA, length(pred@time))

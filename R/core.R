@@ -9,7 +9,7 @@
 # The core lasso and elastic net algorithm
 ###################################
 .lasso <- function(beta, lambda, lambda2 = 0, X, fit, trace = FALSE, epsilon = 1e-8, maxiter = Inf) {
-
+         
   # It is a general function for fitting L1-penalized models
   # possibly with an additional L2-penalty
   # Input:
@@ -99,7 +99,7 @@
 
     # check convergence
     finishednvar <- !any(xor(active, oldactive))
-    finished <- (finishedLL && finishedpen && finishednvar) || (nvar == 0) || (iter == maxiter)
+    finished <- (finishedLL && finishedpen && finishednvar) || (all(activedir == 0)) || (iter == maxiter)
 
     if (!finished) {
       iter <- iter+1
@@ -389,7 +389,7 @@
 # Workhorse function for cross-validated likelihood
 ###################################
 .cvl <- function(X, lambda1, lambda2, beta, fit, cvl, prediction,
-    groups, trace = FALSE, betas = NULL, ...)  {
+    groups, trace = FALSE, betas = NULL, quit.if.failed = TRUE, ...)  {
 
   n <- nrow(X)
   m <- ncol(X)
@@ -463,7 +463,7 @@
       if (trace) cat(rep("\b", trunc(log10(i))+1), sep ="")
   
       out <- cvl(lin.pred, leaveout)
-      if (is.na(out) || abs(out) == Inf || foldfit$converged == FALSE) failed <<- TRUE
+      if (quit.if.failed && (is.na(out) || abs(out) == Inf || foldfit$converged == FALSE)) failed <<- TRUE
     } else {
       out <- NA
     }
@@ -471,7 +471,7 @@
     out
   })
 
-  if (failed) cvls <- -Inf
+  if (failed || any(is.na(cvls))) cvls <- -Inf
 
   list(cvl = sum(cvls), fit = fullfit, betas = betas, predictions = predictions)
 }

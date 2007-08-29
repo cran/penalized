@@ -7,7 +7,7 @@ plotpath <- function(object, labelsize = 0.6,...) {
   labwidth <- ifelse(labelsize > 0, max(strwidth(rownames(betas[!remove,]),"inches",labelsize)), 0)
   margins <- par("mai")
   par("mai" = c(margins[1:3], max(margins[3], labwidth*1.4)))
-  matplot(lambda1, t(betas[!remove,]), type ="l", ylab = "coefficient", xlab = "L1-penalty",col=rainbow(sum(!remove)), xlim = rev(range(lambda1)), log="x" )
+  matplot(lambda1, t(betas[!remove,,drop=FALSE]), type ="l", ylab = "coefficient", xlab = "L1-penalty",col=rainbow(sum(!remove)), xlim = rev(range(lambda1)), log="x" )
   if (labelsize > 0) {
     take <- which(!remove)
     for (i in 1:sum(!remove)) {
