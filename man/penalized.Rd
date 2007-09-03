@@ -8,9 +8,10 @@ and/or L2 (ridge) penalties, or a combination of the two.}
 
 \usage{ 
 
-penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, data, 
-    model = c("cox", "logistic", "linear"), startbeta, startgamma, steps = 1, 
-    epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) 
+penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, 
+    data, model = c("cox", "logistic", "linear"), startbeta, startgamma, 
+    steps = 1, epsilon = 1e-10, maxiter, standardize = FALSE, 
+    trace = TRUE) 
 
 } 
 
@@ -80,17 +81,20 @@ optimizing the tunung parameters.}
 data(nki70)
 
 # A single lasso fit predicting survival
-pen <- penalized(Surv(time, event), penalized = nki70[,8:77], unpenalized = ~ER+Age+Diam+N+Grade, data = nki70, lambda1 = 10)
+pen <- penalized(Surv(time, event), penalized = nki70[,8:77], 
+    unpenalized = ~ER+Age+Diam+N+Grade, data = nki70, lambda1 = 10)
 show(pen)
 coefficients(pen)
 coefficients(pen, "penalized")
 basehaz(pen)
 
 # A single lasso fit using using the clinical risk factors 
-pen <- penalized(Surv(time, event), penalized = ~ER+Age+Diam+N+Grade, data = nki70, lambda1=10, standardize=TRUE)
+pen <- penalized(Surv(time, event), penalized = ~ER+Age+Diam+N+Grade, 
+    data = nki70, lambda1=10, standardize=TRUE)
 
 # using steps
-pen <- penalized(Surv(time, event), penalized = nki70[,8:77], data = nki70, lambda1 = 1, steps = 20)
+pen <- penalized(Surv(time, event), penalized = nki70[,8:77], 
+    data = nki70, lambda1 = 1, steps = 20)
 plotpath(pen)
 } 
 

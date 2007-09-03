@@ -51,12 +51,15 @@
     
     # The fitted baseline
     dtimes <- time[status==1]
-    basesurv <- cumprod(1-breslows[status==1][sort.list(dtimes)])
+    sdtimes <- sort(dtimes)
+    basecumhaz <- cumsum(breslows[status==1][sort.list(dtimes)])
+    uniquetimes <- sapply(seq_along(sdtimes)[-length(sdtimes)], function(i) sdtimes[i] != sdtimes[i+1])
+    basesurv <- exp(-basecumhaz[uniquetimes])
     if (max(dtimes) < max(time)) {
-      basetimes <- c(0, sort(dtimes), max(time))
+      basetimes <- c(0, sdtimes[uniquetimes], max(time))
       basesurv <- c(1, basesurv, basesurv[length(basesurv)])
     } else {
-      basetimes <- c(0, sort(dtimes))
+      basetimes <- c(0, sdtimes[uniquetimes])
       basesurv <- c(1, basesurv)
     }
     

@@ -12,29 +12,30 @@ and/or L2 (ridge) penalties, using likelihood cross-validation.}
 
 \usage{
 
-cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, data,
-    model = c("cox", "logistic", "linear"), startbeta, startgamma, fold,
-    epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE)
+cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, 
+    data, model = c("cox", "logistic", "linear"), startbeta, 
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+    trace = TRUE)
 
-optL1 (response, penalized, unpenalized, minlambda1, maxlambda1, lambda2 = 0,
-    data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold,
-    epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE,
-    tol = .Machine$double.eps^0.25)
+optL1 (response, penalized, unpenalized, minlambda1, maxlambda1, 
+    lambda2 = 0, data, model = c("cox", "logistic", "linear"), 
+    startbeta, startgamma, fold, epsilon = 1e-10, maxiter, 
+    standardize = FALSE, trace = TRUE, tol = .Machine$double.eps^0.25)
 
-optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2,
-    data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold,
-    epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE,
-    tol = .Machine$double.eps^0.25)
+optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, 
+    maxlambda2, data, model = c("cox", "logistic", "linear"), 
+    startbeta, startgamma, fold, epsilon = 1e-10, maxiter, 
+    standardize = FALSE, trace = TRUE, tol = .Machine$double.eps^0.25)
 
-profL1 (response, penalized, unpenalized, minlambda1, maxlambda1, lambda2 = 0,
-  data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold,
-  epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE,
-  steps = 100, autominsteps = steps/5, log = FALSE)
+profL1 (response, penalized, unpenalized, minlambda1, maxlambda1, 
+    lambda2 = 0, data, model = c("cox", "logistic", "linear"), startbeta, 
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+    trace = TRUE, steps = 100, autominsteps = steps/5, log = FALSE)
   
-profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2,
-  data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold,
-  epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE,
-  steps = 100, autominsteps = steps/5, log = TRUE)
+profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, 
+    maxlambda2, data, model = c("cox", "logistic", "linear"), startbeta, 
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+    trace = TRUE, steps = 100, autominsteps = steps/5, log = TRUE)
 }
 
 \arguments{
@@ -52,7 +53,7 @@ Note that an unpenalized intercept is included in the model by default (except i
 This can be suppressed by specifying \code{unpenalized = ~0}.}
 
 \item{lambda1, lambda2}{The fixed values of the tuning parameters for L1 and L2
-penalization. Both may be vectors if different cavariates are to be penalized differently.}
+penalization. Both may be vectors if different covariates are to be penalized differently.}
 
 \item{minlambda1, minlambda2, maxlambda1, maxlambda2}{The values of the tuning
 parameters for L1 or L2 penalization between which the cross-validated likelihood
@@ -88,18 +89,18 @@ unit central L2-norm before applying penalization.}
 \item{trace}{If \code{TRUE}, prints progress information. Note that setting
 \code{trace=TRUE} may slow down the algorithm (but it often feels quicker)}
 
-\item{steps}{The maximum number of steps between \code{minlambda1}/\code{minlambda1} and
-\code{maxlambda1}/\code{maxlambda1} at which the cross-validated likelihood is to
+\item{steps}{The maximum number of steps between \code{minlambda1} and
+\code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} at which the cross-validated likelihood is to
 be calculated.}
 
-\item{autominsteps}{The minimum number of steps between \code{minlambda1}/\code{minlambda1} and
-\code{maxlambda1}/\code{maxlambda1} at which the cross-validated likelihood is to
+\item{autominsteps}{The minimum number of steps between \code{minlambda1} and
+\code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} at which the cross-validated likelihood is to
 be calculated. If \code{autominsteps} is smaller than \code{steps}, the algorithm will
 automatically stop when the cross-validated likelihood drops below the cross-validated
 likelihood of the null model, provided it has done at least \code{autominsteps} steps.}
 
-\item{log}{If \code{FALSE}, the steps between \code{minlambda1}/\code{minlambda1} and
-\code{maxlambda1}/\code{maxlambda1} are equidistant on a linear scale, if \code{TRUE}
+\item{log}{If \code{FALSE}, the steps between \code{minlambda1} and
+\code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} are equidistant on a linear scale, if \code{TRUE}
 on a logaritmic scale. Please note the different default between \code{optL1} (\code{FALSE}) 
 and \code{optL2} (\code{TRUE}).}
 
@@ -139,7 +140,7 @@ See also \code{\link[stats:optimize]{optimize}}.}
   minimization without derivatives (see also \code{\link[stats:optimize]{optimize}}).
   There is a risk that these functions converge to a local instead of to a global 
   optimum. This is especially the case for \code{optL1}, as the cross-validated 
-  likelihood as a function of \code{lambda1} sometimes has local optima. It is 
+  likelihood as a function of \code{lambda1} quite often has local optima. It is 
   recommended to use \code{optL1} in combination with \code{profL1} to check whether
   \code{optL1} has converged to the right optimum.
   
@@ -161,7 +162,8 @@ coefficients(opt$fullfit)
 plot(opt$predictions)
 
 # Plotting the profile of the crossvalidated likelihood
-prof <- profL1(Surv(time, event), penalized = nki70[,8:77], fold = opt$fold, steps=20)
+prof <- profL1(Surv(time, event), penalized = nki70[,8:77], 
+    fold = opt$fold, steps=20)
 plot(prof$lambda, prof$cvl, type="l")
 plotpath(prof$fullfit)
 }
