@@ -30,12 +30,12 @@ optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 profL1 (response, penalized, unpenalized, minlambda1, maxlambda1, 
     lambda2 = 0, data, model = c("cox", "logistic", "linear"), startbeta, 
     startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
-    trace = TRUE, steps = 100, autominsteps = steps/5, log = FALSE)
+    trace = TRUE, steps = 100, minsteps = steps/5, log = FALSE)
   
 profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, 
     maxlambda2, data, model = c("cox", "logistic", "linear"), startbeta, 
     startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
-    trace = TRUE, steps = 100, autominsteps = steps/5, log = TRUE)
+    trace = TRUE, steps = 100, minsteps = steps/5, log = TRUE)
 }
 
 \arguments{
@@ -93,11 +93,11 @@ unit central L2-norm before applying penalization.}
 \code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} at which the cross-validated likelihood is to
 be calculated.}
 
-\item{autominsteps}{The minimum number of steps between \code{minlambda1} and
+\item{minsteps}{The minimum number of steps between \code{minlambda1} and
 \code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} at which the cross-validated likelihood is to
-be calculated. If \code{autominsteps} is smaller than \code{steps}, the algorithm will
+be calculated. If \code{minsteps} is smaller than \code{steps}, the algorithm will
 automatically stop when the cross-validated likelihood drops below the cross-validated
-likelihood of the null model, provided it has done at least \code{autominsteps} steps.}
+likelihood of the null model, provided it has done at least \code{minsteps} steps.}
 
 \item{log}{If \code{FALSE}, the steps between \code{minlambda1} and
 \code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} are equidistant on a linear scale, if \code{TRUE}

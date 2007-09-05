@@ -4,7 +4,7 @@
 profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lambda2 = 0, 
   data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
   epsilon = 1e-10, maxiter = Inf, standardize = FALSE, trace = TRUE,
-  steps = 100, autominsteps = steps/5, log = FALSE) {
+  steps = 100, minsteps = steps/5, log = FALSE) {
 
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data)
@@ -166,7 +166,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
     cvls[iter] <- out$cvl
     fits[[iter]] <- out$fit
     predictions[[iter]] <- out$predictions
-    finished <- ((cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= autominsteps)) || (iter == length(lambda1s))
+    finished <- ((cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= minsteps)) || (iter == length(lambda1s))
   }
 
   lambda1s <- lambda1s[!is.na(cvls)]
@@ -194,7 +194,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
 profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, 
   data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
   epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE,
-  steps = 100, autominsteps = steps/5, log = TRUE) {
+  steps = 100, minsteps = steps/5, log = TRUE) {
 
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data)
@@ -223,6 +223,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   # fill in miscelaneous missing input
   if (missing(unpenalized)) unpenalized <- matrix(,n,0)
   if (missing(data)) data <-  as.data.frame(matrix(,n,0))
+  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0)) 25 else Inf
 
   # turn penalized into a matrix if it is not a matrix
   if (is.data.frame(penalized) || is.vector(penalized)) penalized <- as.matrix(penalized)
@@ -344,7 +345,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
     cvls[iter] <- out$cvl
     fits[[iter]] <- out$fit
     predictions[[iter]] <- out$predictions
-    finished <- ((cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= autominsteps)) || (iter == length(lambda2s))
+    finished <- ((cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= minsteps)) || (iter == length(lambda2s))
   }
 
   lambda2s <- lambda2s[!is.na(cvls)]

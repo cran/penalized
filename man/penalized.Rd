@@ -98,4 +98,5 @@ pen <- penalized(Surv(time, event), penalized = nki70[,8:77],
 plotpath(pen)
 } 
 
-\keyword{multivariate} \keyword{regression} 
+\keyword{multivariate} 
+\keyword{regression} 
