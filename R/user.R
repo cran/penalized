@@ -93,8 +93,8 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
       linear = .lmgamma(response, unpenalized, data))
     null <- c(nullgamma, numeric(m)) * weights
     nzn <- (null != 0)
-    lp <- X[,nzn,drop=FALSE] %*% null[nzn]
-    gradient <- as.vector(crossprod(X[,!nzn,drop=FALSE], fit(lp)$residuals))
+    lp <- drop(X[,nzn,drop=FALSE] %*% null[nzn])
+    gradient <- drop(crossprod(X[,!nzn,drop=FALSE], fit(lp)$residuals))
     rel <- gradient / lambda1[!nzn]
     from <- max(abs(rel))
   } else {
@@ -124,7 +124,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
         out <- .ridge(beta = gams, Lambda = PlP, X = t(PX), fit = fit, trace = trace,
           epsilon = epsilon, maxiter = maxiter)
         # and transform back
-        out$beta <- as.vector(crossprod(P, out$beta)) 
+        out$beta <- drop(crossprod(P, out$beta)) 
       } else {
         out <- .ridge(beta = beta, Lambda = lambda2, X = X, fit = fit, trace = trace,
           epsilon = epsilon, maxiter = maxiter)

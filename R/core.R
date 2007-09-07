@@ -50,7 +50,7 @@
     # calculate the local likelihood fit
     if (newfit) {
       activeX <- X[,nzb, drop=FALSE]
-      linpred <- as.vector(activeX %*% beta[nzb])
+      linpred <- drop(activeX %*% beta[nzb])
       localfit <- fit(linpred)
       # Check for divergence
       if (is.na(localfit$loglik)) {
@@ -61,7 +61,7 @@
         converged <- FALSE
         break
       }
-      grad <- as.vector(crossprod(X, localfit$residuals))
+      grad <- drop(crossprod(X, localfit$residuals))
       if (enet) {
         grad[active] <- grad[active] - lambda2[active] * beta[active]
       }
@@ -125,9 +125,9 @@
             hessian <- -crossprod(t(PX)) - PlP
           }
           Pgrad <- P %*% direction[active]
-          shg <- as.vector(.solve(hessian, Pgrad))
+          shg <- drop(.solve(hessian, Pgrad))
           gams <- gams - shg
-          NRbeta <- as.vector(crossprod(P, gams))
+          NRbeta <- drop(crossprod(P, gams))
         } else { 
           if (is.matrix(localfit$W)) {
             hessian <- -crossprod(activeX, localfit$W) %*% activeX 
@@ -138,7 +138,7 @@
             hessian <- -crossprod(activeX)
           } 
           if (enet) diag(hessian) <- diag(hessian) - lambda2[active]
-          NRbeta <- activebeta - as.vector(.solve(hessian, direction[active]))
+          NRbeta <- activebeta - drop(.solve(hessian, direction[active]))
         }   
         NRfailed <- !all(sign(NRbeta) == sign(activebeta))
         if (!NRfailed) { 
@@ -150,9 +150,9 @@
       if (!tryNR || NRfailed) {
         # find the second derivative of the likelihood in the projected direction
         if (newfit) {
-          Xdir <- as.vector(X[,active, drop=F] %*% activedir)
+          Xdir <- drop(X[,active, drop=F] %*% activedir)
           if (is.matrix(localfit$W)) {
-            curve <- as.vector((crossprod(Xdir, localfit$W) %*% Xdir) / sum(activedir * activedir))
+            curve <- drop((crossprod(Xdir, localfit$W) %*% Xdir) / sum(activedir * activedir))
           } else if (length(localfit$W) > 1) {
             curve <- sum(Xdir * Xdir * localfit$W) / sum(activedir * activedir)
           } else {
@@ -213,7 +213,7 @@
   while (!finished) {
     nzb <- (beta != 0)
     lp <- X[,nzb,drop=FALSE] %*% beta[nzb]
-    gradient <- as.vector(crossprod(X[,!nzb,drop=FALSE], fit(lp)$residuals))
+    gradient <- drop(crossprod(X[,!nzb,drop=FALSE], fit(lp)$residuals))
     rel <- gradient / lambda[!nzb]
     if (length(rel) > n) {
       nextlambda <- sort(abs(rel), decreasing = TRUE)[n]
@@ -240,7 +240,7 @@
 ###################################
 .ridge <- function(beta, eta, Lambda, X, fit, trace = FALSE, epsilon = 1e-8, maxiter = 25) {
 
-  if (missing(eta)) eta <- as.vector(X %*% beta)
+  if (missing(eta)) eta <- drop(X %*% beta)
 
   iter <- 0
   oldLL <- -Inf
@@ -292,9 +292,9 @@
       } else {
         diag(Hess) <- diag(Hess) - Lambda
       }
-      shg <- as.vector(.solve(Hess, grad))
+      shg <- drop(.solve(Hess, grad))
       beta <- beta - shg       
-      eta <- as.vector(X %*% beta)
+      eta <- drop(X %*% beta)
       if (is.matrix(Lambda)) {
         penalty <- as.numeric(0.5 * sum(beta * (Lambda %*% beta)))
       } else {
@@ -414,7 +414,7 @@
         PlP <- crossprod(t(Pl[!leftoutP,,drop=FALSE]))
         out <- .ridge(beta = gams, Lambda = PlP, X = t(PX[!leftoutP,!leftout,drop = FALSE]), 
           fit = subfit, ...)
-        out$beta <- as.vector(crossprod(P[!leftoutP,,drop=FALSE], out$beta))
+        out$beta <- drop(crossprod(P[!leftoutP,,drop=FALSE], out$beta))
         out
       }
     } 

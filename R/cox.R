@@ -24,7 +24,7 @@
       time <- time[!leftout]
       Riskset <- Riskset[!leftout, !leftout]
     }
-    ws <- as.vector(exp(lp))
+    ws <- drop(exp(lp))
     if (any(ws == Inf | ws == 0)) { 
       ws <- 1e-10 + 1e10 * status
       exploded <- TRUE
@@ -32,8 +32,8 @@
       exploded <- FALSE
     }
 
-    breslows <- as.vector(status / Riskset %*% ws)
-    breslow <- as.vector(breslows[status==1] %*% Riskset[status==1,,drop=FALSE])
+    breslows <- drop(status / Riskset %*% ws)
+    breslow <- drop(breslows[status==1] %*% Riskset[status==1,,drop=FALSE])
     
     # The martingale residuals
     residuals <- status - breslow * ws

@@ -10,6 +10,8 @@
 \newcommand{\Rclass}[1]{{\textit{#1}}}
 \newcommand{\Rfunarg}[1]{{\textit{#1}}}
 
+\sloppy
+
 \title{L1 and L2 Penalized Regression Models}
 
 \author{Jelle Goeman}
@@ -20,9 +22,11 @@
 
 \section{Introduction}
 
-This short note explains the use of the \Rpackage{penalized} package. The package is designed for penalized estimation in generalized linear models. At this moment, the only supported models are linear regression, logistic regression and the Cox proportional hazards model, but others are likely to be included in the future. As to penalties, the package allows an L1 absolute value (``lasso'') penalty \citep{Tibshirani1996, Tibshirani1997}, an L2 quadratic (``ridge'') penalty \citep{Hoerl1970, Cessie1992, Verweij1994}, or a combination of the two \citep[the ``naive elastic net'' of][]{Zou2005}. The package also includes facilities for likelihood cross-validation and for optimization of the tuning parameter.
+This short note explains the use of the \Rpackage{penalized} package. The package is designed for penalized estimation in generalized linear models. 
 
-L1 and L2 penalized estimation methods shrink the estimates of the regression coefficients towards zero relative to the maximum likelihood estimates. The purpose of this shrinkage is to prevent overfit arising due either collinearity of the covariates or high-dimensionality. Although both shrinkage methods, the effects of L1 and L2 penalization are quite different in practice. Applying an L2 penalty tends to result in all small but non-zero regression coefficients, whereas applying an L1 penalty tends to result in many regression coefficients shrunk exactly to zero and a few other regression coefficients with comparatively little shrinkage. Combining L1 and L2 penalties tends to give a result in between, with fewer regression coefficients set to zero than in a pure L1 setting, and more shrinkage to the other coefficients. The amount of shrinkage is determined by tuning parameters $\lambda_1$ and $\lambda_2$, for L1 and L2 respectively, where a value of zero always means no shrinkage (= maximum likelihood estimation) and a value of infinity means infinite shrinkage (= setting all regression coefficients to zero). For more details about the methods, please refer to the above-mentioned papers.
+The supported models at this moment are linear regression, logistic regression and the Cox proportional hazards model, but others are likely to be included in the future. As to penalties, the package allows an L1 absolute value (``lasso'') penalty \citep{Tibshirani1996, Tibshirani1997}, an L2 quadratic (``ridge'') penalty \citep{Hoerl1970, Cessie1992, Verweij1994}, or a combination of the two \citep[the ``naive elastic net'' of][]{Zou2005}. The package also includes facilities for likelihood cross-validation and for optimization of the tuning parameter.
+
+L1 and L2 penalized estimation methods shrink the estimates of the regression coefficients towards zero relative to the maximum likelihood estimates. The purpose of this shrinkage is to prevent overfit arising due to either collinearity of the covariates or high-dimensionality. Although both methods are shrinkage methods, the effects of L1 and L2 penalization are quite different in practice. Applying an L2 penalty tends to result in all small but non-zero regression coefficients, whereas applying an L1 penalty tends to result in many regression coefficients shrunk exactly to zero and a few other regression coefficients with comparatively little shrinkage. Combining L1 and L2 penalties tends to give a result in between, with fewer regression coefficients set to zero than in a pure L1 setting, and more shrinkage of the other coefficients. The amount of shrinkage is determined by tuning parameters $\lambda_1$ and $\lambda_2$. A value of zero always means no shrinkage (= maximum likelihood estimation) and a value of infinity means infinite shrinkage (= setting all regression coefficients to zero). For more details about the methods, please refer to the above-mentioned papers.
 
 It is important to note that shrinkage methods are generally not invariant to the relative scaling of the covariates. Before fitting a model, it is prudent to consider if the covariates already have a natural scaling relative to each other or whether they should be standardized.
 
@@ -38,14 +42,14 @@ The basic function of the package is the \Rfunction{penalized} function, which p
 
 \subsection{the nki70 data}
 
-As example data we use the 70 gene signature of \cite{Veer2002} in the gene expression data set of \cite{Vijver2002}. 
+As example data we use the 70 gene signature of \cite{Veer2002} in the gene expression data set of \cite{Vijver2002}.
 
 <<load>>=
 library(penalized)
 data(nki70)
 @
 
-This loads a \Rclass{data.frame} with 295 breast cancer patients and 77 covariates. The first two indicate the survival time and event status (time is in months), the next five are clinical covariates (diameter of the tumor, lymph node status, estrogen receptor status, grade of the tumor and age of the patients), and the other 70 are gene expression measurements of the 70 molecular markers.
+This loads a \Rclass{data.frame} with 144 breast cancer patients and 77 covariates. The first two covariates indicate the survival time and event status (time is in months), the next five are clinical covariates (diameter of the tumor, lymph node status, estrogen receptor status, grade of the tumor and age of the patients), and the other 70 are gene expression measurements of the 70 molecular markers.
 
 \subsection{the penalized function}
 
@@ -76,28 +80,28 @@ Note that for small values of \Rfunarg{lambda1} or \Rfunarg{lambda2} the algorit
 
 \subsection{standardization}
 
-If the covariates are not on the same scale in a natural way, it is advisable to standardize them. The function argument \Rfunarg{standardize} (default: \Robject{FALSE}) standardizes the covariates to unit second central moment before applying penalization. This standardization makes sure that each covariates is affected more or less equally by the penalization.
+If the covariates are not naturally on the same scale, it is advisable to standardize them. The function argument \Rfunarg{standardize} (default: \Robject{FALSE}) standardizes the covariates to unit second central moment before applying penalization. This standardization makes sure that each covariate is affected more or less equally by the penalization.
 
 The fitted regression coefficients that the function returns have been scaled back and correspond to the original scale of the covariates.
 
 
 \subsection{penfit objects}
 
-The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted.
+The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted. For example, to extract regression coefficients, (martingale) residuals, individual relative risks and baseline hazard, write
 
 <<extract>>=
-coefficients(fit)       # the fitted regression coefficients
-residuals(fit)          # the martingale residuals
-fitted.values(fit)      # the fitted relative risks
-basehaz(fit)            # the baseline hazard
+coefficients(fit)       
+residuals(fit)[1:10]         
+fitted.values(fit)[1:10]    
+basehaz(fit)              
 @
 
-See \Robject{help(penfit)} for more information.
+See \Robject{help(penfit)} for more information on \Rclass{penfit} objects and Section \ref{breslow} on \Rclass{breslow} objects.
 
 
 \subsection{unpenalized covariates}
 
-In some situations not all covariates are subject to a penalty. Any additional covariates that should be included in the model without being penalized can be specified separately. using the third function argument (\Rfunarg{unpenalized}). For example
+In some situations it is desirable that not all covariates are subject to a penalty. Any additional covariates that should be included in the model without being penalized can be specified separately. using the third function argument (\Rfunarg{unpenalized}). For example
 
 <<unpenalized,results=hide>>=
 fit <- penalized(Surv(time,event), nki70[,8:77], ~ER, lambda2=1)
@@ -105,16 +109,18 @@ fit <- penalized(Surv(time,event), nki70[,8:77], ~ER, lambda2=1)
 
 This adds estrogen receptor status as an unpenalized covariate.
 
+In linear and logistic regression the intercept is by default never penalized.
+
 In rare cases  each covariate may have to penalized in a different way, or some covariates have to be given an L2 penalty and others an L1 penalty. In those cases, the arguments \Rfunarg{lambda1} and \Rfunarg{lambda2} may be supplied as vectors of the same length as the number of covariates in the function argument \Rfunarg{penalized}.
 
 
 \subsection{factors}
 
-If some of the factors included in the \Rclass{formula} object \Rfunarg{penalized} are \Rclass{factor}, these are automatically made into dummy variables, as in \Rfunction{glm} and \Rfunction{coxph}, but in a special way that is more appropriate for penalized regression.
+If some of the factors included in the \Rclass{formula} object \Rfunarg{penalized} are of type \Rclass{factor}, these are automatically made into dummy variables, as in \Rfunction{glm} and \Rfunction{coxph}, but in a special way that is more appropriate for penalized regression.
 
 Unordered factors are turned into as many dummy variables as the factor has levels. This ensures a symmetric treatment of all levels and guarantees that the fit does not depend on the ordering of the levels. See \Robject{help(contr.none)} for details.
 
-Ordered factors are turned into dummy variables that code for the difference between successive levels (one dummy less than the number of levels). L2 penalization on such factors therefore leads to small successive differences; L1 penalization leads to ranges of successive levels with identical effects.
+Ordered factors are turned into dummy variables that code for the difference between successive levels (one dummy less than the number of levels). L2 penalization on such factors therefore leads to small successive differences; L1 penalization leads to ranges of successive levels with identical effects. See \Robject{help(contr.diff)} for details.
 
 To override the automatic choice of contrasts, use \Rfunction{C} (package \Rpackage{stats}).
 
@@ -140,7 +146,7 @@ plotpath(fit)
 \end{figure}
 
 
-\section{Cross-validation and optimization}
+\section{Cross-validation and optimization} \label{cv}
 
 Cross-validation can be used to assess the predictive quality of the penalized prediction model or to compare the predictive ability of different values of the tuning parameter.
 
@@ -153,13 +159,13 @@ Five functions are available for calculating the cross-validated log likelihood 
 
 The function \Rfunction{cvl} calculates the cross-validated log likelihood for fixed values of $\lambda_1$ and $\lambda_2$.
 
-It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, \Rfunarg{fold} can give the precise allocation of the subjects into the folds by giving a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold of the corresponding subject. The default is to do leave-one-out cross-validation.
+It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation.
 
 The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 \begin{description}
 \item[\Robject{cvl}] the cross-validated log likelihood.
 \item[\Robject{fold}] the fold allocation used; this may serve as input to a next call to \Rfunction{cvl} to ensure comparability.
-\item[\Robject{predictions}] the prediction made on each left-out subject. The format depends on the model used. In logistic regression this is just a vector of probabilities. In the Cox model this is a collection of predicted survival curves (a \Rclass{breslow} object). In the linear model this is a collection of predicted means and predicted standard deviations (the latter are the maximum likelihood estimates of $\sigma^2$).
+\item[\Robject{predictions}] the predictions made on each left-out subject. The format depends on the model used. In logistic regression this is just a vector of probabilities. In the Cox model this is a collection of predicted survival curves (a \Rclass{breslow} object). In the linear model this is a collection of predicted means and predicted standard deviations (the latter are the maximum penalized likelihood estimates of $\sigma^2$).
 \item[\Robject{fullfit}] the fit on the full data (a \Rclass{penfit} object)
 \end{description}
 
@@ -175,7 +181,7 @@ fit <- cvl(Surv(time,event), nki70[,8:77], lambda1=2, fold=fit$fold)
 @
 
 
-\subsection{breslow objects}
+\subsection{breslow objects} \label{breslow}
 
 The \Rclass{breslow} class is defined in the \Rpackage{penalized} package to store estimated survival curves. They are used for the predictions in cross-validation and for the baseline hazard in the \Rfunction{penalized} function. See \Robject{help(breslow}) for details.
 
@@ -194,17 +200,17 @@ plot(fit$predictions)
 
 \subsection{profiling the cross-validated log likelihood}
 
-The functions \Rfunction{profL1} and \Rfunction{profL2} can be used to examine the effect of the parameters $\lambda_1$ and $\lambda_2$ on the cross-validated log likelihood. The \Rfunction{profL1} can be used to vary $\lambda_1$ while keeping $\lambda_2$ fixed, vice versa for \Rfunction{profL2}.
+The functions \Rfunction{profL1} and \Rfunction{profL2} can be used to examine the effect of the parameters $\lambda_1$ and $\lambda_2$ on the cross-validated log likelihood. The \Rfunction{profL1} function can be used to vary $\lambda_1$ while keeping $\lambda_2$ fixed, vice versa for \Rfunction{profL2}.
 
-The minimum and maximum values between which the cross-validated log likelihood is to be profiled can be given as \Rfunarg{minlambda1} and  \Rfunarg{maxlambda1} or \Rfunarg{minlambda2} and  \Rfunarg{maxlambda2}, respectively. The default value of \Rfunarg{minlambda1} and  \Rfunarg{minlambda2} is at zero and the default value of \Rfunarg{maxlambda1} is at the maximal value of $\lambda_1$, that is the smallest value that shrinks all regression coefficients to zero, but \Rfunarg{maxlambda2} has no default.
+The minimum and maximum values between which the cross-validated log likelihood is to be profiled can be given as \Rfunarg{minlambda1} and  \Rfunarg{maxlambda1} or \Rfunarg{minlambda2} and  \Rfunarg{maxlambda2}, respectively. The default value of \Rfunarg{minlambda1} and  \Rfunarg{minlambda2} is at zero.  The default value of \Rfunarg{maxlambda1} is at the maximal value of $\lambda_1$, that is the smallest value that shrinks all regression coefficients to zero. There is no default for \Rfunarg{maxlambda2}.
 
-The number of steps between the minimal and maximal values can be given in the \Rfunarg{steps} argument (default 100). These steps are equally spaced if the argument \Rfunarg{log} is \Robject{FALSE} or equally spaced on the log scale if the argument \Rfunarg{log} is \Robject{TRUE}. Note that the default value of \Rfunarg{log} differs between \Rfunction{profL1} (\Robject{FALSE}) and \Rfunction{profL2} (\Robject{FALSE}). If \Rfunarg{log} is \Robject{TRUE}, \Rfunarg{minlambda1} or \Rfunarg{minlambda2} must be given by the user as the default value is not usable.
+The number of steps between the minimal and maximal values can be given in the \Rfunarg{steps} argument (default 100). These steps are equally spaced if the argument \Rfunarg{log} is \Robject{FALSE} or equally spaced on the log scale if the argument \Rfunarg{log} is \Robject{TRUE}. Note that the default value of \Rfunarg{log} differs between \Rfunction{profL1} (\Robject{FALSE}) and \Rfunction{profL2} (\Robject{TRUE}). If \Rfunarg{log} is \Robject{TRUE}, \Rfunarg{minlambda1} or \Rfunarg{minlambda2} must be given by the user as the default value is not usable.
 
 By default, the profiling is stopped prematurely when the cross-validated log likelihood drops below the cross-validated log likelihood of the null model with all penalized regression coefficients equal to zero. This is done because it avoids lengthy calculations at small values of $\lambda$ when the models are most likely not interesting. The automatic stopping can be controlled using the option \Rfunarg{minsteps} (default \Rfunarg{steps}/5). The algorithm only considers stopping prematurely after it has done at least \Rfunarg{minsteps} steps. Setting \Robject{minsteps=steps} cancels the automatic stopping.
 
 The functions \Rfunction{profL1} and \Rfunction{profL2} return a named list with the same elements as returned by \Rfunction{cvl}, but each of \Robject{cvl}, \Robject{predictions}, \Robject{fullfit} is now a \Rclass{vector} or a \Rclass{list} (as appropriate) as multiple cross-validated likelihoods were calculated. An additional vector \Robject{lambda} is returned which lists the values of $\lambda_1$ or $\lambda_2$ at which the cross-validated likelihood was calculated.
 
-The allocation of the subjects into cross-validation folds is done only once, so that all cross-validated likelihoods are done with the same allocation. This makes the cross-validated log likelihoods more comparable. As in \Rfunction{cvl} the allocation is returned in \Robject{fold}.
+The allocation of the subjects into cross-validation folds is done only once, so that all cross-validated likelihoods are calculated using the same allocation. This makes the cross-validated log likelihoods more comparable. As in \Rfunction{cvl} the allocation is returned in \Robject{fold}.
 
 <<prof,results=hide>>=
 fit1 <- profL1(Surv(time,event), nki70[,50:70], fold=10)
@@ -230,11 +236,11 @@ plot(fit2$lambda, fit2$cvl, type="l", log="x")
 
 Often we are not interested in the whole profile of the cross-validated likelihood, but only in the optimum. The functions \Rfunction{optL1} and \Rfunction{optL2} can be used to find the optimal value of $\lambda_1$ or $\lambda_2$.
 
-The algorithm used for the optimization is the Brent algorithm for minimization without derivatives \citep[][see also \Robject{help(optimize)}]{Brent1973}. When using this algorithm, it is important to realize that this algorithm is guaranteed to work only for unimodal functions and that it may converge to a local maximum. This is especially relevant for L1 optimization, as the cross-validated likelihood as a function of $\lambda_1$ very often has several local maxima. It is recommended to only use \Rfunction{optL1} in combination with \Rfunction{profL1} to prevent convergence to the wrong optimum. The cross-validated likelihood as a function of $\lambda_2$, on the other hand, is far better behaved and practically never has local maxima. The function \Rfunction{optL2} can safely be used without combining it with \Rfunction{profL2}.
+The algorithm used for the optimization is the Brent algorithm for minimization without derivatives \citep[][see also \Robject{help(optimize)}]{Brent1973}. When using this algorithm, it is important to realize that this algorithm is guaranteed to work only for unimodal functions and that it may converge to a local maximum. This is especially relevant for L1 optimization, as the cross-validated likelihood as a function of $\lambda_1$ very often has several local maxima. It is recommended to only use \Rfunction{optL1} in combination with \Rfunction{profL1} to prevent convergence to the wrong optimum. The cross-validated likelihood as a function of $\lambda_2$, on the other hand, is far better behaved and practically never has local maxima. The function \Rfunction{optL2} can safely be used even without combining it with \Rfunction{profL2}.
 
 The functions \Rfunction{optL1} and \Rfunction{optL2} take the same arguments as \Rfunction{cvl}, and some additional ones.
 
-The arguments \Rfunarg{minlambda1} and \Rfunarg{maxlambda1}, and \Rfunarg{minlambda2} and \Rfunarg{maxlambda2} can be used to specify the range between which the cross-validated log likelihood is to be optimized. Both arguments can be left out in both functions, but supplying them can improve convergence speed. In \Rfunction{optL1}, the parameter range can be use to ensure that the function converges to the right maximum. In \Rfunction{optL2} the user also can supply only one of \Rfunarg{minlambda2} and \Rfunarg{maxlambda2} to give the algorithm advance information of the order of magnitude of $\lambda_2$. In this case, the algorithm may search an find the optimum below \Rfunarg{minlambda2} or above \Rfunarg{maxlambda2}.
+The arguments \Rfunarg{minlambda1} and \Rfunarg{maxlambda1}, and \Rfunarg{minlambda2} and \Rfunarg{maxlambda2} can be used to specify the range between which the cross-validated log likelihood is to be optimized. Both arguments can be left out in both functions, but supplying them can improve convergence speed. In \Rfunction{optL1}, the parameter range can be use to ensure that the function converges to the right maximum. In \Rfunction{optL2} the user can also supply only one of \Rfunarg{minlambda2} and \Rfunarg{maxlambda2} to give the algorithm advance information of the order of magnitude of $\lambda_2$. In this case, the algorithm will search for an optimum around \Rfunarg{minlambda2} or \Rfunarg{maxlambda2}.
 
 The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just as \Rfunction{cvl}, with an additional element \Robject{lambda} which returns the optimum found. The returned \Robject{cvl}, \Robject{predictions}, \Robject{fullfit} all relate to the optimal $\lambda$ found.
 
