@@ -16,6 +16,7 @@
 
 \author{Jelle Goeman}
 
+\usepackage{c:/R/R-2.6.0dev/share/texmf/Sweave}
 \begin{document}
 
 \maketitle \tableofcontents \newpage
@@ -32,9 +33,6 @@ It is important to note that shrinkage methods are generally not invariant to th
 
 The main algorithm for L1 penalized estimation that used in this package will be documented in a forthcoming paper. It has been combined with ideas from \cite{Eilers2001} and \cite{Houwelingen2006} for efficient L2 penalized estimation.
 
-<<options, echo=FALSE>>=
-options(continue = "  ")
-@
 
 \section{Penalized likelihood estimation}
 
@@ -44,10 +42,12 @@ The basic function of the package is the \Rfunction{penalized} function, which p
 
 As example data we use the 70 gene signature of \cite{Veer2002} in the gene expression data set of \cite{Vijver2002}.
 
-<<load>>=
-library(penalized)
-data(nki70)
-@
+\begin{Schunk}
+\begin{Sinput}
+> library(penalized)
+> data(nki70)
+\end{Sinput}
+\end{Schunk}
 
 This loads a \Rclass{data.frame} with 144 breast cancer patients and 77 covariates. The first two covariates indicate the survival time and event status (time is in months), the next five are clinical covariates (diameter of the tumor, lymph node status, estrogen receptor status, grade of the tumor and age of the patients), and the other 70 are gene expression measurements of the 70 molecular markers.
 
@@ -55,11 +55,16 @@ This loads a \Rclass{data.frame} with 144 breast cancer patients and 77 covariat
 
 To fit a model to predict survival (\Robject{Surv(time,event)}) with the two markers ``DIAPH3'' and ``NUSAP1'' at $\lambda_1 = 0$ and $\lambda_2 = 1$, we can say (all are equivalent)
 
-<<first, results=hide>>=
-fit <- penalized(Surv(time,event), ~DIAPH3+NUSAP1, data=nki70, lambda2=1)
-fit <- penalized(Surv(time,event), nki70[,10:11], data=nki70, lambda2=1)
-fit <- penalized(Surv(time,event)~DIAPH3+NUSAP1, data=nki70, lambda2=1)
-@
+\begin{Schunk}
+\begin{Sinput}
+> fit <- penalized(Surv(time, event), ~DIAPH3 + NUSAP1, data = nki70, 
+      lambda2 = 1)
+> fit <- penalized(Surv(time, event), nki70[, 10:11], data = nki70, 
+      lambda2 = 1)
+> fit <- penalized(Surv(time, event) ~ DIAPH3 + NUSAP1, data = nki70, 
+      lambda2 = 1)
+\end{Sinput}
+\end{Schunk}
 
 The covariates may be specified in the second function argument (\Rfunarg{penalized}) as a \Rclass{formula} object with an open left hand side, as in the first line. Alternatively, they may be specified as a matrix, as in the second line. If, as here, they are supplied as a \Rclass{data.frame}, they are coerced to a matrix.
 
@@ -67,9 +72,11 @@ For consistency with \Rfunction{glm} and \Rfunction{coxph} the third option is a
 
 Use \Rfunction{attach} to avoid specifying the \Rfunarg{data} argument every time.
 
-<<attach>>=
-attach(nki70)
-@
+\begin{Schunk}
+\begin{Sinput}
+> attach(nki70)
+\end{Sinput}
+\end{Schunk}
 
 \subsection{choice of lambda}
 
@@ -89,12 +96,39 @@ The fitted regression coefficients that the function returns have been scaled ba
 
 The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted. For example, to extract regression coefficients, (martingale) residuals, individual relative risks and baseline hazard, write
 
-<<extract>>=
-coefficients(fit)
-residuals(fit)[1:10]
-fitted.values(fit)[1:10]
-basehaz(fit)
-@
+\begin{Schunk}
+\begin{Sinput}
+> coefficients(fit)
+\end{Sinput}
+\begin{Soutput}
+      DIAPH3       NUSAP1 
+-0.003347245  1.610876235 
+\end{Soutput}
+\begin{Sinput}
+> residuals(fit)[1:10]
+\end{Sinput}
+\begin{Soutput}
+       125        127        128        129        130        132        134 
+-0.1299336  0.7104811 -0.3517060 -0.2083512 -0.4264021 -0.3621108  0.7464918 
+       135        136        137 
+-0.6172103  0.7367359 -0.4470460 
+\end{Soutput}
+\begin{Sinput}
+> fitted.values(fit)[1:10]
+\end{Sinput}
+\begin{Soutput}
+      125       127       128       129       130       132       134       135 
+0.4023261 1.0605204 0.8671254 0.6451380 1.3203100 1.1783128 0.7849620 1.3615191 
+      136       137 
+1.2242175 0.5909803 
+\end{Soutput}
+\begin{Sinput}
+> basehaz(fit)
+\end{Sinput}
+\begin{Soutput}
+A "breslow" object with 1 survival curve and 50 time points.
+\end{Soutput}
+\end{Schunk}
 
 See \Robject{help(penfit)} for more information on \Rclass{penfit} objects and Section \ref{breslow} on \Rclass{breslow} objects.
 
@@ -103,9 +137,11 @@ See \Robject{help(penfit)} for more information on \Rclass{penfit} objects and S
 
 In some situations it is desirable that not all covariates are subject to a penalty. Any additional covariates that should be included in the model without being penalized can be specified separately. using the third function argument (\Rfunarg{unpenalized}). For example
 
-<<unpenalized,results=hide>>=
-fit <- penalized(Surv(time,event), nki70[,8:77], ~ER, lambda2=1)
-@
+\begin{Schunk}
+\begin{Sinput}
+> fit <- penalized(Surv(time, event), nki70[, 8:77], ~ER, lambda2 = 1)
+\end{Sinput}
+\end{Schunk}
 
 This adds estrogen receptor status as an unpenalized covariate.
 
@@ -133,16 +169,21 @@ When using the \Rfunarg{steps} argument, the function starts fitting the model a
 
 If the argument \Rfunarg{steps} is supplied to \Rfunction{penalized}, the function returns a \Rclass{list} of \Rclass{penfit} objects. These can be accessed individually or their coefficients can be plotted using \Rfunction{plotpath}.
 
-<<steps>>=
-fit <- penalized(Surv(time,event), nki70[,8:77], lambda1=1,
-    steps=50, trace = FALSE)
-plotpath(fit, log="x")
-@
+\begin{Schunk}
+\begin{Sinput}
+> fit <- penalized(Surv(time, event), nki70[, 8:77], lambda1 = 1, 
+      steps = 50, trace = FALSE)
+> plotpath(fit, log = "x")
+\end{Sinput}
+\end{Schunk}
 
 \begin{figure}
-<<stepsplot, fig=TRUE>>=
-plotpath(fit, log="x")
-@
+\begin{Schunk}
+\begin{Sinput}
+> plotpath(fit, log = "x")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{penalized-stepsplot}
 \end{figure}
 
 
@@ -169,33 +210,105 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 \item[\Robject{fullfit}] the fit on the full data (a \Rclass{penfit} object)
 \end{description}
 
-<<cvl1,results=hide>>=
-fit <- cvl(Surv(time,event), nki70[,8:77], lambda1=1, fold=10)
-@
-<<cvl2>>=
-fit$cvl
-fit$fullfit
-@
-<<cvl3,results=hide>>=
-fit <- cvl(Surv(time,event), nki70[,8:77], lambda1=2, fold=fit$fold)
-@
+\begin{Schunk}
+\begin{Sinput}
+> fit <- cvl(Surv(time, event), nki70[, 8:77], lambda1 = 1, fold = 10)
+\end{Sinput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Sinput}
+> fit$cvl
+\end{Sinput}
+\begin{Soutput}
+[1] -258.8614
+\end{Soutput}
+\begin{Sinput}
+> fit$fullfit
+\end{Sinput}
+\begin{Soutput}
+Penalized cox regression object
+70 regression coefficients of which 28 are non-zero
+
+Loglikelihood =	 -214.92 
+L1 penalty =	 24.29771 	at lambda1 =  1 
+\end{Soutput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Sinput}
+> fit <- cvl(Surv(time, event), nki70[, 8:77], lambda1 = 2, fold = fit$fold)
+\end{Sinput}
+\end{Schunk}
 
 
 \subsection{breslow objects} \label{breslow}
 
 The \Rclass{breslow} class is defined in the \Rpackage{penalized} package to store estimated survival curves. They are used for the predictions in cross-validation and for the baseline hazard in the \Rfunction{penalized} function. See \Robject{help(breslow}) for details.
 
-<<breslow>>=
-fit$predictions
-time(fit$predictions)
-as.matrix(fit$predictions)[1:2,]
-plot(fit$predictions)
-@
+\begin{Schunk}
+\begin{Sinput}
+> fit$predictions
+\end{Sinput}
+\begin{Soutput}
+A "breslow" object with 144 survival curves and 51 time points.
+\end{Soutput}
+\begin{Sinput}
+> time(fit$predictions)
+\end{Sinput}
+\begin{Soutput}
+ [1]  0.0000000  0.3531828  0.6488706  0.9363276  0.9609856  1.2101300
+ [7]  1.3880903  1.5003422  1.6098563  1.6125941  1.7166324  1.7330595
+[13]  1.9466119  1.9657769  1.9739904  2.2231348  2.2970568  2.3353867
+[19]  2.3408624  2.6146475  2.6803559  2.6967830  2.8117728  2.8528405
+[25]  3.1211499  3.2197125  3.4195756  3.4387406  3.6550308  3.9151266
+[31]  4.2190281  4.4462697  4.6214921  4.6625599  4.9719370  5.1170431
+[37]  6.5653662  6.9952088  8.1286790  8.3039014  8.5284052  8.5612594
+[43]  8.9253936  8.9883641  9.9986311 11.2114990 11.7399042 12.4654346
+[49] 14.0123203 17.4209446 17.6591376
+\end{Soutput}
+\begin{Sinput}
+> as.matrix(fit$predictions)[1:2, ]
+\end{Sinput}
+\begin{Soutput}
+    0 0.353182752 0.648870637 0.9363276 0.960985626 1.210130048 1.388090349
+125 1   0.9989347   0.9978586 0.9967385   0.9956129   0.9944606    0.993285
+127 1   0.9916090   0.9832260 0.9746626   0.9660885   0.9660885    0.957457
+    1.500342231 1.609856263 1.612594114 1.716632444 1.733059548 1.94661191
+125   0.9920905   0.9908817   0.9896256   0.9883535   0.9870626  0.9857592
+127   0.9487849   0.9401169   0.9312540   0.9223558   0.9133310  0.9042438
+    1.965776865 1.973990418 2.223134839 2.29705681 2.335386721 2.340862423
+125   0.9844413   0.9830940   0.9817167  0.9803154   0.9789026   0.9774795
+127   0.8951733   0.8859677   0.8765960  0.8671884   0.8577554   0.8482975
+    2.614647502 2.680355921 2.696783025 2.811772758 2.85284052 3.121149897
+125   0.9760217   0.9744991   0.9744991   0.9729206  0.9712878   0.9696109
+127   0.8387106   0.8288923   0.8190195   0.8088627  0.7985395   0.7985395
+    3.219712526 3.419575633 3.438740589 3.655030801 3.915126626 4.219028063
+125   0.9696109   0.9678692   0.9661130   0.9643052   0.9624729   0.9606144
+127   0.7881460   0.7777934   0.7777934   0.7673210   0.7567945   0.7462917
+    4.446269678 4.621492129 4.66255989 4.971937029 5.117043121 6.565366188
+125   0.9587166   0.9567970  0.9567970   0.9548272   0.9521676   0.9521676
+127   0.7357257   0.7251901  0.7145503   0.7145503   0.7036969   0.6877622
+    6.995208761 8.128678987 8.303901437 8.528405202 8.561259411 8.925393566
+125   0.9491654   0.9449050   0.9405922   0.9362416   0.9317417   0.9269696
+127   0.6877622   0.6673861   0.6471099   0.6271186   0.6068854   0.5853712
+    8.988364134 9.998631075 11.21149897 11.73990418 12.46543463 14.01232033
+125   0.9219295   0.9147533   0.9051725   0.8929614   0.8778687   0.8556864
+127   0.5635264   0.5362056   0.5052671   0.4640525   0.4174834   0.3573423
+    17.42094456 17.65913758
+125   0.8556864          NA
+127   0.3573423   0.3573423
+\end{Soutput}
+\begin{Sinput}
+> plot(fit$predictions)
+\end{Sinput}
+\end{Schunk}
 
 \begin{figure}
-<<breslowplot, fig=TRUE>>=
-plot(fit$predictions)
-@
+\begin{Schunk}
+\begin{Sinput}
+> plot(fit$predictions)
+\end{Sinput}
+\end{Schunk}
+\includegraphics{penalized-breslowplot}
 \end{figure}
 
 \subsection{profiling the cross-validated log likelihood}
@@ -212,36 +325,49 @@ The functions \Rfunction{profL1} and \Rfunction{profL2} return a named list with
 
 The allocation of the subjects into cross-validation folds is done only once, so that all cross-validated likelihoods are calculated using the same allocation. This makes the cross-validated log likelihoods more comparable. As in \Rfunction{cvl} the allocation is returned in \Robject{fold}.
 
-<<prof,results=hide>>=
-fit1 <- profL1(Surv(time,event), nki70[,50:70], fold=10)
-plot(fit1$lambda, fit1$cvl, type="l")
-fit2 <- profL2(Surv(time,event), nki70[,50:70], fold=fit1$fold,
-    minl = 0.01, maxl = 1000)
-plot(fit2$lambda, fit2$cvl, type="l", log="x")
-@
+\begin{Schunk}
+\begin{Sinput}
+> fit1 <- profL1(Surv(time, event), nki70[, 50:70], fold = 10)
+> plot(fit1$lambda, fit1$cvl, type = "l")
+> fit2 <- profL2(Surv(time, event), nki70[, 50:70], fold = fit1$fold, 
+      minl = 0.01, maxl = 1000)
+> plot(fit2$lambda, fit2$cvl, type = "l", log = "x")
+\end{Sinput}
+\end{Schunk}
 
 \begin{figure}
-<<profplot1, fig=TRUE>>=
-plot(fit1$lambda, fit1$cvl, type="l")
-@
+\begin{Schunk}
+\begin{Sinput}
+> plot(fit1$lambda, fit1$cvl, type = "l")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{penalized-profplot1}
 \end{figure}
 
 \begin{figure}
-<<profplot2, fig=TRUE>>=
-plot(fit2$lambda, fit2$cvl, type="l", log="x")
-@
+\begin{Schunk}
+\begin{Sinput}
+> plot(fit2$lambda, fit2$cvl, type = "l", log = "x")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{penalized-profplot2}
 \end{figure}
 
 The \Rfunction{plotpath} function can again be used to visualize the effect of the tuning parameter on the covariates.
 
-<<profpath>>=
-plotpath(fit2$fullfit, log="x")
-@
+\begin{Schunk}
+\begin{Sinput}
+> plotpath(fit2$fullfit, log = "x")
+\end{Sinput}
+\end{Schunk}
 
 \begin{figure}
-<<profpathplot, fig=TRUE>>=
-plotpath(fit2$fullfit, log="x")
-@
+\begin{Schunk}
+\begin{Sinput}
+> plotpath(fit2$fullfit, log = "x")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{penalized-profpathplot}
 \end{figure}
 
 \subsection{optimizing the cross-validated likelihood}
@@ -256,16 +382,30 @@ The arguments \Rfunarg{minlambda1} and \Rfunarg{maxlambda1}, and \Rfunarg{minlam
 
 The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just as \Rfunction{cvl}, with an additional element \Robject{lambda} which returns the optimum found. The returned \Robject{cvl}, \Robject{predictions}, \Robject{fullfit} all relate to the optimal $\lambda$ found.
 
-<<opt1,results=hide>>=
-opt1 <- optL1(Surv(time,event), nki70[,50:70], fold=fit1$fold)
-@
-<<optres>>=
-opt1$lambda
-opt1$cvl
-@
-<<opt2,results=hide>>=
-opt2 <- optL2(Surv(time,event), nki70[,50:70], fold=fit2$fold)
-@
+\begin{Schunk}
+\begin{Sinput}
+> opt1 <- optL1(Surv(time, event), nki70[, 50:70], fold = fit1$fold)
+\end{Sinput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Sinput}
+> opt1$lambda
+\end{Sinput}
+\begin{Soutput}
+[1] 1.985964
+\end{Soutput}
+\begin{Sinput}
+> opt1$cvl
+\end{Sinput}
+\begin{Soutput}
+[1] -261.4205
+\end{Soutput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Sinput}
+> opt2 <- optL2(Surv(time, event), nki70[, 50:70], fold = fit2$fold)
+\end{Sinput}
+\end{Schunk}
 
 \bibliography{penalized}
 

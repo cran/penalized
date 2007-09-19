@@ -4,7 +4,7 @@
 profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lambda2 = 0, 
   data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
   epsilon = 1e-10, maxiter = Inf, standardize = FALSE, trace = TRUE,
-  steps = 100, minsteps = steps/5, log = FALSE) {
+  steps = 100, minsteps = steps/4, log = FALSE) {
 
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data)
@@ -194,7 +194,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
 profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, 
   data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
   epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE,
-  steps = 100, minsteps = steps/5, log = TRUE) {
+  steps = 100, minsteps = steps/4, log = TRUE) {
 
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data)

@@ -30,12 +30,12 @@ optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 profL1 (response, penalized, unpenalized, minlambda1, maxlambda1, 
     lambda2 = 0, data, model = c("cox", "logistic", "linear"), startbeta, 
     startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
-    trace = TRUE, steps = 100, minsteps = steps/5, log = FALSE)
+    trace = TRUE, steps = 100, minsteps = steps/4, log = FALSE)
   
 profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, 
     maxlambda2, data, model = c("cox", "logistic", "linear"), startbeta, 
     startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
-    trace = TRUE, steps = 100, minsteps = steps/5, log = TRUE)
+    trace = TRUE, steps = 100, minsteps = steps/4, log = TRUE)
 }
 
 \arguments{
