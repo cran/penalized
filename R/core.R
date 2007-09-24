@@ -116,8 +116,9 @@
             Pl <- P * matrix(sqrt(lambda2[active]), nrow(P), ncol(P), byrow = TRUE)
             PlP <- crossprod(t(Pl))
           }
-          if (is.matrix(localfit$W)) {
-            hessian <- - PX %*% localfit$W %*% t(PX) - PlP
+          if (is.list(localfit$W)) {
+            PXdW <- PX * matrix(sqrt(localfit$W$diagW), nrow(PX), ncol(PX), byrow=TRUE)
+            hessian <- - crossprod(t(PXdW)) + crossprod(t(PX %*% localfit$W$P)) - PlP
           } else if (length(localfit$W) > 1) {
             PXW <- PX * matrix(sqrt(localfit$W), nrow(PX), ncol(PX), byrow=TRUE)
             hessian <- -crossprod(t(PXW)) - PlP
@@ -129,8 +130,9 @@
           gams <- gams - shg
           NRbeta <- drop(crossprod(P, gams))
         } else { 
-          if (is.matrix(localfit$W)) {
-            hessian <- -crossprod(activeX, localfit$W) %*% activeX 
+          if (is.list(localfit$W)) {
+            XdW <- activeX * matrix(sqrt(localfit$W$diagW), nrow(activeX), ncol(activeX))
+            hessian <- -crossprod(XdW) + crossprod(crossprod(localfit$W$P, activeX))
           } else if (length(localfit$W) > 1) {
             XW <- activeX * matrix(sqrt(localfit$W), nrow(activeX), ncol(activeX))
             hessian <- -crossprod(XW)
@@ -151,8 +153,8 @@
         # find the second derivative of the likelihood in the projected direction
         if (newfit) {
           Xdir <- drop(X[,active, drop=F] %*% activedir)
-          if (is.matrix(localfit$W)) {
-            curve <- drop((crossprod(Xdir, localfit$W) %*% Xdir) / sum(activedir * activedir))
+          if (is.list(localfit$W)) {
+            curve <- (sum(Xdir * Xdir * localfit$W$diagW) - drop(crossprod(crossprod(localfit$W$P, Xdir)))) / sum(activedir * activedir)
           } else if (length(localfit$W) > 1) {
             curve <- sum(Xdir * Xdir * localfit$W) / sum(activedir * activedir)
           } else {
@@ -279,8 +281,9 @@
       } else {
         grad <- crossprod(X, localfit$residuals) - Lambda * beta
       }
-      if (is.matrix(localfit$W)) {
-        Hess <- -crossprod(X, localfit$W) %*% X 
+      if (is.list(localfit$W)) {
+        XdW <- X * matrix(sqrt(localfit$W$diagW), nrow(X), ncol(X))
+        Hess <-  -crossprod(XdW) + crossprod(crossprod(localfit$W$P, X))
       } else if (length(localfit$W) > 1) {
         XW <- X * matrix(sqrt(localfit$W), nrow(X), ncol(X))
         Hess <- -crossprod(XW) 
@@ -443,35 +446,42 @@
   } 
   
   # True cross-validation starts here
-  failed <- FALSE
-  predictions <- vector("list", n)
-  names(predictions) <- rownames(X)
-  cvls <- sapply(1:fold, function(i) {
-    if (!failed) {
-      if (trace) {
-        cat(i)
-        flush.console()
-      }
-      leaveout <- (groups == i)
-  
-      foldfit <- cvfit(leaveout, betas[,i])
-      lin.pred <- numeric(n)
-      lin.pred[leaveout] <- X[leaveout, foldfit$beta != 0, drop=FALSE] %*% foldfit$beta[foldfit$beta != 0]
-      lin.pred[!leaveout] <- foldfit$fit$lp
-      predictions[leaveout] <<- lapply(lin.pred[leaveout], prediction, nuisance = foldfit$fit$nuisance)
-      betas[,i] <<- foldfit$beta
-      if (trace) cat(rep("\b", trunc(log10(i))+1), sep ="")
-  
-      out <- cvl(lin.pred, leaveout)
-      if (quit.if.failed && (is.na(out) || abs(out) == Inf || foldfit$converged == FALSE)) failed <<- TRUE
-    } else {
-      out <- NA
-    }
+  if (fold > 1) {
+    failed <- FALSE
+    predictions <- vector("list", n)
+    names(predictions) <- rownames(X)
+    cvls <- sapply(1:fold, function(i) {
+      if (!failed) {
+        if (trace) {
+          cat(i)
+          flush.console()
+        }
+        leaveout <- (groups == i)
     
-    out
-  })
-
-  if (failed || any(is.na(cvls))) cvls <- -Inf
+        foldfit <- cvfit(leaveout, betas[,i])
+        lin.pred <- numeric(n)
+        lin.pred[leaveout] <- X[leaveout, foldfit$beta != 0, drop=FALSE] %*% foldfit$beta[foldfit$beta != 0]
+        lin.pred[!leaveout] <- foldfit$fit$lp
+        predictions[leaveout] <<- lapply(lin.pred[leaveout], prediction, nuisance = foldfit$fit$nuisance)
+        betas[,i] <<- foldfit$beta
+        if (trace) cat(rep("\b", trunc(log10(i))+1), sep ="")
+    
+        out <- cvl(lin.pred, leaveout)
+        if (quit.if.failed && (is.na(out) || abs(out) == Inf || foldfit$converged == FALSE)) failed <<- TRUE
+      } else {
+        out <- NA
+      }
+      
+      out
+    })
+    
+    if (failed || any(is.na(cvls))) cvls <- -Inf
+    
+  } else {
+    cvls <- NA
+    predictions <- NA
+    betas <- NA
+  }
 
   list(cvl = sum(cvls), fit = fullfit, betas = betas, predictions = predictions)
 }

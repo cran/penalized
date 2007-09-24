@@ -46,8 +46,7 @@
 
     # The weights matrix
     Pij <- outer(ws, breslows) * t(Riskset)
-    W <- - crossprod(t(Pij[,status==1]))
-    diag(W) <- diag(W) + breslow * ws
+    W <- list(P = Pij[,status==1], diagW = breslow * ws)        # construct: W = diag(diagW) - P %*% t(P)
     
     # The fitted baseline
     dtimes <- time[status==1]

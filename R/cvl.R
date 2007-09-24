@@ -166,13 +166,15 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
     cvls[iter] <- out$cvl
     fits[[iter]] <- out$fit
     predictions[[iter]] <- out$predictions
-    finished <- ((cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= minsteps)) || (iter == length(lambda1s))
+    finished <- ((fold > 1) && ((cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= minsteps))) || (iter == length(lambda1s))
   }
 
-  lambda1s <- lambda1s[!is.na(cvls)]
-  fits <- fits[!is.na(cvls)]                                           
-  predictions <- predictions[!is.na(cvls)]
-  cvls <- cvls[!is.na(cvls)]
+  if (fold > 1) {
+    lambda1s <- lambda1s[!is.na(cvls)]
+    fits <- fits[!is.na(cvls)]                                           
+    predictions <- predictions[!is.na(cvls)]
+    cvls <- cvls[!is.na(cvls)]
+  }
 
   predictions <- lapply(predictions, function(preds) {
     switch(model, 
