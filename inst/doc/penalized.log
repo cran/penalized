@@ -1,4 +1,4 @@
-This is pdfeTeX, Version 3.141592-1.21a-2.2 (MiKTeX 2.4) (preloaded format=latex 2005.10.5)  24 SEP 2007 18:19
+This is pdfeTeX, Version 3.141592-1.21a-2.2 (MiKTeX 2.4) (preloaded format=latex 2005.10.5)  28 SEP 2007 18:50
 entering extended mode
 **penalized.tex
 (penalized.tex
@@ -240,7 +240,7 @@ File: penalized-profplot2.pdf Graphic file (type pdf)
 3.62pt>
 File: penalized-profpathplot.pdf Graphic file (type pdf)
 <use penalized-profpathplot.pdf> [9 <penalized-breslowplot.pdf>]
-Underfull \hbox (badness 1824) in paragraph at lines 381--382
+Underfull \hbox (badness 1824) in paragraph at lines 383--384
 []\T1/aer/m/n/10 The ar-gu-ments \T1/aer/m/it/10 min-lambda1 \T1/aer/m/n/10 and
  \T1/aer/m/it/10 maxlambda1\T1/aer/m/n/10 , and \T1/aer/m/it/10 min-lambda2 \T1
 /aer/m/n/10 and
@@ -270,4 +270,4 @@ uesky\cm\cmmi10.pfb><C:\texmf\fonts\type1\bluesky\cm\cmti10.pfb><C:\texmf\fonts
 \type1\bluesky\cm\cmr10.pfb><C:\texmf\fonts\type1\bluesky\cm\cmbx10.pfb><C:\tex
 mf\fonts\type1\bluesky\cm\cmbx12.pfb><C:\texmf\fonts\type1\bluesky\cm\cmr12.pfb
 ><C:\texmf\fonts\type1\bluesky\cm\cmr17.pfb>
-Output written on penalized.pdf (13 pages, 424760 bytes).
+Output written on penalized.pdf (13 pages, 424835 bytes).

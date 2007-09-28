@@ -200,7 +200,7 @@ Five functions are available for calculating the cross-validated log likelihood 
 
 The function \Rfunction{cvl} calculates the cross-validated log likelihood for fixed values of $\lambda_1$ and $\lambda_2$.
 
-It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation.
+It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation. 
 
 The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 \begin{description}
@@ -220,7 +220,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -253.9609
+[1] -260.5181
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -270,32 +270,32 @@ A "breslow" object with 144 survival curves and 51 time points.
 \end{Sinput}
 \begin{Soutput}
     0 0.353182752 0.648870637 0.9363276 0.960985626 1.210130048 1.388090349
-125 1   0.9980295   0.9960460 0.9939858   0.9919131   0.9898024   0.9876404
-127 1   0.9912068   0.9824162 0.9733499   0.9642945   0.9551403   0.9458337
+125 1   0.9987813   0.9987813 0.9975279   0.9962647   0.9949735   0.9936620
+127 1   0.9907089   0.9813876 0.9718705   0.9623844   0.9527705   0.9430411
     1.500342231 1.609856263 1.612594114 1.716632444 1.733059548 1.94661191
-125   0.9854491   0.9832386   0.9809639   0.9786675   0.9786675  0.9763372
-127   0.9364732   0.9271038   0.9175383   0.9079594   0.9079594  0.8983185
+125   0.9923339    0.990998   0.9896244   0.9882359   0.9868227  0.9853908
+127   0.9332399    0.923419   0.9134226   0.9034237   0.9034237  0.8933970
     1.965776865 1.973990418 2.223134839 2.29705681 2.335386721 2.340862423
-125   0.9739905   0.9715920   0.9691276  0.9666448   0.9641467   0.9616285
-127   0.8886909   0.8789332   0.8689946  0.8590703   0.8491737   0.8392875
+125   0.9839492   0.9824826   0.9809718  0.9794474   0.9779112   0.9763578
+127   0.8833550   0.8732476   0.8732476  0.8631403   0.8530492   0.8429884
     2.614647502 2.680355921 2.696783025 2.811772758 2.85284052 3.121149897
-125   0.9590218   0.9563295   0.9535881   0.9507863  0.9479033   0.9449524
-127   0.8291481   0.8187758   0.8083183   0.7977381  0.7869636   0.7760529
+125   0.9747760   0.9731350   0.9714661   0.9697436  0.9679777   0.9661632
+127   0.8327548   0.8222655   0.8117213   0.8117213  0.8010193   0.7902661
     3.219712526 3.419575633 3.438740589 3.655030801 3.915126626 4.219028063
-125   0.9419558   0.9388776   0.9357672   0.9325833   0.9293588   0.9261005
-127   0.7650935   0.7539615   0.7428412   0.7315908   0.7203319   0.7090922
+125   0.9643135   0.9624134   0.9604979   0.9585404   0.9565506   0.9545332
+127   0.7794846   0.7685134   0.7575613   0.7465016   0.7354139   0.7243423
     4.446269678 4.621492129 4.66255989 4.971937029 5.117043121 6.565366188
-125   0.9228044   0.9228044  0.9194196   0.9194196   0.9194196   0.9149920
-127   0.6978611   0.6978611  0.6864721   0.6864721   0.6864721   0.6717931
+125   0.9524803   0.9504011  0.9482946   0.9461311   0.9432727   0.9432727
+127   0.7132768   0.7022158  0.6911149   0.6911149   0.6798402   0.6651859
     6.995208761 8.128678987 8.303901437 8.528405202 8.561259411 8.925393566
-125   0.9100696   0.9037884   0.8974172    0.891013   0.8844193   0.8772074
-127   0.6557607   0.6357362   0.6159132    0.596475   0.5769625   0.5561922
+125   0.9399992   0.9357346   0.9313879   0.9270043   0.9225059   0.9175366
+127   0.6488094   0.6274551   0.6061199   0.5852429   0.5645511   0.5425686
     8.988364134 9.998631075 11.21149897 11.73990418 12.46543463 14.01232033
-125   0.8697395   0.8602366   0.8481345   0.8302644   0.8070338   0.7694501
-127   0.5353016   0.5096053   0.4782791   0.4347799   0.3828974   0.3092729
+125   0.9123408   0.9056762   0.8971636   0.8783952   0.8783952   0.8783952
+127   0.5205835   0.4874961   0.4874961   0.4432349   0.3955063   0.3357017
     17.42094456 17.65913758
-125   0.7694501   0.7694501
-127   0.3092729   0.3092729
+125   0.8783952   0.8783952
+127   0.3357017          NA
 \end{Soutput}
 \begin{Sinput}
 > plot(fit$predictions)
@@ -325,6 +325,8 @@ The functions \Rfunction{profL1} and \Rfunction{profL2} return a named list with
 
 The allocation of the subjects into cross-validation folds is done only once, so that all cross-validated likelihoods are calculated using the same allocation. This makes the cross-validated log likelihoods more comparable. As in \Rfunction{cvl} the allocation is returned in \Robject{fold}.
 
+It is also possible in these functions to set \Robject{fold = 1}. This will cause no cross-validation to be performed, but will let only the full data fits be calculated. This can be used in a similar way to the use of the \Rfunction{penalized} function with its \Rfunarg{steps} argument, only with more flexibility. 
+
 \begin{Schunk}
 \begin{Sinput}
 > fit1 <- profL1(Surv(time, event), nki70[, 50:70], fold = 10)
@@ -353,7 +355,7 @@ The allocation of the subjects into cross-validation folds is done only once, so
 \includegraphics{penalized-profplot2}
 \end{figure}
 
-The \Rfunction{plotpath} function can again be used to visualize the effect of the tuning parameter on the covariates.
+The \Rfunction{plotpath} function can again be used to visualize the effect of the tuning parameter on the regression coefficients.
 
 \begin{Schunk}
 \begin{Sinput}
@@ -392,13 +394,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.416622
+[1] 2.411398
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -260.0238
+[1] -259.4892
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}

@@ -12,4 +12,4 @@
 \contentsline {subsection}{\numberline {3.1}cross-validation}{6}
 \contentsline {subsection}{\numberline {3.2}breslow objects}{7}
 \contentsline {subsection}{\numberline {3.3}profiling the cross-validated log likelihood}{8}
-\contentsline {subsection}{\numberline {3.4}optimizing the cross-validated likelihood}{9}
+\contentsline {subsection}{\numberline {3.4}optimizing the cross-validated likelihood}{10}

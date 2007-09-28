@@ -20,7 +20,7 @@ plotpath <- function(object, labelsize = 0.6,...) {
   
   # Plot
   matplot(lambda, t(betas[!remove,,drop=FALSE]), type ="l", ylab = "coefficient", xlab = label, col=rainbow(sum(!remove)), xlim = rev(range(lambda)), ...)
-  if (labelsize > 0) {
+  if (labelsize > 0 && !is.null(rownames(betas))) {
     take <- which(!remove)
     for (i in 1:sum(!remove)) {
       j <- take[i]
@@ -31,6 +31,6 @@ plotpath <- function(object, labelsize = 0.6,...) {
   
   # Reset the margins
   par("mai"=margins)
-  
+
   return(invisible(NULL))
 }

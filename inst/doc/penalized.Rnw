@@ -159,7 +159,7 @@ Five functions are available for calculating the cross-validated log likelihood 
 
 The function \Rfunction{cvl} calculates the cross-validated log likelihood for fixed values of $\lambda_1$ and $\lambda_2$.
 
-It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation.
+It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation. 
 
 The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 \begin{description}
@@ -212,6 +212,8 @@ The functions \Rfunction{profL1} and \Rfunction{profL2} return a named list with
 
 The allocation of the subjects into cross-validation folds is done only once, so that all cross-validated likelihoods are calculated using the same allocation. This makes the cross-validated log likelihoods more comparable. As in \Rfunction{cvl} the allocation is returned in \Robject{fold}.
 
+It is also possible in these functions to set \Robject{fold = 1}. This will cause no cross-validation to be performed, but will let only the full data fits be calculated. This can be used in a similar way to the use of the \Rfunction{penalized} function with its \Rfunarg{steps} argument, only with more flexibility. 
+
 <<prof,results=hide>>=
 fit1 <- profL1(Surv(time,event), nki70[,50:70], fold=10)
 plot(fit1$lambda, fit1$cvl, type="l")
@@ -232,7 +234,7 @@ plot(fit2$lambda, fit2$cvl, type="l", log="x")
 @
 \end{figure}
 
-The \Rfunction{plotpath} function can again be used to visualize the effect of the tuning parameter on the covariates.
+The \Rfunction{plotpath} function can again be used to visualize the effect of the tuning parameter on the regression coefficients.
 
 <<profpath>>=
 plotpath(fit2$fullfit, log="x")

@@ -111,7 +111,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   null <- c(nullgamma, numeric(m)) * weights
   nzn <- (null != 0)
   lp <- X[,nzn,drop=FALSE] %*% null[nzn]
-  gradient <- as.vector(crossprod(X[,!nzn,drop=FALSE], fit$fit(lp)$residuals))  
+  gradient <- drop(crossprod(X[,!nzn,drop=FALSE], fit$fit(lp)$residuals))  
   rel <- gradient / lambda1[!nzn]
   
   # which lambda-values?
@@ -300,6 +300,8 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
     logistic = .logitgamma(response, unpenalized, data),
     linear = .lmgamma(response, unpenalized, data)
   )
+  g <- length(nullgamma)
+  nullgamma <- nullgamma * weights[1:g]
   
   # which lambda-values?
   if (!log && missing(minlambda2)) {
@@ -311,7 +313,6 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
     lambda2s <- seq(maxlambda2, minlambda2, length.out = steps+1)
 
   # benchmark: cvl at infinite penalty
-  g <- length(nullgamma)
   if (g > 0) {
     nullfit <- .cvl(X[,1:g, drop=FALSE], lambda1 = rep(0,g), lambda2 = rep(0,g), nullgamma, fit=fit$fit, cvl=fit$cvl, 
       prediction = fit$prediction, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
@@ -341,19 +342,21 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
     }
     out <- .cvl(X, lambda1, rellambda*lambda2, beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, groups=groups,
       epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, quit.if.failed=FALSE)
-    if (trace) cat("cvl=", out$cvl, "\n")
+    if (trace) if (fold > 1) cat("cvl=", out$cvl, "\n") else cat("\n")
     beta <- out$fit$beta
     betas <- out$betas
     cvls[iter] <- out$cvl
     fits[[iter]] <- out$fit
     predictions[[iter]] <- out$predictions
-    finished <- ((cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= minsteps)) || (iter == length(lambda2s))
+    finished <- ((fold > 1) && (cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= minsteps)) || (iter == length(lambda2s))
   }
 
-  lambda2s <- lambda2s[!is.na(cvls)]
-  fits <- fits[!is.na(cvls)]
-  predictions <- predictions[!is.na(cvls)]
-  cvls <- cvls[!is.na(cvls)]
+  if (fold > 1) {
+    lambda2s <- lambda2s[!is.na(cvls)]
+    fits <- fits[!is.na(cvls)]
+    predictions <- predictions[!is.na(cvls)]
+    cvls <- cvls[!is.na(cvls)]
+  }
                         
   predictions <- lapply(predictions, function(preds) {
     switch(model, 
@@ -362,11 +365,11 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
       linear = .lmmerge(preds)
     )
   })
-
+                              
   makethisfit <- function(iter)
     .makepenfit(fits[[iter]], length(startgamma), model, inputlambda1, lambda2s[[iter]], orthogonalizer)
 
-  return(list(lambda = lambda2s, fold = groups, cvl = cvls, fullfit = lapply(1:length(cvls), makethisfit)))
+  return(list(lambda = lambda2s, fold = groups, cvl = cvls, predictions = predictions, fullfit = lapply(1:length(cvls), makethisfit)))
 } 
 
 ######################################
@@ -481,7 +484,7 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
   null <- c(nullgamma, numeric(m)) * weights
   nzn <- (null != 0)
   lp <- X[,nzn,drop=FALSE] %*% null[nzn]
-  gradient <- as.vector(crossprod(X[,!nzn,drop=FALSE], fit$fit(lp)$residuals))
+  gradient <- drop(crossprod(X[,!nzn,drop=FALSE], fit$fit(lp)$residuals))
   rel <- gradient / lambda1[!nzn]
   if (missing(maxlambda1)) maxlambda1 <- max(abs(rel))
   if (missing(minlambda1)) minlambda1 <- 0
@@ -635,7 +638,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   # benchmark: cvl at infinite penalty
   g <- length(startgamma)
   if (g > 0) {
-    null <- .cvl(X[,1:g, drop=FALSE], lambda1 = rep(0,g), lambda2 = rep(0,g), startgamma, fit=fit$fit, cvl=fit$cvl,
+    null <- .cvl(X[,1:g, drop=FALSE], lambda1 = rep(0,g), lambda2 = rep(0,g), beta[1:g], fit=fit$fit, cvl=fit$cvl,
       prediction = fit$prediction, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
     nullgamma <- null$fit$fit$beta
   } else {
@@ -708,7 +711,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
       nxtcvl <- thiscvl(nxt)
       ready <- nxtcvl < highcvl
       if (!ready) {
-        high <- nxt; highcvl <- nxtcvl; low <- high; lowcvl <- highcvl
+        low <- high; lowcvl <- highcvl; high <- nxt; highcvl <- nxtcvl
       }
       infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
       infmin <- (fac < 1) && (abs(lowcvl - nxtcvl) / abs(nxtcvl + 0.1) < epsilon) 

@@ -418,6 +418,7 @@
         out <- .ridge(beta = gams, Lambda = PlP, X = t(PX[!leftoutP,!leftout,drop = FALSE]), 
           fit = subfit, ...)
         out$beta <- drop(crossprod(P[!leftoutP,,drop=FALSE], out$beta))
+        names(out$beta) <- names(beta)
         out
       }
     } 
@@ -465,7 +466,7 @@
         predictions[leaveout] <<- lapply(lin.pred[leaveout], prediction, nuisance = foldfit$fit$nuisance)
         betas[,i] <<- foldfit$beta
         if (trace) cat(rep("\b", trunc(log10(i))+1), sep ="")
-    
+
         out <- cvl(lin.pred, leaveout)
         if (quit.if.failed && (is.na(out) || abs(out) == Inf || foldfit$converged == FALSE)) failed <<- TRUE
       } else {
@@ -474,7 +475,7 @@
       
       out
     })
-    
+                                      
     if (failed || any(is.na(cvls))) cvls <- -Inf
     
   } else {
@@ -523,8 +524,10 @@
 
 #######################################
 # a solve() function that does not complain about near-singularity
-# often dangerous, sometimes useful
+# often dangerous, but very useful here
 #######################################
 .solve <- function(a,b) {
-  qr.coef(qr(a, LAPACK=TRUE), b)
+  out <- try(qr.coef(qr(a, LAPACK=TRUE), b))
+  if (is(out, "try-error")) stop("Matrix inversion failed. Please increase lambda1 and/or lambda2", call. = FALSE)
+  return(out)
 }
