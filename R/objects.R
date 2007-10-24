@@ -13,12 +13,13 @@ setClass("penfit",
     model = "character",
     lambda1 = "vector",
     lambda2 = "vector",
-    nuisance = "list" 
+    nuisance = "list",
+    weights = "vector" 
   )
 )
 
 # creation method for a penfit object 
-.makepenfit <- function(object, unpenalized, model, lambda1, lambda2, orthogonalizer) {
+.makepenfit <- function(object, unpenalized, model, lambda1, lambda2, orthogonalizer, weights) {
   out <- new("penfit")
   
   beta <- object$beta[unpenalized + seq_len(length(object$beta) - unpenalized)]
@@ -43,6 +44,8 @@ setClass("penfit",
   
   out@lambda1 <- lambda1
   out@lambda2 <- lambda2
+  
+  out@weights <- weights
   
   out
 }
@@ -91,6 +94,10 @@ setMethod("fitted.values", "penfit", function(object, ...) {
   object@fitted
 })
 
+# extracts the weights
+setMethod("weights", "penfit", function(object, ...) {
+  object@weights
+})
 
 # extracts the baseline hazard (survival models only)
 setGeneric("basehaz")

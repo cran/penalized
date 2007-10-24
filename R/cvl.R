@@ -185,7 +185,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   })
   
   makethisfit <- function(iter)
-    .makepenfit(fits[[iter]], length(startgamma), model, lambda1s[[iter]], inputlambda2, orthogonalizer)
+    .makepenfit(fits[[iter]], length(startgamma), model, lambda1s[[iter]], inputlambda2, orthogonalizer, weights)
 
   return(list(lambda = lambda1s, fold = groups, cvl = cvls, predictions = predictions, fullfit = lapply(1:length(cvls), makethisfit)))
 } 
@@ -367,7 +367,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   })
                               
   makethisfit <- function(iter)
-    .makepenfit(fits[[iter]], length(startgamma), model, inputlambda1, lambda2s[[iter]], orthogonalizer)
+    .makepenfit(fits[[iter]], length(startgamma), model, inputlambda1, lambda2s[[iter]], orthogonalizer, weights)
 
   return(list(lambda = lambda2s, fold = groups, cvl = cvls, predictions = predictions, fullfit = lapply(1:length(cvls), makethisfit)))
 } 
@@ -528,7 +528,8 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
   )
 
 
-  return(list(lambda = opt$argmax, cvl = opt$max, predictions = best$predictions, fold = groups, fullfit = .makepenfit(best$fit, length(startgamma), model, opt$argmax, inputlambda2, orthogonalizer)))
+  return(list(lambda = opt$argmax, cvl = opt$max, predictions = best$predictions, fold = groups, 
+    fullfit = .makepenfit(best$fit, length(startgamma), model, opt$argmax, inputlambda2, orthogonalizer, weights)))
 }
 
 ######################################
@@ -743,6 +744,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     linear = .lmmerge(best$predictions)
   )
 
-  return(list(lambda = opt$argmax, cvl = opt$max, predictions = best$predictions, fold = groups, fullfit = .makepenfit(best$fit, length(startgamma), model, inputlambda1, opt$argmax, orthogonalizer)))
+  return(list(lambda = opt$argmax, cvl = opt$max, predictions = best$predictions, fold = groups, 
+    fullfit = .makepenfit(best$fit, length(startgamma), model, inputlambda1, opt$argmax, orthogonalizer, weights)))
 }
       

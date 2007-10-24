@@ -1,7 +1,16 @@
-plotpath <- function(object, labelsize = 0.6,...) {
+plotpath <- function(object, labelsize = 0.6, standardize = FALSE, ...) {
   if (length(object) > 0) {
     betas <- sapply(object, coefficients, "p")
   }
+  
+  # Standardize if asked for
+  if (standardize) {
+    weights <- weights(object[[1]])
+    if (length(weights) > nrow(betas)) 
+      weights <- weights[-seq_len(length(weights)-nrow(betas))] 
+    betas <- betas * matrix(weights, nrow = nrow(betas), ncol = ncol(betas))
+  }
+  
   # Do not plot the regression coefficients of covariates that are always zero
   remove <- apply(betas, 1, function(bet) all(bet == 0) )
 

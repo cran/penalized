@@ -1,6 +1,6 @@
 importFrom(survival, Surv, coxph, basehaz)
 
-importFrom(stats, coefficients, fitted.values, residuals, time)
+importFrom(stats, coefficients, fitted.values, residuals, time, weights)
 
 importFrom(graphics, plot)
 

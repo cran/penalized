@@ -65,7 +65,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
   # Join unpenalized and penalized covariates and standardize to the same scale
   inputlambda1 <- lambda1
   inputlambda2 <- lambda2
-  prepared <- .prepare(penalized, unpenalized, lambda1, lambda2, data, startbeta, 
+  prepared <- .prepare(penalized, unpenalized, lambda1=1, lambda2, data, startbeta, 
     startgamma, intercept = intercept, standardize = standardize)
   X <- prepared$X 
   lambda1 <- prepared$lambda1 
@@ -98,14 +98,14 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
     rel <- gradient / lambda1[!nzn]
     from <- max(abs(rel))
   } else {
-    from <- 1
+    from <- inputlambda1
   }
-  lambda1s <- as.list(seq(from, 1, length.out=steps+1))
+  lambda1s <- as.list(seq(from, inputlambda1, length.out=steps+1))
   if (steps == 1) lambda1s <- lambda1s[-1]
 
   # fit the model for all lambdas
   outs <- lapply(lambda1s, function(rellambda) {
-    if (!all(lambda1 == 0)) {
+    if (!(rellambda == 0)) {
       if (all(lambda2 == 0)) {
         out <- .steplasso(beta = beta, lambda = rellambda * lambda1, lambda2 = 0, X = X,
           fit = fit, trace = trace, epsilon = epsilon, maxiter = maxiter)
@@ -139,8 +139,8 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
   
   # put the output in a penfit object
   outs <- sapply(1:length(outs), function(nr) {
-    thislambda1 <- inputlambda1 * lambda1s[[nr]]
-    .makepenfit(outs[[nr]], length(startgamma), model, thislambda1, inputlambda2, orthogonalizer)
+    thislambda1 <- lambda1s[[nr]]
+    .makepenfit(outs[[nr]], length(startgamma), model, thislambda1, inputlambda2, orthogonalizer, weights)
   })
 
   if(length(outs)==1) 
@@ -263,7 +263,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data,
     linear = .lmmerge(res$predictions)
   )
 
-  return(list(cvl = res$cvl, predictions = res$predictions, fold = groups, fullfit = .makepenfit(res$fit, length(startgamma), model, inputlambda1, inputlambda2, orthogonalizer)))
+  return(list(cvl = res$cvl, predictions = res$predictions, fold = groups, fullfit = .makepenfit(res$fit, length(startgamma), model, inputlambda1, inputlambda2, orthogonalizer, weights)))
 }
 
 
