@@ -75,13 +75,20 @@ setMethod("show", "penfit", function(object) {
 })
 
 # extracts the coefficients
-setMethod("coefficients", "penfit", function(object, which = c("nonzero", "all", "penalized", "unpenalized")) {
+setMethod("coefficients", "penfit", function(object, which = c("nonzero", "all", "penalized", "unpenalized"), standardize = FALSE) {
   which <- match.arg(which)
-  switch(which, 
-    all = c(object@unpenalized, object@penalized),
-    penalized = object@penalized,
-    unpenalized = object@unpenalized,
-    nonzero = c(object@unpenalized, object@penalized[object@penalized != 0]))
+  nunp <- length(object@unpenalized)
+  np <- length(object@penalized)
+  whichunp <- switch(which, 
+    all =, unpenalized =, nonzero = rep(TRUE,nunp),
+    penalized = rep(FALSE, nunp))
+  whichp <- switch(which,
+    all =, penalized = rep(TRUE, np),
+    unpenalized = rep(FALSE, np),
+    nonzero = (object@penalized != 0))
+  out <- c(object@unpenalized[whichunp], object@penalized[whichp])
+  if (standardize) out <- out * object@weights[c(whichunp, whichp)]
+  out
 })
 
 # extracts the residuals

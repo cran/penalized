@@ -78,25 +78,35 @@ It is difficult to say in advance which value of \Rfunarg{lambda1} or \Rfunarg{l
 Note that for small values of \Rfunarg{lambda1} or \Rfunarg{lambda2} the algorithm be very slow, may fail to converge or may run into numerical problems, especially in high-dimensional data. When this happens, increase the value of \Rfunarg{lambda1} or \Rfunarg{lambda2}.
 
 
-\subsection{standardization}
-
-If the covariates are not naturally on the same scale, it is advisable to standardize them. The function argument \Rfunarg{standardize} (default: \Robject{FALSE}) standardizes the covariates to unit second central moment before applying penalization. This standardization makes sure that each covariate is affected more or less equally by the penalization.
-
-The fitted regression coefficients that the function returns have been scaled back and correspond to the original scale of the covariates.
-
-
 \subsection{penfit objects}
 
 The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted. For example, to extract regression coefficients, (martingale) residuals, individual relative risks and baseline hazard, write
 
 <<extract>>=
-coefficients(fit)
 residuals(fit)[1:10]
 fitted.values(fit)[1:10]
 basehaz(fit)
 @
 
 See \Robject{help(penfit)} for more information on \Rclass{penfit} objects and Section \ref{breslow} on \Rclass{breslow} objects.
+
+The \Rfunction{coefficients} function extracts the named vector of regression coefficients. It has an extra second argument \Rfunarg{which} that can be used to specify which coefficients are of interest. Possible values of \Rfunarg{which} are \Robject{nonzero} (the default) for extracting all non-zero coefficients, \Robject{all} for all coefficients, and \Robject{penalized} and \Rfunarg{unpenalized} for only the penalized or unpenalized ones.
+
+<<coefficients>>=
+coefficients(fit, "all")
+@
+
+\subsection{standardization}
+
+If the covariates are not naturally on the same scale, it is advisable to standardize them. The function argument \Rfunarg{standardize} (default: \Robject{FALSE}) standardizes the covariates to unit second central moment before applying penalization. This standardization makes sure that each covariate is affected more or less equally by the penalization.
+
+The fitted regression coefficients that the function returns have been scaled back and correspond to the original scale of the covariates. To extract the regression coefficients of the standardized covariates, use the \Rfunction{coefficients} function with \Robject{standardize = FALSE}. This option is also available if the model was not fitted with standardized covariates, as the covariates are always standardized internally for numerical stability. To find the weights used by the function, use \Robject{weights(fit)}.
+
+<<weights>>=
+coefficients(fit)
+coefficients(fit, standardize = TRUE)
+weights(fit)
+@
 
 
 \subsection{unpenalized covariates}
@@ -159,7 +169,7 @@ Five functions are available for calculating the cross-validated log likelihood 
 
 The function \Rfunction{cvl} calculates the cross-validated log likelihood for fixed values of $\lambda_1$ and $\lambda_2$.
 
-It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation. 
+It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation.
 
 The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 \begin{description}
@@ -212,7 +222,7 @@ The functions \Rfunction{profL1} and \Rfunction{profL2} return a named list with
 
 The allocation of the subjects into cross-validation folds is done only once, so that all cross-validated likelihoods are calculated using the same allocation. This makes the cross-validated log likelihoods more comparable. As in \Rfunction{cvl} the allocation is returned in \Robject{fold}.
 
-It is also possible in these functions to set \Robject{fold = 1}. This will cause no cross-validation to be performed, but will let only the full data fits be calculated. This can be used in a similar way to the use of the \Rfunction{penalized} function with its \Rfunarg{steps} argument, only with more flexibility. 
+It is also possible in these functions to set \Robject{fold = 1}. This will cause no cross-validation to be performed, but will let only the full data fits be calculated. This can be used in a similar way to the use of the \Rfunction{penalized} function with its \Rfunarg{steps} argument, only with more flexibility.
 
 <<prof,results=hide>>=
 fit1 <- profL1(Surv(time,event), nki70[,50:70], fold=10)

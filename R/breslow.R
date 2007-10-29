@@ -12,8 +12,8 @@ setMethod("show", "breslow", function(object) {
   cat(" and", ncol(object@curves), "time points.\n")
 })
 
-setMethod("plot", "breslow", function(x, y, ...) {
-  plot(0,1,col=0,xlim=range(x@time),ylim=0:1, ylab="",xlab="", ...)
+setMethod("plot", "breslow", function(x, y, xlab = "time", ylab = "survival probability", ...) {
+  plot(0,1,col=0,xlim=range(x@time),ylim=0:1, ylab = ylab,xlab = xlab, ...)
   for (i in 1:nrow(x@curves)) lines(x@time, x@curves[i,], type="s", ...)
   return(invisible(NULL))
 })

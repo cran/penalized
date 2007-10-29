@@ -1,17 +1,18 @@
-\name{penfit object} 
-\alias{penfit-class} 
-\alias{penfit} 
+\name{penfit object}
+\alias{penfit-class}
+\alias{penfit}
 \docType{class}
 
-\alias{show,penfit-method} 
-\alias{coefficients,penfit-method} 
-\alias{residuals,penfit-method} 
-\alias{fitted.values,penfit-method} 
-\alias{penalty,penfit-method} 
-\alias{loglik,penfit-method} 
-\alias{basehaz,penfit-method} 
-\alias{basehaz} 
-\alias{penalty} 
+\alias{show,penfit-method}
+\alias{coefficients,penfit-method}
+\alias{residuals,penfit-method}
+\alias{fitted.values,penfit-method}
+\alias{penalty,penfit-method}
+\alias{weights,penfit-method}
+\alias{loglik,penfit-method}
+\alias{basehaz,penfit-method}
+\alias{basehaz}
+\alias{penalty}
 \alias{loglik}
 
 
@@ -33,6 +34,7 @@
     \item{\code{lambda1}:}{Object of class "vector". The lambda1 parameter(s) used.}
     \item{\code{lambda2}:}{Object of class "vector". The lambda2 parameter(s) used.}
     \item{\code{nuisance}:}{Object of class "list". The maximum likelihood estimates of any nuisance parameters in the model.}
+    \item{\code{weights}:}{Object of class "vector". The weights of the covariates used for standardization.}
   }
 }
 
@@ -40,18 +42,17 @@
   \describe{
     \item{show}{(penfit): Summarizes the test result.}
     \item{residuals}{(penfit): Returns the residuals.}
-    \item{coefficients}{(penfit): Returns the regression coefficients. Accepts a second argument "which", that takes
-    values "nonzero" (the default), "all", "penalized" or "unpenalized" for extracting only the non-zero, the penalized
-    or the unpenalized regression coeffiicents.}
+    \item{coefficients}{(penfit): Returns the regression coefficients. Accepts a second argument "which", that takes values "nonzero" (the default), "all", "penalized" or "unpenalized" for extracting only the non-zero, the penalized or the unpenalized regression coefficients. A third argument "standardize" (default FALSE) can be used to let the method return the regression coefficients for the standardized covariates.}
     \item{basehaz}{(penfit): Returns the baseline hazard (a \code{\link{breslow}} object) if a cox model was fitted, \code{NULL} otherwise.}
     \item{penalty}{(penfit): Returns the L1 and L2 penalties of the fitted model.}
     \item{loglik}{(penfit): Returns the log likelihood of the fitted model.}
+    \item{weights}{(penfit): Returns the weights used for standardization.}
   }
 }
 
-\author{Jelle Goeman: \email{j.j.goeman@lumc.nl}} 
+\author{Jelle Goeman: \email{j.j.goeman@lumc.nl}}
 
 \seealso{\code{\link{penalized}}.}
 
-\keyword{multivariate} 
+\keyword{multivariate}
 \keyword{regression} 

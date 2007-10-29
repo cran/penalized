@@ -85,25 +85,11 @@ It is difficult to say in advance which value of \Rfunarg{lambda1} or \Rfunarg{l
 Note that for small values of \Rfunarg{lambda1} or \Rfunarg{lambda2} the algorithm be very slow, may fail to converge or may run into numerical problems, especially in high-dimensional data. When this happens, increase the value of \Rfunarg{lambda1} or \Rfunarg{lambda2}.
 
 
-\subsection{standardization}
-
-If the covariates are not naturally on the same scale, it is advisable to standardize them. The function argument \Rfunarg{standardize} (default: \Robject{FALSE}) standardizes the covariates to unit second central moment before applying penalization. This standardization makes sure that each covariate is affected more or less equally by the penalization.
-
-The fitted regression coefficients that the function returns have been scaled back and correspond to the original scale of the covariates.
-
-
 \subsection{penfit objects}
 
 The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted. For example, to extract regression coefficients, (martingale) residuals, individual relative risks and baseline hazard, write
 
 \begin{Schunk}
-\begin{Sinput}
-> coefficients(fit)
-\end{Sinput}
-\begin{Soutput}
-      DIAPH3       NUSAP1 
--0.003347245  1.610876235 
-\end{Soutput}
 \begin{Sinput}
 > residuals(fit)[1:10]
 \end{Sinput}
@@ -131,6 +117,48 @@ A "breslow" object with 1 survival curve and 50 time points.
 \end{Schunk}
 
 See \Robject{help(penfit)} for more information on \Rclass{penfit} objects and Section \ref{breslow} on \Rclass{breslow} objects.
+
+The \Rfunction{coefficients} function extracts the named vector of regression coefficients. It has an extra second argument \Rfunarg{which} that can be used to specify which coefficients are of interest. Possible values of \Rfunarg{which} are \Robject{nonzero} (the default) for extracting all non-zero coefficients, \Robject{all} for all coefficients, and \Robject{penalized} and \Rfunarg{unpenalized} for only the penalized or unpenalized ones.
+
+\begin{Schunk}
+\begin{Sinput}
+> coefficients(fit, "all")
+\end{Sinput}
+\begin{Soutput}
+      DIAPH3       NUSAP1 
+-0.003347245  1.610876235 
+\end{Soutput}
+\end{Schunk}
+
+\subsection{standardization}
+
+If the covariates are not naturally on the same scale, it is advisable to standardize them. The function argument \Rfunarg{standardize} (default: \Robject{FALSE}) standardizes the covariates to unit second central moment before applying penalization. This standardization makes sure that each covariate is affected more or less equally by the penalization.
+
+The fitted regression coefficients that the function returns have been scaled back and correspond to the original scale of the covariates. To extract the regression coefficients of the standardized covariates, use the \Rfunction{coefficients} function with \Robject{standardize = FALSE}. This option is also available if the model was not fitted with standardized covariates, as the covariates are always standardized internally for numerical stability. To find the weights used by the function, use \Robject{weights(fit)}.
+
+\begin{Schunk}
+\begin{Sinput}
+> coefficients(fit)
+\end{Sinput}
+\begin{Soutput}
+      DIAPH3       NUSAP1 
+-0.003347245  1.610876235 
+\end{Soutput}
+\begin{Sinput}
+> coefficients(fit, standardize = TRUE)
+\end{Sinput}
+\begin{Soutput}
+       DIAPH3        NUSAP1 
+-0.0007849407  0.4300408953 
+\end{Soutput}
+\begin{Sinput}
+> weights(fit)
+\end{Sinput}
+\begin{Soutput}
+   DIAPH3    NUSAP1 
+0.2345035 0.2669609 
+\end{Soutput}
+\end{Schunk}
 
 
 \subsection{unpenalized covariates}
@@ -200,7 +228,7 @@ Five functions are available for calculating the cross-validated log likelihood 
 
 The function \Rfunction{cvl} calculates the cross-validated log likelihood for fixed values of $\lambda_1$ and $\lambda_2$.
 
-It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation. 
+It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation.
 
 The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 \begin{description}
@@ -220,7 +248,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -265.3904
+[1] -253.6936
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -263,39 +291,39 @@ A "breslow" object with 144 survival curves and 51 time points.
 [31]  4.2190281  4.4462697  4.6214921  4.6625599  4.9719370  5.1170431
 [37]  6.5653662  6.9952088  8.1286790  8.3039014  8.5284052  8.5612594
 [43]  8.9253936  8.9883641  9.9986311 11.2114990 11.7399042 12.4654346
-[49] 14.0123203 17.2402464 17.6591376
+[49] 14.0123203 16.1478439 17.6591376
 \end{Soutput}
 \begin{Sinput}
 > as.matrix(fit$predictions)[1:2, ]
 \end{Sinput}
 \begin{Soutput}
     0 0.353182752 0.648870637 0.9363276 0.960985626 1.210130048 1.388090349
-125 1   0.9988691   0.9977267 0.9965619   0.9953864   0.9941835   0.9929599
-127 1   0.9910416   0.9820840 0.9729464   0.9638127   0.9545929   0.9453214
+125 1   0.9979208   0.9958256 0.9936656   0.9914884   0.9892655   0.9869952
+127 1   0.9891710   0.9783866 0.9672869   0.9562315   0.9450681   0.9338075
     1.500342231 1.609856263 1.612594114 1.716632444 1.733059548 1.94661191
-125   0.9917232   0.9904769   0.9891997   0.9879055   0.9865857  0.9852408
-127   0.9453214   0.9360596   0.9265743   0.9170982   0.9075470  0.8979828
+125   0.9846821   0.9823475   0.9799263   0.9774901   0.9749907  0.9724605
+127   0.9225617   0.9225617   0.9109492   0.8993384   0.8876524  0.8759687
     1.965776865 1.973990418 2.223134839 2.29705681 2.335386721 2.340862423
-125   0.9838847   0.9824869   0.9810337  0.9795685   0.9780905   0.9765973
-127   0.8884425   0.8787962   0.8690059  0.8592210   0.8494489   0.8396391
+125   0.9699139   0.9699139   0.9672994  0.9646642   0.9620099   0.9593324
+127   0.8759687   0.8641839   0.8641839  0.8524272   0.8407254   0.8289637
     2.614647502 2.680355921 2.696783025 2.811772758 2.85284052 3.121149897
-125   0.9750364   0.9734185   0.9717636   0.9700452  0.9682733   0.9664439
-127   0.8296615   0.8194873   0.8194873   0.8089785  0.7982934   0.7982934
+125   0.9565577   0.9536776   0.9507492   0.9477406  0.9446530   0.9414971
+127   0.8170670   0.8048157   0.7925304   0.7796460  0.7665407   0.7532261
     3.219712526 3.419575633 3.438740589 3.655030801 3.915126626 4.219028063
-125   0.9645856   0.9626864   0.9607701   0.9607701   0.9588222   0.9568396
-127   0.7875691   0.7767202   0.7659206   0.7550028   0.7440844   0.7332042
+125   0.9382530   0.9349359   0.9315824   0.9281624    0.924693   0.9211863
+127   0.7399029   0.7264784   0.7131935   0.6998123    0.686491   0.6732327
     4.446269678 4.621492129 4.66255989 4.971937029 5.117043121 6.565366188
-125   0.9548213   0.9527628  0.9506771   0.9485248   0.9485248   0.9456526
-127   0.7223007   0.7114182  0.7004319   0.7004319   0.6891838   0.6689529
+125   0.9176262   0.9140233  0.9103708   0.9066401   0.9027661   0.8975992
+127   0.6599723   0.6468274  0.6335888   0.6335888   0.6199614   0.6026427
     6.995208761 8.128678987 8.303901437 8.528405202 8.561259411 8.925393566
-125   0.9422704   0.9378983   0.9334279   0.9334279   0.9288372   0.9237464
-127   0.6689529   0.6689529   0.6488311   0.6290073   0.6092504   0.5888974
+125   0.8916399   0.8835896   0.8754588   0.8672860   0.8589562   0.8497231
+127   0.5838997   0.5596047   0.5358154   0.5126478   0.4897093   0.4654248
     8.988364134 9.998631075 11.21149897 11.73990418 12.46543463 14.01232033
-125   0.9183634   0.9112246   0.9022991   0.8886226   0.8701534   0.8386479
-127   0.5630812   0.5630812   0.5312959   0.4899771   0.4439786   0.3825974
-    17.24024641 17.65913758
-125   0.8386479          NA
-127   0.3825974   0.3825974
+125   0.8401773   0.8289782   0.8156885   0.7975767   0.7747412   0.7444097
+127   0.4409302   0.4086032   0.3710899   0.3304431   0.2860730   0.2369144
+    16.14784394 17.65913758
+125   0.7444097   0.7444097
+127   0.2369144   0.2369144
 \end{Soutput}
 \begin{Sinput}
 > plot(fit$predictions)
@@ -325,7 +353,7 @@ The functions \Rfunction{profL1} and \Rfunction{profL2} return a named list with
 
 The allocation of the subjects into cross-validation folds is done only once, so that all cross-validated likelihoods are calculated using the same allocation. This makes the cross-validated log likelihoods more comparable. As in \Rfunction{cvl} the allocation is returned in \Robject{fold}.
 
-It is also possible in these functions to set \Robject{fold = 1}. This will cause no cross-validation to be performed, but will let only the full data fits be calculated. This can be used in a similar way to the use of the \Rfunction{penalized} function with its \Rfunarg{steps} argument, only with more flexibility. 
+It is also possible in these functions to set \Robject{fold = 1}. This will cause no cross-validation to be performed, but will let only the full data fits be calculated. This can be used in a similar way to the use of the \Rfunction{penalized} function with its \Rfunarg{steps} argument, only with more flexibility.
 
 \begin{Schunk}
 \begin{Sinput}
@@ -394,13 +422,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.351866
+[1] 2.394569
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -260.5131
+[1] -260.4905
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}
