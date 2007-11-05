@@ -9,6 +9,7 @@
 \alias{[[,breslow-method}
 \alias{as.list,breslow-method}
 \alias{as.matrix,breslow-method}
+\alias{as.data.frame,breslow-method}
 \alias{time,breslow-method}
 
 
@@ -26,12 +27,13 @@
 
 \section{Methods}{
   \describe{
-    \item{show}{(breslow): Summarizes the dimensions of the object.}
-    \item{plot}{(breslow): Straightforward plotting (all curves in one plot).}
-    \item{as.list}{(breslow): Coerces the object to a list.}
-    \item{as.matrix}{(breslow): Returns the "curves" slot with the "time" slot as column names.}
     \item{"["}{(breslow): Coerces the object to a matrix (as as.matrix) and selects rows and/or columns.}
     \item{"[["}{(breslow): Selects a subset of the curves.}    
+    \item{as.data.frame}{(breslow): Returns the "curves" slot together with the "time" slot in a \code{data.frame}.}
+    \item{as.list}{(breslow): Coerces the object to a list.}
+    \item{as.matrix}{(breslow): Returns the "curves" slot with the "time" slot as column names.}
+    \item{plot}{(breslow): Straightforward plotting (all curves in one plot).}
+    \item{show}{(breslow): Summarizes the dimensions of the object.}
   }
 }
 

@@ -323,7 +323,7 @@
   if (!missing(unpenalized) && is(unpenalized, "formula")) {
     unpenalized <- model.matrix(unpenalized, data)
   } 
-  interceptcolumn <- which(apply(unpenalized, 2, function(x) all(x == x[1])))
+  interceptcolumn <- which(apply(unpenalized, 2, function(x) all(x == 1)))
   if (length(interceptcolumn) > 1) stop("multiple intercept columns")
   if (intercept && length(interceptcolumn) == 0) {
     unpenalized <- as.matrix(rep(1, nrow(penalized)))

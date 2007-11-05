@@ -80,12 +80,12 @@ Note that for small values of \Rfunarg{lambda1} or \Rfunarg{lambda2} the algorit
 
 \subsection{penfit objects}
 
-The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted. For example, to extract regression coefficients, (martingale) residuals, individual relative risks and baseline hazard, write
+The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted. For example, to extract regression coefficients, (martingale) residuals, individual relative risks and baseline survival curve, write
 
 <<extract>>=
 residuals(fit)[1:10]
 fitted.values(fit)[1:10]
-basehaz(fit)
+basesurv(fit)
 @
 
 See \Robject{help(penfit)} for more information on \Rclass{penfit} objects and Section \ref{breslow} on \Rclass{breslow} objects.
@@ -149,6 +149,8 @@ fit <- penalized(Surv(time,event), nki70[,8:77], lambda1=1,
 plotpath(fit, log="x")
 @
 
+Note that \Rfunction{plotpath} plots the unstandardized coefficients by default. Standardized coefficients can be plotted (even when the model was not fitted with standardized coefficients) with the \Rfunarg{standardize} argument.
+
 \begin{figure}
 <<stepsplot, fig=TRUE>>=
 plotpath(fit, log="x")
@@ -198,7 +200,7 @@ The \Rclass{breslow} class is defined in the \Rpackage{penalized} package to sto
 <<breslow>>=
 fit$predictions
 time(fit$predictions)
-as.matrix(fit$predictions)[1:2,]
+as.data.frame(basesurv(fit$fullfit))[1:10,]
 plot(fit$predictions)
 @
 

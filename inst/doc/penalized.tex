@@ -87,7 +87,7 @@ Note that for small values of \Rfunarg{lambda1} or \Rfunarg{lambda2} the algorit
 
 \subsection{penfit objects}
 
-The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted. For example, to extract regression coefficients, (martingale) residuals, individual relative risks and baseline hazard, write
+The penalized function returns a \Rclass{penfit} object, from which useful information can be extracted. For example, to extract regression coefficients, (martingale) residuals, individual relative risks and baseline survival curve, write
 
 \begin{Schunk}
 \begin{Sinput}
@@ -109,7 +109,7 @@ The penalized function returns a \Rclass{penfit} object, from which useful infor
 1.2242175 0.5909803 
 \end{Soutput}
 \begin{Sinput}
-> basehaz(fit)
+> basesurv(fit)
 \end{Sinput}
 \begin{Soutput}
 A "breslow" object with 1 survival curve and 50 time points.
@@ -205,6 +205,8 @@ If the argument \Rfunarg{steps} is supplied to \Rfunction{penalized}, the functi
 \end{Sinput}
 \end{Schunk}
 
+Note that \Rfunction{plotpath} plots the unstandardized coefficients by default. Standardized coefficients can be plotted (even when the model was not fitted with standardized coefficients) with the \Rfunarg{standardize} argument.
+
 \begin{figure}
 \begin{Schunk}
 \begin{Sinput}
@@ -248,7 +250,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -253.6936
+[1] -249.9789
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -291,39 +293,23 @@ A "breslow" object with 144 survival curves and 51 time points.
 [31]  4.2190281  4.4462697  4.6214921  4.6625599  4.9719370  5.1170431
 [37]  6.5653662  6.9952088  8.1286790  8.3039014  8.5284052  8.5612594
 [43]  8.9253936  8.9883641  9.9986311 11.2114990 11.7399042 12.4654346
-[49] 14.0123203 16.1478439 17.6591376
+[49] 14.0123203 17.4209446 17.6591376
 \end{Soutput}
 \begin{Sinput}
-> as.matrix(fit$predictions)[1:2, ]
+> as.data.frame(basesurv(fit$fullfit))[1:10, ]
 \end{Sinput}
 \begin{Soutput}
-    0 0.353182752 0.648870637 0.9363276 0.960985626 1.210130048 1.388090349
-125 1   0.9979208   0.9958256 0.9936656   0.9914884   0.9892655   0.9869952
-127 1   0.9891710   0.9783866 0.9672869   0.9562315   0.9450681   0.9338075
-    1.500342231 1.609856263 1.612594114 1.716632444 1.733059548 1.94661191
-125   0.9846821   0.9823475   0.9799263   0.9774901   0.9749907  0.9724605
-127   0.9225617   0.9225617   0.9109492   0.8993384   0.8876524  0.8759687
-    1.965776865 1.973990418 2.223134839 2.29705681 2.335386721 2.340862423
-125   0.9699139   0.9699139   0.9672994  0.9646642   0.9620099   0.9593324
-127   0.8759687   0.8641839   0.8641839  0.8524272   0.8407254   0.8289637
-    2.614647502 2.680355921 2.696783025 2.811772758 2.85284052 3.121149897
-125   0.9565577   0.9536776   0.9507492   0.9477406  0.9446530   0.9414971
-127   0.8170670   0.8048157   0.7925304   0.7796460  0.7665407   0.7532261
-    3.219712526 3.419575633 3.438740589 3.655030801 3.915126626 4.219028063
-125   0.9382530   0.9349359   0.9315824   0.9281624    0.924693   0.9211863
-127   0.7399029   0.7264784   0.7131935   0.6998123    0.686491   0.6732327
-    4.446269678 4.621492129 4.66255989 4.971937029 5.117043121 6.565366188
-125   0.9176262   0.9140233  0.9103708   0.9066401   0.9027661   0.8975992
-127   0.6599723   0.6468274  0.6335888   0.6335888   0.6199614   0.6026427
-    6.995208761 8.128678987 8.303901437 8.528405202 8.561259411 8.925393566
-125   0.8916399   0.8835896   0.8754588   0.8672860   0.8589562   0.8497231
-127   0.5838997   0.5596047   0.5358154   0.5126478   0.4897093   0.4654248
-    8.988364134 9.998631075 11.21149897 11.73990418 12.46543463 14.01232033
-125   0.8401773   0.8289782   0.8156885   0.7975767   0.7747412   0.7444097
-127   0.4409302   0.4086032   0.3710899   0.3304431   0.2860730   0.2369144
-    16.14784394 17.65913758
-125   0.7444097   0.7444097
-127   0.2369144   0.2369144
+    survival      time
+1  1.0000000 0.0000000
+2  0.9947948 0.3531828
+3  0.9895787 0.6488706
+4  0.9842225 0.9363276
+5  0.9788527 0.9609856
+6  0.9733970 1.2101300
+7  0.9678684 1.3880903
+8  0.9622905 1.5003422
+9  0.9566938 1.6098563
+10 0.9509489 1.6125941
 \end{Soutput}
 \begin{Sinput}
 > plot(fit$predictions)
@@ -422,13 +408,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.394569
+[1] 2.129261
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -260.4905
+[1] -259.5268
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}

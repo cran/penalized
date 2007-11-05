@@ -1,0 +1,7 @@
+0.9-14
+- basehaz() now returns the baseline hazard instead of the baseline survival curve.
+- New method basesurv() returns the baseline suvival.
+- The center argument in basehaz() and basesurv() implemented.
+- linear.predictors() method added for penfit objects.
+- Missing documentation of fitted.values() added.
+- as.data.frame() method added for breslow objects.

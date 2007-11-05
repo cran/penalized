@@ -24,6 +24,22 @@ setMethod("as.matrix", "breslow", function(x, ...) {
   out
 })
 
+setGeneric("as.data.frame")
+setMethod("as.data.frame", "breslow", function(x, row.names = NULL, optional = FALSE, ...) {
+  subjectnames <- rownames(x@curves)
+  if (is.null(subjectnames)) 
+    subjectnames <- 1:nrow(x@curves)
+  if (length(subjectnames) > 1) 
+    col.names <- paste("survival", colnames(x@curves), sep=".")
+  else
+    col.names <- "survival"
+  out <- as.data.frame(t(x@curves), row.names, optional)
+  colnames(out) <- make.names(col.names)
+  out <- data.frame(out, time = x@time)
+  out
+})
+
+
 setMethod("[", "breslow", function(x, i, j, ... , drop = TRUE) {
   if (missing(i) && missing(j))
     as.matrix(x)[,,drop=drop]

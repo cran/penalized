@@ -6,6 +6,7 @@ setClass("penfit",
     unpenalized = "vector",
     residuals = "vector",
     fitted = "vector",
+    lin.pred = "vector",
     loglik = "numeric",
     penalty = "vector",
     iterations = "numeric",
@@ -30,6 +31,7 @@ setClass("penfit",
   
   out@residuals <- object$fit$residuals
   out@fitted <- object$fit$fitted
+  out@lin.pred <- object$fit$lp
   
   out@loglik <- if (is.na(object$fit$loglik)) -Inf else object$fit$loglik
   out@penalty <- object$penalty
@@ -96,6 +98,12 @@ setMethod("residuals", "penfit", function(object, ...) {
   object@residuals
 })
 
+# extracts the linear predictors
+setGeneric("linear.predictors", function(object, ...) standardGeneric("linear.predictors"))
+setMethod("linear.predictors", "penfit", function(object, ...) {
+  object@lin.pred
+})
+
 # extracts the fitted values
 setMethod("fitted.values", "penfit", function(object, ...) {
   object@fitted
@@ -107,11 +115,28 @@ setMethod("weights", "penfit", function(object, ...) {
 })
 
 # extracts the baseline hazard (survival models only)
-setGeneric("basehaz")
-setMethod("basehaz", "penfit", function(fit, centered) {
+setGeneric("basesurv", function(fit, centered = TRUE, ...) standardGeneric("basesurv"))
+setMethod("basesurv", "penfit", function(fit, centered = TRUE) {
   if (fit@model == "cox") 
-    return(fit@nuisance$baseline)
+    if (centered) {
+      meanlp <- mean(linear.predictors(fit))  
+      out <- fit@nuisance$baseline
+      out@curves <- out@curves^exp(meanlp)
+      return(out)
+    } else {
+      return(fit@nuisance$baseline)
+    }
   else
+    return(NULL)
+})
+
+setGeneric("basehaz")
+setMethod("basehaz", "penfit", function(fit, centered = TRUE) {
+  if (fit@model == "cox") {
+    bs <- basesurv(fit, centered)
+    out <- data.frame(hazard = -log(drop(bs@curves)), time = time(bs))
+    return(out)
+  } else
     return(NULL)
 })
 
