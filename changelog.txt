@@ -1,6 +1,10 @@
+0.9-15
+- Fixed a bug in penalized() and all cvl-functions that sometimes caused name conflicts because the terms of user-supplied formulae would first be evaluated in the package name space. All eval() calls are now explicitly directed to the correct environment.
+
+
 0.9-14
-- basehaz() now returns the baseline hazard instead of the baseline survival curve.
 - New method basesurv() returns the baseline suvival.
+- basehaz() now returns the baseline hazard instead of the baseline survival curve.
 - The center argument in basehaz() and basesurv() implemented.
 - linear.predictors() method added for penfit objects.
 - Missing documentation of fitted.values() added.

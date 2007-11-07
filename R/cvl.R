@@ -7,14 +7,14 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   steps = 100, minsteps = steps/4, log = FALSE) {
 
   # determine the response
-  if (!missing(data)) response <- eval(as.list(match.call())$response, data)
+  if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
     if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
     penalized <- response
     if (missing(data))
-      response <- eval(attr(terms(response), "variables"))[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data)[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing
@@ -199,14 +199,14 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   steps = 100, minsteps = steps/4, log = TRUE) {
 
   # determine the response
-  if (!missing(data)) response <- eval(as.list(match.call())$response, data)
+  if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
     if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
     penalized <- response
     if (missing(data))
-      response <- eval(attr(terms(response), "variables"))[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data)[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing
@@ -381,14 +381,14 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
   tol = .Machine$double.eps^0.25) {
 
   # determine the response
-  if (!missing(data)) response <- eval(as.list(match.call())$response, data)
+  if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
     if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
     penalized <- response
     if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"))[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data)[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing
@@ -541,14 +541,14 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   tol = .Machine$double.eps^0.25) {
 
   # determine the response
-  if (!missing(data)) response <- eval(as.list(match.call())$response, data)
+  if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
     if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
     penalized <- response
     if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"))[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data)[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing

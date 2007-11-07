@@ -195,7 +195,7 @@ fit <- cvl(Surv(time,event), nki70[,8:77], lambda1=2, fold=fit$fold)
 
 \subsection{breslow objects} \label{breslow}
 
-The \Rclass{breslow} class is defined in the \Rpackage{penalized} package to store estimated survival curves. They are used for the predictions in cross-validation and for the baseline hazard in the \Rfunction{penalized} function. See \Robject{help(breslow}) for details.
+The \Rclass{breslow} class is defined in the \Rpackage{penalized} package to store estimated survival curves. They are used for the predictions in cross-validation and for the baseline survival estimated in the \Rfunction{penalized} function. See \Robject{help(breslow}) for details.
 
 <<breslow>>=
 fit$predictions

@@ -250,7 +250,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -249.9789
+[1] -265.3459
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -272,7 +272,7 @@ L1 penalty =	 24.29771 	at lambda1 =  1
 
 \subsection{breslow objects} \label{breslow}
 
-The \Rclass{breslow} class is defined in the \Rpackage{penalized} package to store estimated survival curves. They are used for the predictions in cross-validation and for the baseline hazard in the \Rfunction{penalized} function. See \Robject{help(breslow}) for details.
+The \Rclass{breslow} class is defined in the \Rpackage{penalized} package to store estimated survival curves. They are used for the predictions in cross-validation and for the baseline survival estimated in the \Rfunction{penalized} function. See \Robject{help(breslow}) for details.
 
 \begin{Schunk}
 \begin{Sinput}
@@ -408,13 +408,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.129261
+[1] 2.431872
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -259.5268
+[1] -261.9456
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}
