@@ -3,16 +3,21 @@
 ####################################                                    
 penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, data, model = c("cox", "logistic", "linear"),
   startbeta, startgamma, steps =1, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) {
-
+                             
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
-    if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
-    penalized <- response
+    if (missing(penalized)) {
+      penalized <- response
+    } else if (missing(unpenalized)) {
+      unpenalized <- response
+    } else {
+      warning("Right hand side of response formula ignored.")
+    }
     if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
   }
 
   
@@ -159,12 +164,17 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data,
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
-    if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
-    penalized <- response
+    if (missing(penalized)) {
+      penalized <- response
+    } else if (missing(unpenalized)) {
+      unpenalized <- response
+    } else {
+      warning("Right hand side of response formula ignored.")
+    }
     if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing

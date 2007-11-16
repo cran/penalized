@@ -9,12 +9,17 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
-    if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
-    penalized <- response
-    if (missing(data))
-      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
+    if (missing(penalized)) {
+      penalized <- response
+    } else if (missing(unpenalized)) {
+      unpenalized <- response
+    } else {
+      warning("Right hand side of response formula ignored.")
+    }
+    if (missing(data)) 
+      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing
@@ -201,12 +206,17 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
-    if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
-    penalized <- response
-    if (missing(data))
-      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
+    if (missing(penalized)) {
+      penalized <- response
+    } else if (missing(unpenalized)) {
+      unpenalized <- response
+    } else {
+      warning("Right hand side of response formula ignored.")
+    }
+    if (missing(data)) 
+      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing
@@ -383,12 +393,17 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
-    if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
-    penalized <- response
+    if (missing(penalized)) {
+      penalized <- response
+    } else if (missing(unpenalized)) {
+      unpenalized <- response
+    } else {
+      warning("Right hand side of response formula ignored.")
+    }
     if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing
@@ -543,12 +558,16 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   # determine the response
   if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
   if (is(response, "formula")) {
-    if (!missing(penalized)) warning("Ignoring \"penalized\" argument because \"response\" is a formula.", call.=FALSE)
-    penalized <- response
+    if (missing(penalized)) 
+      penalized <- response
+    else if (missing(unpenalized)) 
+      unpenalized <- response
+    else 
+      warning("Right hand side of response formula ignored.")
     if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"), globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data, globalenv())[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
   }
 
   # determine the model if missing
@@ -560,7 +579,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   }
   model <- match.arg(model)
   
-  # make sure the response has he correctformat and determine the sample size
+  # make sure the response has he correct format and determine the sample size
   if (model == "cox" && !is(response, "Surv")) response <- Surv(response)
   n <- if (model == "cox") length(response)/2 else length(response)
 

@@ -1,3 +1,9 @@
+0.9-16
+- Changed the input checks to allow the format penalized(response~unpenalized, penalized). This is in line with functions such as lme.
+- Fixed a bug in .coxmerge() that resulted in alignment mistakes in the cross-validated predicted survival curves.
+- Added the advice to the vignette to add an L2 penalty in case of multi-level factors.
+
+
 0.9-15
 - Fixed a bug in penalized() and all cvl-functions that sometimes caused name conflicts because the terms of user-supplied formulae would first be evaluated in the package name space. All eval() calls are now explicitly directed to the correct environment.
 

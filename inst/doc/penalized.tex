@@ -66,7 +66,7 @@ To fit a model to predict survival (\Robject{Surv(time,event)}) with the two mar
 \end{Sinput}
 \end{Schunk}
 
-The covariates may be specified in the second function argument (\Rfunarg{penalized}) as a \Rclass{formula} object with an open left hand side, as in the first line. Alternatively, they may be specified as a matrix, as in the second line. If, as here, they are supplied as a \Rclass{data.frame}, they are coerced to a matrix.
+The covariates may be specified in the second function argument (\Rfunarg{penalized}) as a \Rclass{formula} object with an open left hand side, as in the first line. Alternatively, they may be specified as a \Rclass{matrix} or \Rclass{data.frame}, as in the second line. If, as here, they are supplied as a \Rclass{data.frame}, they are coerced to a matrix.
 
 For consistency with \Rfunction{glm} and \Rfunction{coxph} the third option is also allowed, in which the covariates are included in the first function argument.
 
@@ -163,15 +163,16 @@ The fitted regression coefficients that the function returns have been scaled ba
 
 \subsection{unpenalized covariates}
 
-In some situations it is desirable that not all covariates are subject to a penalty. Any additional covariates that should be included in the model without being penalized can be specified separately. using the third function argument (\Rfunarg{unpenalized}). For example
+In some situations it is desirable that not all covariates are subject to a penalty. Any additional covariates that should be included in the model without being penalized can be specified separately. using the third function argument (\Rfunarg{unpenalized}). For example (the two commands below are equivalent)
 
 \begin{Schunk}
 \begin{Sinput}
 > fit <- penalized(Surv(time, event), nki70[, 8:77], ~ER, lambda2 = 1)
+> fit <- penalized(Surv(time, event) ~ ER, nki70[, 8:77], lambda2 = 1)
 \end{Sinput}
 \end{Schunk}
 
-This adds estrogen receptor status as an unpenalized covariate.
+This adds estrogen receptor status as an unpenalized covariate. Note in the second line that right hand side of the \Rclass{formula} object in the \Rfunarg{response} argument is automatically taken to be the \Rfunarg{unpenalized} argument because the \Rfunarg{penalized} argument was given by the user.
 
 In linear and logistic regression the intercept is by default never penalized.
 
@@ -185,6 +186,8 @@ If some of the factors included in the \Rclass{formula} object \Rfunarg{penalize
 Unordered factors are turned into as many dummy variables as the factor has levels. This ensures a symmetric treatment of all levels and guarantees that the fit does not depend on the ordering of the levels. See \Robject{help(contr.none)} for details.
 
 Ordered factors are turned into dummy variables that code for the difference between successive levels (one dummy less than the number of levels). L2 penalization on such factors therefore leads to small successive differences; L1 penalization leads to ranges of successive levels with identical effects. See \Robject{help(contr.diff)} for details.
+
+When fitting a model with factors with more than two levels with an L1 penalty, it is advisable to add a small L2 penalty as well in order to speed up convergence. By varying the L2 penalty it can be checked that the L2 penalty is not so large that it influences the estimates.
 
 To override the automatic choice of contrasts, use \Rfunction{C} (package \Rpackage{stats}).
 
@@ -250,7 +253,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -265.3459
+[1] -258.5888
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -390,7 +393,7 @@ The \Rfunction{plotpath} function can again be used to visualize the effect of t
 
 Often we are not interested in the whole profile of the cross-validated likelihood, but only in the optimum. The functions \Rfunction{optL1} and \Rfunction{optL2} can be used to find the optimal value of $\lambda_1$ or $\lambda_2$.
 
-The algorithm used for the optimization is the Brent algorithm for minimization without derivatives \citep[][see also \Robject{help(optimize)}]{Brent1973}. When using this algorithm, it is important to realize that this algorithm is guaranteed to work only for unimodal functions and that it may converge to a local maximum. This is especially relevant for L1 optimization, as the cross-validated likelihood as a function of $\lambda_1$ very often has several local maxima. It is recommended to only use \Rfunction{optL1} in combination with \Rfunction{profL1} to prevent convergence to the wrong optimum. The cross-validated likelihood as a function of $\lambda_2$, on the other hand, is far better behaved and practically never has local maxima. The function \Rfunction{optL2} can safely be used even without combining it with \Rfunction{profL2}.
+The algorithm used for the optimization is the Brent algorithm for minimization without derivatives \citep[][see also \Robject{help(optimize)}]{Brent1973}. When using this algorithm, it is important to realize that this algorithm is guaranteed to work only for unimodal functions and that it may converge to a local maximum. This is especially relevant for L1 optimization, as the cross-validated likelihood as a function of $\lambda_1$ very often has several local maxima. It is recommended only to use \Rfunction{optL1} in combination with \Rfunction{profL1} to prevent convergence to the wrong optimum. The cross-validated likelihood as a function of $\lambda_2$, on the other hand, is far better behaved and practically never has local maxima. The function \Rfunction{optL2} can safely be used even without combining it with \Rfunction{profL2}.
 
 The functions \Rfunction{optL1} and \Rfunction{optL2} take the same arguments as \Rfunction{cvl}, and some additional ones.
 
@@ -408,13 +411,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.431872
+[1] 2.463987
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -261.9456
+[1] -260.4834
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}

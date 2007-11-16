@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592-1.40.3 (MiKTeX 2.6) (preloaded format=pdflatex 2007.10.31)  7 NOV 2007 13:24
+This is pdfTeX, Version 3.141592-1.40.3 (MiKTeX 2.6) (preloaded format=pdflatex 2007.10.31)  16 NOV 2007 18:11
 entering extended mode
 **M:/R/packages/penalized/inst/doc/penalized.tex
 (M:\R\packages\penalized\inst\doc\penalized.tex
@@ -198,33 +198,33 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 LaTeX Font Info:    Try loading font information for T1+aett on input line 39.
 ("C:\Program Files\MiKTeX 2.6\tex\latex\ae\t1aett.fd"
 File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
-) [2] [3] [4] <penalized-stepsplot.pdf, id=24, 433.62pt x 433.62pt>
+) [2] [3] [4] [5] <penalized-stepsplot.pdf, id=27, 433.62pt x 433.62pt>
 File: penalized-stepsplot.pdf Graphic file (type pdf)
-<use penalized-stepsplot.pdf> [5] [6 <penalized-stepsplot.pdf>]
+<use penalized-stepsplot.pdf> [6 <penalized-stepsplot.pdf>]
 
 LaTeX Font Warning: Font shape `T1/aett/bx/n' undefined
-(Font)              using `T1/aett/m/n' instead on input line 237.
+(Font)              using `T1/aett/m/n' instead on input line 240.
 
 [7] <penalized-breslowplot.pdf, id=40, 433.62pt x 433.62pt>
 File: penalized-breslowplot.pdf Graphic file (type pdf)
-<use penalized-breslowplot.pdf> [8] <penalized-profplot1.pdf, id=44, 433.62pt x
- 433.62pt>
+<use penalized-breslowplot.pdf> [8] [9 <penalized-breslowplot.pdf>] <penalized-
+profplot1.pdf, id=52, 433.62pt x 433.62pt>
 File: penalized-profplot1.pdf Graphic file (type pdf)
-<use penalized-profplot1.pdf> <penalized-profplot2.pdf, id=45, 433.62pt x 433.6
+<use penalized-profplot1.pdf> <penalized-profplot2.pdf, id=53, 433.62pt x 433.6
 2pt>
 File: penalized-profplot2.pdf Graphic file (type pdf)
-<use penalized-profplot2.pdf> [9 <penalized-breslowplot.pdf>] <penalized-profpa
-thplot.pdf, id=54, 433.62pt x 433.62pt>
+<use penalized-profplot2.pdf> <penalized-profpathplot.pdf, id=54, 433.62pt x 43
+3.62pt>
 File: penalized-profpathplot.pdf Graphic file (type pdf)
-<use penalized-profpathplot.pdf>
-Underfull \hbox (badness 1824) in paragraph at lines 397--398
+<use penalized-profpathplot.pdf> [10 <penalized-profplot1.pdf>]
+Underfull \hbox (badness 1824) in paragraph at lines 400--401
 []\T1/aer/m/n/10 The ar-gu-ments \T1/aer/m/it/10 min-lambda1 \T1/aer/m/n/10 and
  \T1/aer/m/it/10 maxlambda1\T1/aer/m/n/10 , and \T1/aer/m/it/10 min-lambda2 \T1
 /aer/m/n/10 and
  []
 
-[10 <penalized-profplot1.pdf>] (penalized.bbl [11 <penalized-profplot2.pdf>] [1
-2 <penalized-profpathplot.pdf>]) [13] (penalized.aux)
+[11 <penalized-profplot2.pdf>] (penalized.bbl [12 <penalized-profpathplot.pdf>]
+) [13] (penalized.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
@@ -246,7 +246,7 @@ MiKTeX 2.6/fonts/type1/bluesky/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.6/fonts/t
 ype1/bluesky/cm/cmsltt10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/c
 m/cmti10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmti7.pfb><C:/
 Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmtt10.pfb>
-Output written on penalized.pdf (13 pages, 438246 bytes).
+Output written on penalized.pdf (13 pages, 443941 bytes).
 PDF statistics:
  119 PDF objects out of 300000 (max. 8388607)
  0 named destinations out of 300000 (max. 131072)

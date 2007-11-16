@@ -12,29 +12,29 @@ and/or L2 (ridge) penalties, using likelihood cross-validation.}
 
 \usage{
 
-cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0, 
-    data, model = c("cox", "logistic", "linear"), startbeta, 
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
+    data, model = c("cox", "logistic", "linear"), startbeta,
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
     trace = TRUE)
 
-optL1 (response, penalized, unpenalized, minlambda1, maxlambda1, 
-    lambda2 = 0, data, model = c("cox", "logistic", "linear"), 
-    startbeta, startgamma, fold, epsilon = 1e-10, maxiter, 
+optL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
+    lambda2 = 0, data, model = c("cox", "logistic", "linear"),
+    startbeta, startgamma, fold, epsilon = 1e-10, maxiter,
     standardize = FALSE, trace = TRUE, tol = .Machine$double.eps^0.25)
 
-optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, 
-    maxlambda2, data, model = c("cox", "logistic", "linear"), 
-    startbeta, startgamma, fold, epsilon = 1e-10, maxiter, 
+optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
+    maxlambda2, data, model = c("cox", "logistic", "linear"),
+    startbeta, startgamma, fold, epsilon = 1e-10, maxiter,
     standardize = FALSE, trace = TRUE, tol = .Machine$double.eps^0.25)
 
-profL1 (response, penalized, unpenalized, minlambda1, maxlambda1, 
-    lambda2 = 0, data, model = c("cox", "logistic", "linear"), startbeta, 
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+profL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
+    lambda2 = 0, data, model = c("cox", "logistic", "linear"), startbeta,
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
     trace = TRUE, steps = 100, minsteps = steps/4, log = FALSE)
-  
-profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, 
-    maxlambda2, data, model = c("cox", "logistic", "linear"), startbeta, 
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+
+profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
+    maxlambda2, data, model = c("cox", "logistic", "linear"), startbeta,
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
     trace = TRUE, steps = 100, minsteps = steps/4, log = TRUE)
 }
 
@@ -59,17 +59,13 @@ penalization. Both may be vectors if different covariates are to be penalized di
 parameters for L1 or L2 penalization between which the cross-validated likelihood
 is to be profiled or optimized.}
 
-\item{data}{A \code{data.frame} used to evaluate \code{response}, and the terms of
- \code{penalized} or \code{unpenalized} when these have been specified as a
- \code{\link[stats:formula]{formula}} object.}
+\item{data}{A \code{data.frame} used to evaluate \code{response}, and the terms of \code{penalized} or \code{unpenalized} when these have been specified as a  \code{\link[stats:formula]{formula}} object.}
 
 \item{model}{The model to be used. If missing, the model will be guessed from the \code{response} input.}
 
-\item{startbeta}{Starting values for the regression coefficients of the penalized covariates.
-These starting values will be used only for the first values of \code{lambda1} and \code{lambda2}.}
+\item{startbeta}{Starting values for the regression coefficients of the penalized covariates. These starting values will be used only for the first values of \code{lambda1} and \code{lambda2}.}
 
-\item{startgamma}{Starting values for the regression coefficients of the unpenalized covariates.
-These starting values will be used only for the first values of \code{lambda1} and \code{lambda2}.}
+\item{startgamma}{Starting values for the regression coefficients of the unpenalized covariates. These starting values will be used only for the first values of \code{lambda1} and \code{lambda2}.}
 
 \item{fold}{The fold for cross-validation. May be supplied as a single number
 (between 2 and n) giving the number of folds, or, alternatively, as a length \code{n}
@@ -101,7 +97,7 @@ likelihood of the null model, provided it has done at least \code{minsteps} step
 
 \item{log}{If \code{FALSE}, the steps between \code{minlambda1} and
 \code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} are equidistant on a linear scale, if \code{TRUE}
-on a logaritmic scale. Please note the different default between \code{optL1} (\code{FALSE}) 
+on a logaritmic scale. Please note the different default between \code{optL1} (\code{FALSE})
 and \code{optL2} (\code{TRUE}).}
 
 \item{tol}{The tolerance of the Brent algorithm used for minimization.
@@ -136,16 +132,16 @@ See also \code{\link[stats:optimize]{optimize}}.}
 
 \value{A named list. See details.}
 
-\note{The \code{optL1} and \code{optL2} functions use Brent's algorithm for 
+\note{The \code{optL1} and \code{optL2} functions use Brent's algorithm for
   minimization without derivatives (see also \code{\link[stats:optimize]{optimize}}).
-  There is a risk that these functions converge to a local instead of to a global 
-  optimum. This is especially the case for \code{optL1}, as the cross-validated 
-  likelihood as a function of \code{lambda1} quite often has local optima. It is 
+  There is a risk that these functions converge to a local instead of to a global
+  optimum. This is especially the case for \code{optL1}, as the cross-validated
+  likelihood as a function of \code{lambda1} quite often has local optima. It is
   recommended to use \code{optL1} in combination with \code{profL1} to check whether
   \code{optL1} has converged to the right optimum.
-  
+
   See also the notes under \code{\link{penalized}}.
-} 
+}
 
 \author{Jelle Goeman: \email{j.j.goeman@lumc.nl}}
 
@@ -162,10 +158,10 @@ coefficients(opt$fullfit)
 plot(opt$predictions)
 
 # Plotting the profile of the crossvalidated likelihood
-prof <- profL1(Surv(time, event), penalized = nki70[,8:77], 
+prof <- profL1(Surv(time, event), penalized = nki70[,8:77],
     fold = opt$fold, steps=20)
 plot(prof$lambda, prof$cvl, type="l")
 plotpath(prof$fullfit)
 }
 
-\keyword{multivariate} \keyword{regression}
+\keyword{multivariate} \keyword{regression} 

@@ -112,17 +112,20 @@
 # merges predicted survival curves with different time points
 # input: a list of breslow objects
 .coxmerge <- function(predictions) {
-
+                      
   times <- sort(unique(unlist(lapply(predictions, time))))
   curves <- sapply(predictions, function(pred) {
-    res <- rep(NA, length(pred@time))
+    res <- rep(NA, length(times))
     res[times %in% time(pred)] <- pred@curves[1,]
-    res <- sapply(1:length(res), function(i) {
-      if (is.na(res[i]) && any(!is.na(res[-(1:i)])))
-        res[min(which(!is.na(res) & (1:length(res)>i)))]
-      else
-        res[i]
-    })
+    # We interpolate all NAs except in the tail
+    endnas <- rev(cumsum(is.na(rev(res)))==1:length(res)) 
+    ready <- !any(is.na(res[!endnas]))
+    while (!ready) {
+      nas <- which(is.na(res[!endnas]))
+      ready <- !any(is.na(res[nas-1]))
+      res[nas] <- res[nas-1]
+    }
+    res
   })
   out <- new("breslow")
   out@time <- times
