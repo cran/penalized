@@ -120,9 +120,7 @@ fit <- penalized(Surv(time,event)~ER, nki70[,8:77], lambda2=1)
 
 This adds estrogen receptor status as an unpenalized covariate. Note in the second line that right hand side of the \Rclass{formula} object in the \Rfunarg{response} argument is automatically taken to be the \Rfunarg{unpenalized} argument because the \Rfunarg{penalized} argument was given by the user.
 
-In linear and logistic regression the intercept is by default never penalized.
-
-In rare cases  each covariate may have to penalized in a different way, or some covariates have to be given an L2 penalty and others an L1 penalty. In those cases, the arguments \Rfunarg{lambda1} and \Rfunarg{lambda2} may be supplied as vectors of the same length as the number of covariates in the function argument \Rfunarg{penalized}.
+In linear and logistic regression the intercept is by default never penalized. The use of an intercept can be suppressed with \Robject{penalized = ~0}. The intercept is always removed from the penalized model matrix, unless the penalized model consists of only an intercept.
 
 
 \subsection{factors}

@@ -2,6 +2,7 @@
 # These functions are not user level functions!
 # They require a very specific input format and they 
 # rely on the functions calling them for input checking
+# These functions are not exported in the NAMESPACE file
 ###################################
  
 
@@ -314,81 +315,6 @@
 
 
 ###################################
-# Puts input data in the right format
-###################################
-.prepare <- function(penalized, unpenalized, lambda1, lambda2, data, startbeta,
-    startgamma, intercept, standardize) {
-
-  # extract the data matrix and check presence/absence of intercept
-  if (!missing(unpenalized) && is(unpenalized, "formula")) {
-    unpenalized <- model.matrix(unpenalized, data)
-  } 
-  interceptcolumn <- which(apply(unpenalized, 2, function(x) all(x == 1)))
-  if (length(interceptcolumn) > 1) stop("multiple intercept columns")
-  if (intercept && length(interceptcolumn) == 0) {
-    unpenalized <- as.matrix(rep(1, nrow(penalized)))
-    colnames(unpenalized) <- "(Intercept)"
-    interceptcolumn <- 1
-  } 
-  if (!intercept && length(interceptcolumn) > 0) {
-    unpenalized <- unpenalized[, -interceptcolumn, drop = FALSE]
-  }
-
-  #check dimensions
-  if (nrow(unpenalized) != nrow(penalized)) 
-    stop("The row counts of \"penalized\" ", nrow(penalized), ") and \"unpenalized\" (", nrow(unpenalized), ") do not match", call. = FALSE)
-  if (length(startgamma) != ncol(unpenalized))
-    stop("The number of covariates in \"unpenalized\" (", ncol(unpenalized), ") does not match the length of \"startgamma\" (", length(startgamma), ")", call. = FALSE)
-  if (length(startbeta) != ncol(penalized))
-    stop("The number of covariates in \"penalized\" (", ncol(penalized), ") does not match the length of \"startbeta\" (", length(startbeta), ")", call. = FALSE)
-  if (!length(lambda1) %in% c(1, ncol(penalized)))
-    stop("The length of \"lambda1\" (", length(lambda1), ") should be either 1 or ", ncol(penalized), call.=FALSE)
-  if (!length(lambda2) %in% c(1, ncol(penalized)))
-    stop("The length of \"lambda2\" (", length(lambda2), ") should be either 1 or ", ncol(penalized), call.=FALSE)
-
-  # orthogonalize penalized with respect to unpenalized
-  if (ncol(unpenalized) > 0) {
-    orthogonalizer <- solve(crossprod(unpenalized), crossprod(unpenalized, penalized))
-    penalized <- penalized - unpenalized %*% orthogonalizer
-  } else {
-    orthogonalizer <- matrix(,0,ncol(penalized))
-  }
-
-  # Join penalized and unpenalized together
-  X <- cbind(unpenalized, penalized)
-  n <- nrow(X)
-  if (missing(startgamma)) startgamma <- numeric(ncol(unpenalized))
-  if (missing(startbeta)) startbeta <- numeric(ncol(penalized))
-  if (is.null(names(startgamma))) names(startgamma) <- colnames(unpenalized)
-  if (is.null(names(startbeta))) names(startbeta) <- colnames(penalized)
-  beta <- c(startgamma, startbeta)
-  
-  # make vectors of lambda1 and lambda2
-  if (length(lambda1) == 1) {
-    lambda1 <- rep(lambda1, times = ncol(penalized))
-  }
-  lambda1 <- c(numeric(ncol(unpenalized)), lambda1)
-  if (length(lambda2) == 1) {
-    lambda2 <- rep(lambda2, times = ncol(penalized))
-  }
-  lambda2 <- c(numeric(ncol(unpenalized)), lambda2)
-
-  # stabilize/standardize
-  vars <- apply(X,2,var) * (n-1)/n
-  vars[vars == 0] <- 1
-  sds <- sqrt(vars)
-  X <- X / matrix(sds, nrow(X), ncol(X), byrow=T)
-  if (!standardize) {
-    lambda1[lambda1 != 0] <- lambda1[lambda1 != 0] / sds[lambda1 != 0]
-    lambda2[lambda2 != 0] <- lambda2[lambda2 != 0] / vars[lambda2 != 0]
-  }
-  beta[beta != 0] <- beta[beta != 0] * sds[beta != 0]
-
-  return(list(X = X, beta = beta, weights = sds, lambda1 = lambda1, lambda2 = lambda2, orthogonalizer = orthogonalizer))
-}
-   
-   
-###################################
 # Workhorse function for cross-validated likelihood
 ###################################
 .cvl <- function(X, lambda1, lambda2, beta, fit, cvl, prediction,
@@ -530,4 +456,26 @@
   out <- try(qr.coef(qr(a, LAPACK=TRUE), b))
   if (is(out, "try-error")) stop("Matrix inversion failed. Please increase lambda1 and/or lambda2", call. = FALSE)
   return(out)
+}
+
+#######################################
+# calculate cross-validation folds
+#######################################
+.getFolds <- function(fold, n) {
+  if(length(fold) == 1) {
+    if (fold == n) {
+      groups <- 1:n
+    } else {
+      groups <- sample(n) %% fold + 1
+    }
+  } else {
+    if (length(fold) == n) {
+      groups <- fold 
+      fold <- max(groups)
+    } else {
+      stop("incorrect input of \"fold\"", call.=FALSE)
+    }
+  }
+  if (!all(1:fold %in% groups)) stop("incorrect input of \"fold\"", call.=FALSE)
+  return(groups)
 }

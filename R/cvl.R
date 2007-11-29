@@ -1,4 +1,59 @@
 ######################################
+# Finds the cross-validated loglikelihood for a given penalty
+######################################
+cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, data, 
+  model = c("cox", "logistic", "linear"), startbeta, startgamma, fold,  
+  epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) {
+
+  # Maximum number of iterations depends on the input
+  if (missing(maxiter)) maxiter <- if (lambda1 == 0) 25 else Inf
+
+  # call the general input checking function
+  prep <- .checkinput(match.call(), parent.frame())
+
+  # check for the presence of penalty parameters
+  if (ncol(prep$X) >= nrow(prep$X) && lambda1 == 0 && lambda2 == 0)
+    stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
+
+  # prepare the model
+  fit <- switch(prep$model,
+    cox = .coxfit(prep$response),
+    logistic = .logitfit(prep$response),
+    linear = .lmfit(prep$response)
+  )
+
+  # retrieve the dimensions for convenience
+  pu <- length(prep$nullgamma)
+  pp <- ncol(prep$X) - pu
+  n <- nrow(prep$X)
+  
+  # divide the samples into folds for cross-validation
+  if (missing(fold)) fold <- n
+  groups <- .getFolds(fold, n)
+  names(groups) <- rownames(prep$X)
+  fold <- max(groups)
+  
+  res <- .cvl(prep$X, lambda1 * prep$baselambda1, lambda2 * prep$baselambda2, 
+    prep$beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, 
+    groups=groups, epsilon=epsilon, maxiter=maxiter, trace = trace, 
+    quit.if.failed = FALSE)
+  res$predictions <- switch(prep$model, 
+    cox = .coxmerge(res$predictions),
+    logistic = .logitmerge(res$predictions),
+    linear = .lmmerge(res$predictions)
+  )
+
+  return(list(
+    cvl = res$cvl, 
+    predictions = res$predictions, 
+    fold = groups, 
+    fullfit = .makepenfit(res$fit, pu, prep$model, lambda1, 
+      lambda2, prep$orthogonalizer, prep$weights)
+  ))
+}
+
+
+######################################
 # Finds the curve of the cross-validated likelihood for a given L2-penalty and a range of L1-penalty values
 ######################################
 profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lambda2 = 0, 
@@ -6,127 +61,45 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   epsilon = 1e-10, maxiter = Inf, standardize = FALSE, trace = TRUE,
   steps = 100, minsteps = steps/4, log = FALSE) {
 
-  # determine the response
-  if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
-  if (is(response, "formula")) {
-    if (missing(penalized)) {
-      penalized <- response
-    } else if (missing(unpenalized)) {
-      unpenalized <- response
-    } else {
-      warning("Right hand side of response formula ignored.")
-    }
-    if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
-    else
-      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
-  }
+  # call the general input checking function
+  prep <- .checkinput(match.call(), parent.frame())
 
-  # determine the model if missing
-  if (missing(model)) {
-    if (is(response, "Surv")) model <- "cox"
-    else if (all(response %in% 0:1)) model <- "logistic"
-    else if (is.numeric(response)) model <- "linear"
-    else stop("Model could not be determined from the input. Please specify the model.")
-  }
-  model <- match.arg(model)
-
-  # make sure the response has he correctformat and determine the sample size
-  if (model == "cox" && !is(response, "Surv")) response <- Surv(response)
-  n <- if (model == "cox") length(response)/2 else length(response)
-
-  # fill in miscelaneous missing input
-  if (missing(unpenalized)) unpenalized <- matrix(,n,0)
-  if (missing(data)) data <-  as.data.frame(matrix(,n,0))
-
-  # turn penalized into a matrix if it is not a matrix
-  if (is.data.frame(penalized) || is.vector(penalized)) penalized <- as.matrix(penalized)
-  if (is(penalized, "formula")) {
-    oldcontrasts <- options("contrasts")[[1]]
-    options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))
-    penalized <- model.matrix(penalized, data)
-    options(contrasts = oldcontrasts)
-    penalized <- penalized[,colnames(penalized) != "(Intercept)", drop = FALSE]
-  }
-  m <- ncol(penalized)
-  if (missing(startbeta))
-    startbeta <- rep(0, m)
-
-  if (nrow(penalized) != n) {
-    stop("The length of \"response\" (",n, ") does not match the row count of \"penalized\" (", nrow(penalized), ")")
-  }
-
-  # startgamma is set at the model of infinite penalty
-  if (missing(startgamma)) {
-    startgamma <- switch(model,
-      cox = .coxgamma(response, unpenalized, data),
-      logistic = .logitgamma(response, unpenalized, data),
-      linear = .lmgamma(response, unpenalized, data))
-  }
-
-  intercept <- (model != "cox")
-  if (is(unpenalized, "formula")) intercept <- intercept && (attr(terms(unpenalized), "intercept") == 1)
-
-  # Join unpenalized and penalized covariates and standardize to the same scale
-  inputlambda2 <- lambda2
-  prepared <- .prepare(penalized, unpenalized, lambda1 = 1, lambda2, data, startbeta,
-    startgamma, intercept = intercept, standardize = standardize)
-  X <- prepared$X
-  lambda1 <- prepared$lambda1
-  lambda2 <- prepared$lambda2
-  weights <- prepared$weights
-  beta <- prepared$beta
-  orthogonalizer <- prepared$orthogonalizer
-  rm(prepared)
-  p <- ncol(X)
-
-  # Prepare the model
-  fit <- switch(model,
-    cox = .coxfit(response),
-    logistic = .logitfit(response),
-    linear = .lmfit(response)
+  # prepare the model
+  fit <- switch(prep$model,
+    cox = .coxfit(prep$response),
+    logistic = .logitfit(prep$response),
+    linear = .lmfit(prep$response)
   )
+
+  # retrieve the dimensions for convenience
+  pu <- length(prep$nullgamma)
+  pp <- ncol(prep$X) - pu
+  n <- nrow(prep$X)
 
   # divide the samples into folds for cross-validation
   if (missing(fold)) fold <- n
-  if(length(fold) == 1) {
-    if (fold == n) {
-      groups <- 1:n
-    } else {
-      groups <- sample(n) %% fold + 1
-    }
-  } else {
-    if (length(fold) == n) {
-      groups <- fold 
-      fold <- max(groups)
-    } else {
-      stop("incorrect input of \"fold\"", call.=FALSE)
-    }
+  groups <- .getFolds(fold, n)
+  names(groups) <- rownames(prep$X)
+  fold <- max(groups)
+
+  # find the maxlambda1 and minlambda1
+  if (missing(maxlambda1)) {
+    if (pu > 0) 
+      lp <- drop(prep$X[,1:pu,drop=FALSE] %*% prep$nullgamma)
+    else 
+      lp <- numeric(n)
+    gradient <- drop(crossprod(prep$X[,pu+1:pp,drop=FALSE], fit$fit(lp)$residuals))
+    rel <- gradient / prep$baselambda1[pu+1:pp]
+    maxlambda1 <- max(abs(rel))
   }
-  if (!all(1:fold %in% groups)) stop("incorrect input of \"fold\"", call.=FALSE)
-  names(groups) <- rownames(X)
-
-
-  # Find the highest interesting value of lambda
-  nullgamma <- switch(model,
-    cox = .coxgamma(response, unpenalized, data),
-    logistic = .logitgamma(response, unpenalized, data),
-    linear = .lmgamma(response, unpenalized, data)
-  )
-  null <- c(nullgamma, numeric(m)) * weights
-  nzn <- (null != 0)
-  lp <- X[,nzn,drop=FALSE] %*% null[nzn]
-  gradient <- drop(crossprod(X[,!nzn,drop=FALSE], fit$fit(lp)$residuals))  
-  rel <- gradient / lambda1[!nzn]
-  
-  # which lambda-values?
-  if (missing(maxlambda1)) maxlambda1 <- max(abs(rel))
   if (missing(minlambda1)) {
     if (log) 
       stop("argument \"minlambda1\" is missing. please specify \"minlambda1\" or set log = FALSE", call. = FALSE)
     else
       minlambda1 <- 0
   }  
+  
+  # find the sequence from maxlambda1 to minlambda1
   if (log) {
     lambda1s <- exp(seq(log(maxlambda1), log(minlambda1), length.out = steps+1))
   } else {
@@ -134,10 +107,11 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   }
 
   # benchmark: cvl at infinite penalty
-  g <- length(nullgamma)
-  if (g > 0) {
-    nullfit <- .cvl(X[,1:g, drop=FALSE], lambda1 = rep(0,g), lambda2 = rep(0,g), nullgamma, fit=fit$fit, cvl=fit$cvl, 
-      prediction = fit$prediction, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
+  if (pu > 0) {
+    nullfit <- .cvl(prep$X[,1:pu, drop=FALSE], lambda1 = rep(0,pu), 
+      lambda2 = rep(0,pu), prep$nullgamma, fit=fit$fit, cvl=fit$cvl, 
+      prediction = fit$prediction, groups=groups, epsilon=epsilon, 
+      maxiter=maxiter, trace = FALSE)
     nullcvl <- nullfit$cvl
     nullfit <- nullfit$fit
   } else {
@@ -148,9 +122,9 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
     nullfit$converged <- TRUE
   }
 
-
-  # The function to be optimized
+  # the actual repeated cvl-calculation
   betas <- NULL
+  beta <- prep$beta
   cvls <- rep(NA,length(lambda1s))
   finished <- FALSE
   iter <- 0
@@ -163,8 +137,10 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(X, rellambda*lambda1, lambda2, beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, groups=groups,
-      epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, quit.if.failed=FALSE)
+    out <- .cvl(prep$X, rellambda*prep$baselambda1, lambda2*prep$baselambda2, 
+      beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, 
+      groups=groups, epsilon=epsilon, maxiter=maxiter, trace = trace, 
+      betas = betas, quit.if.failed=FALSE)
     if (trace) cat("cvl=", out$cvl, "\n")
     beta <- out$fit$beta
     betas <- out$betas
@@ -174,6 +150,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
     finished <- ((fold > 1) && ((cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= minsteps))) || (iter == length(lambda1s))
   }
 
+  # remove the tail of the output
   if (fold > 1) {
     lambda1s <- lambda1s[!is.na(cvls)]
     fits <- fits[!is.na(cvls)]                                           
@@ -181,18 +158,27 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
     cvls <- cvls[!is.na(cvls)]
   }
 
+  # merge the cross-validated predictions
   predictions <- lapply(predictions, function(preds) {
-    switch(model, 
+    switch(prep$model, 
       cox = .coxmerge(preds),
       logistic = .logitmerge(preds),
       linear = .lmmerge(preds)
     )
   })
   
+  # create all the penfit objects
   makethisfit <- function(iter)
-    .makepenfit(fits[[iter]], length(startgamma), model, lambda1s[[iter]], inputlambda2, orthogonalizer, weights)
+    .makepenfit(fits[[iter]], pu, prep$model, lambda1s[[iter]], lambda2, 
+    prep$orthogonalizer, prep$weights)
 
-  return(list(lambda = lambda1s, fold = groups, cvl = cvls, predictions = predictions, fullfit = lapply(1:length(cvls), makethisfit)))
+  return(list(
+    lambda = lambda1s, 
+    fold = groups, 
+    cvl = cvls, 
+    predictions = predictions, 
+    fullfit = lapply(1:length(cvls), makethisfit)
+  ))
 } 
 
 ######################################
@@ -203,129 +189,42 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE,
   steps = 100, minsteps = steps/4, log = TRUE) {
 
-  # determine the response
-  if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
-  if (is(response, "formula")) {
-    if (missing(penalized)) {
-      penalized <- response
-    } else if (missing(unpenalized)) {
-      unpenalized <- response
-    } else {
-      warning("Right hand side of response formula ignored.")
-    }
-    if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
-    else
-      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
-  }
+  # Maximum number of iterations depends on the input
+  if (missing(maxiter)) maxiter <- if (lambda1 == 0) 25 else Inf
 
-  # determine the model if missing
-  if (missing(model)) {
-    if (is(response, "Surv")) model <- "cox"
-    else if (all(response %in% 0:1)) model <- "logistic"
-    else if (is.numeric(response)) model <- "linear"
-    else stop("Model could not be determined from the input. Please specify the model.")
-  }
-  model <- match.arg(model)
+  # call the general input checking function
+  prep <- .checkinput(match.call(), parent.frame())
 
-  # make sure the response has he correctformat and determine the sample size
-  if (model == "cox" && !is(response, "Surv")) response <- Surv(response)
-  n <- if (model == "cox") length(response)/2 else length(response)
-
-  # fill in miscelaneous missing input
-  if (missing(unpenalized)) unpenalized <- matrix(,n,0)
-  if (missing(data)) data <-  as.data.frame(matrix(,n,0))
-  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0)) 25 else Inf
-
-  # turn penalized into a matrix if it is not a matrix
-  if (is.data.frame(penalized) || is.vector(penalized)) penalized <- as.matrix(penalized)
-  if (is(penalized, "formula")) {
-    oldcontrasts <- options("contrasts")[[1]]
-    options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))
-    penalized <- model.matrix(penalized, data)
-    options(contrasts = oldcontrasts)
-    penalized <- penalized[,colnames(penalized) != "(Intercept)", drop = FALSE]
-  }
-  m <- ncol(penalized)
-  if (missing(startbeta))
-    startbeta <- rep(0, m)
-
-  if (nrow(penalized) != n) {
-    stop("The length of \"response\" (",n, ") does not match the row count of \"penalized\" (", nrow(penalized), ")")
-  }
-
-  # startgamma is set at the model of infinite penalty
-  if (missing(startgamma)) {
-    startgamma <- switch(model,
-      cox = .coxgamma(response, unpenalized, data),
-      logistic = .logitgamma(response, unpenalized, data),
-      linear = .lmgamma(response, unpenalized, data))
-  }
-
-  intercept <- (model != "cox")
-  if (is(unpenalized, "formula")) intercept <- intercept && (attr(terms(unpenalized), "intercept") == 1)
-
-  # Join unpenalized and penalized covariates and standardize to the same scale
-  inputlambda1 <- lambda1
-  prepared <- .prepare(penalized, unpenalized, lambda1, lambda2 = 1, data, startbeta,
-    startgamma, intercept = intercept, standardize = standardize)
-  X <- prepared$X
-  lambda1 <- prepared$lambda1
-  lambda2 <- prepared$lambda2
-  weights <- prepared$weights
-  beta <- prepared$beta
-  orthogonalizer <- prepared$orthogonalizer
-  rm(prepared)
-  p <- ncol(X)
-
-  # Prepare the model
-  fit <- switch(model,
-    cox = .coxfit(response),
-    logistic = .logitfit(response),
-    linear = .lmfit(response)
+  # prepare the model
+  fit <- switch(prep$model,
+    cox = .coxfit(prep$response),
+    logistic = .logitfit(prep$response),
+    linear = .lmfit(prep$response)
   )
+
+  # retrieve the dimensions for convenience
+  pu <- length(prep$nullgamma)
+  pp <- ncol(prep$X) - pu
+  n <- nrow(prep$X)
 
   # divide the samples into folds for cross-validation
   if (missing(fold)) fold <- n
-  if(length(fold) == 1) {
-    if (fold == n) {
-      groups <- 1:n
-    } else {
-      groups <- sample(n) %% fold + 1
-    }
-  } else {
-    if (length(fold) == n) {
-      groups <- fold 
-      fold <- max(groups)
-    } else {
-      stop("incorrect input of \"fold\"", call.=FALSE)
-    }
-  }
-  if (!all(1:fold %in% groups)) stop("incorrect input of \"fold\"", call.=FALSE)
-  names(groups) <- rownames(X)
+  groups <- .getFolds(fold, n)
+  names(groups) <- rownames(prep$X)
+  fold <- max(groups)
 
-  # Find the highest interesting value of lambda
-  nullgamma <- switch(model,
-    cox = .coxgamma(response, unpenalized, data),
-    logistic = .logitgamma(response, unpenalized, data),
-    linear = .lmgamma(response, unpenalized, data)
-  )
-  g <- length(nullgamma)
-  nullgamma <- nullgamma * weights[1:g]
-  
-  # which lambda-values?
-  if (!log && missing(minlambda2)) {
-      minlambda2 <- 0
-  }  
-  if (log) {
+  # Find the sequence from maxlambda2 to minlambda2
+  if (!log && missing(minlambda2)) minlambda2 <- 0
+  if (log) 
     lambda2s <- exp(seq(log(maxlambda2), log(minlambda2), length.out = steps+1))
-  } else
+  else
     lambda2s <- seq(maxlambda2, minlambda2, length.out = steps+1)
 
   # benchmark: cvl at infinite penalty
-  if (g > 0) {
-    nullfit <- .cvl(X[,1:g, drop=FALSE], lambda1 = rep(0,g), lambda2 = rep(0,g), nullgamma, fit=fit$fit, cvl=fit$cvl, 
-      prediction = fit$prediction, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
+  if (pu > 0) {
+    nullfit <- .cvl(prep$X[,1:pu, drop=FALSE], lambda1 = rep(0,pu), lambda2 = rep(0,pu),
+      prep$nullgamma, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, 
+      groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
     nullcvl <- nullfit$cvl
     nullfit <- nullfit$fit
   } else {
@@ -336,8 +235,9 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
     nullfit$converged <- TRUE
   }
 
-  # The function to be optimized
+  # the actual repeated cvl-calculation
   betas <- NULL
+  beta <- prep$beta
   cvls <- rep(NA,length(lambda2s))
   finished <- FALSE
   iter <- 0
@@ -350,36 +250,49 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(X, lambda1, rellambda*lambda2, beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, groups=groups,
-      epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, quit.if.failed=FALSE)
+    out <- .cvl(prep$X, lambda1*prep$baselambda1, rellambda*prep$baselambda2, beta,
+      fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, groups=groups,
+      epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, 
+      quit.if.failed=FALSE)
     if (trace) if (fold > 1) cat("cvl=", out$cvl, "\n") else cat("\n")
     beta <- out$fit$beta
     betas <- out$betas
     cvls[iter] <- out$cvl
     fits[[iter]] <- out$fit
     predictions[[iter]] <- out$predictions
-    finished <- ((fold > 1) && (cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) && (iter >= minsteps)) || (iter == length(lambda2s))
+    finished <- ((fold > 1) && (cvls[[iter]] < min(c(nullcvl, cvls[1:(iter-1)]))) &&
+      (iter >= minsteps)) || (iter == length(lambda2s))
   }
 
+  # remove the tail of the output
   if (fold > 1) {
     lambda2s <- lambda2s[!is.na(cvls)]
     fits <- fits[!is.na(cvls)]
     predictions <- predictions[!is.na(cvls)]
     cvls <- cvls[!is.na(cvls)]
   }
-                        
+         
+  # merge the cross-validated predictions               
   predictions <- lapply(predictions, function(preds) {
-    switch(model, 
+    switch(prep$model, 
       cox = .coxmerge(preds),
       logistic = .logitmerge(preds),
       linear = .lmmerge(preds)
     )
   })
-                              
+    
+  # create the penfit objects                          
   makethisfit <- function(iter)
-    .makepenfit(fits[[iter]], length(startgamma), model, inputlambda1, lambda2s[[iter]], orthogonalizer, weights)
+    .makepenfit(fits[[iter]], pu, prep$model, lambda1, lambda2s[[iter]], 
+      prep$orthogonalizer, prep$weights)
 
-  return(list(lambda = lambda2s, fold = groups, cvl = cvls, predictions = predictions, fullfit = lapply(1:length(cvls), makethisfit)))
+  return(list(
+    lambda = lambda2s, 
+    fold = groups, 
+    cvl = cvls, 
+    predictions = predictions, 
+    fullfit = lapply(1:length(cvls), makethisfit)
+  ))
 } 
 
 ######################################
@@ -390,122 +303,44 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
   epsilon = 1e-10, maxiter = Inf, standardize = FALSE, trace = TRUE, 
   tol = .Machine$double.eps^0.25) {
 
-  # determine the response
-  if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
-  if (is(response, "formula")) {
-    if (missing(penalized)) {
-      penalized <- response
-    } else if (missing(unpenalized)) {
-      unpenalized <- response
-    } else {
-      warning("Right hand side of response formula ignored.")
-    }
-    if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
-    else
-      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
-  }
+  # call the general input checking function
+  prep <- .checkinput(match.call(), parent.frame())
 
-  # determine the model if missing
-  if (missing(model)) {
-    if (is(response, "Surv")) model <- "cox"
-    else if (all(response %in% 0:1)) model <- "logistic"
-    else if (is.numeric(response)) model <- "linear"
-    else stop("Model could not be determined from the input. Please specify the model.")
-  }
-  model <- match.arg(model)
-  
-  # make sure the response has he correctformat and determine the sample size
-  if (model == "cox" && !is(response, "Surv")) response <- Surv(response)
-  n <- if (model == "cox") length(response)/2 else length(response)
-
-  # fill in miscelaneous missing input
-  if (missing(unpenalized)) unpenalized <- matrix(,n,0)
-  if (missing(data)) data <-  as.data.frame(matrix(,n,0))
-
-  # turn penalized into a matrix if it is not a matrix
-  if (is.data.frame(penalized) || is.vector(penalized)) penalized <- as.matrix(penalized)
-  if (is(penalized, "formula")) {
-    oldcontrasts <- options("contrasts")[[1]]
-    options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))
-    penalized <- model.matrix(penalized, data)
-    options(contrasts = oldcontrasts)
-    penalized <- penalized[,colnames(penalized) != "(Intercept)", drop = FALSE]
-  }
-  m <- ncol(penalized)
-  if (missing(startbeta)) 
-    startbeta <- rep(0, m)
-
-  if (nrow(penalized) != n) {
-    stop("The length of \"response\" (",n, ") does not match the row count of \"penalized\" (", nrow(penalized), ")")
-  }
-  
-  # startgamma is set at the model of infinite penalty
-  if (missing(startgamma)) {
-    startgamma <- switch(model,
-      cox = .coxgamma(response, unpenalized, data),
-      logistic = .logitgamma(response, unpenalized, data),
-      linear = .lmgamma(response, unpenalized, data))
-  }
-  
-  intercept <- (model != "cox")
-  if (is(unpenalized, "formula")) intercept <- intercept && (attr(terms(unpenalized), "intercept") == 1)
-
-  # Join unpenalized and penalized covariates and standardize to the same scale
-  inputlambda2 <- lambda2
-  prepared <- .prepare(penalized, unpenalized, lambda1 = 1, lambda2, data, startbeta, 
-    startgamma, intercept = intercept, standardize = standardize)
-  X <- prepared$X 
-  lambda1 <- prepared$lambda1 
-  lambda2 <- prepared$lambda2
-  weights <- prepared$weights
-  beta <- prepared$beta
-  orthogonalizer <- prepared$orthogonalizer
-  rm(prepared)
-  p <- ncol(X)
-
-  # Prepare the model
-  fit <- switch(model,
-    cox = .coxfit(response),
-    logistic = .logitfit(response),
-    linear = .lmfit(response)
+  # prepare the model
+  fit <- switch(prep$model,
+    cox = .coxfit(prep$response),
+    logistic = .logitfit(prep$response),
+    linear = .lmfit(prep$response)
   )
-  
+
+  # retrieve the dimensions for convenience
+  pu <- length(prep$nullgamma)
+  pp <- ncol(prep$X) - pu
+  n <- nrow(prep$X)
+
   # divide the samples into folds for cross-validation
   if (missing(fold)) fold <- n
-  if(length(fold) == 1) {
-    if (fold == n) {
-      groups <- 1:n
-    } else {
-      groups <- sample(n) %% fold + 1
-    }
-  } else {
-    if (length(fold) == n) {
-      groups <- fold 
-      fold <- max(groups)
-    } else {
-      stop("incorrect input of \"fold\"", call.=FALSE)
-    }
-  }
-  if (!all(1:fold %in% groups)) stop("incorrect input of \"fold\"", call.=FALSE)
-  names(groups) <- rownames(X)
+  groups <- .getFolds(fold, n)
+  names(groups) <- rownames(prep$X)
+  fold <- max(groups)
   
-  # Find the highest interesting value of lambda
-  nullgamma <- switch(model, 
-    cox = .coxgamma(response, unpenalized, data),
-    logistic = .logitgamma(response, unpenalized, data),
-    linear = .lmgamma(response, unpenalized, data)
-  )
-  null <- c(nullgamma, numeric(m)) * weights
-  nzn <- (null != 0)
-  lp <- X[,nzn,drop=FALSE] %*% null[nzn]
-  gradient <- drop(crossprod(X[,!nzn,drop=FALSE], fit$fit(lp)$residuals))
-  rel <- gradient / lambda1[!nzn]
-  if (missing(maxlambda1)) maxlambda1 <- max(abs(rel))
+  # Find the maxlambda1 and minlambda1
+  if (missing(maxlambda1)) {
+    if (pu > 0) 
+      lp <- drop(prep$X[,1:pu,drop=FALSE] %*% prep$nullgamma)
+    else 
+      lp <- numeric(n)
+    gradient <- drop(crossprod(prep$X[,pu+1:pp,drop=FALSE], fit$fit(lp)$residuals))
+    rel <- gradient / prep$baselambda1[pu+1:pp]
+    maxlambda1 <- max(abs(rel))
+  }
   if (missing(minlambda1)) minlambda1 <- 0
 
   # The function to be optimized
+  # Note: in passing it keeps track of the fit with the best cvl so far
+  # It does this to be able to return more than just the optimal cvl-value
   betas <- NULL
+  beta <- prep$beta
   maxcvl <- -Inf
   best <- NULL
   thiscvl <- function(rellambda) {
@@ -513,13 +348,14 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(X, rellambda*lambda1, lambda2, beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, 
-      groups=groups, epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
+    out <- .cvl(prep$X, rellambda*prep$baselambda1, lambda2 * prep$baselambda2, 
+      beta, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, groups=groups, 
+      epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
     if (trace) cat("cvl=", out$cvl, "\n")
     beta <<- out$fit$beta
     if (is.null(betas)) {
       between <- mean(abs(beta - out$fit$beta))
-      within <- mean(abs(out$betas - matrix(out$fit$beta, p, fold)))
+      within <- mean(abs(out$betas - matrix(out$fit$beta, pp+pu, fold)))
       if (between < within) {
         betas <<- out$betas
       } 
@@ -536,15 +372,21 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
   #optimize it
   opt <- opt.brent(thiscvl, c(minlambda1, maxlambda1), maximum = TRUE, tol = tol)
   
-  best$predictions <- switch(model, 
+  # merge the cross-validated predictions of the optimal model
+  best$predictions <- switch(prep$model, 
     cox = .coxmerge(best$predictions),
     logistic = .logitmerge(best$predictions),
     linear = .lmmerge(best$predictions)
   )
 
-
-  return(list(lambda = opt$argmax, cvl = opt$max, predictions = best$predictions, fold = groups, 
-    fullfit = .makepenfit(best$fit, length(startgamma), model, opt$argmax, inputlambda2, orthogonalizer, weights)))
+  return(list(
+    lambda = opt$argmax, 
+    cvl = opt$max, 
+    predictions = best$predictions, 
+    fold = groups, 
+    fullfit = .makepenfit(best$fit, pu, prep$model, opt$argmax, lambda2, 
+      prep$orthogonalizer, prep$weights)
+  ))
 }
 
 ######################################
@@ -552,146 +394,74 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
 ######################################
 optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, 
   data, model = c("cox", "logistic", "linear"), startbeta, startgamma, fold, 
-  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, trace = TRUE, 
+  epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE, 
   tol = .Machine$double.eps^0.25) {
 
-  # determine the response
-  if (!missing(data)) response <- eval(as.list(match.call())$response, data, globalenv())
-  if (is(response, "formula")) {
-    if (missing(penalized)) 
-      penalized <- response
-    else if (missing(unpenalized)) 
-      unpenalized <- response
-    else 
-      warning("Right hand side of response formula ignored.")
-    if (missing(data)) 
-      response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
-    else
-      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
-  }
+  # maximum number of iterations depends on the input
+  if (missing(maxiter)) maxiter <- if (lambda1 == 0) 25 else Inf
 
-  # determine the model if missing
-  if (missing(model)) {
-    if (is(response, "Surv")) model <- "cox"
-    else if (all(response %in% 0:1)) model <- "logistic"
-    else if (is.numeric(response)) model <- "linear"
-    else stop("Model could not be determined from the input. Please specify the model.")
-  }
-  model <- match.arg(model)
-  
-  # make sure the response has he correct format and determine the sample size
-  if (model == "cox" && !is(response, "Surv")) response <- Surv(response)
-  n <- if (model == "cox") length(response)/2 else length(response)
+  # call the general input checking function
+  prep <- .checkinput(match.call(), parent.frame())
 
-  # fill in miscelaneous missing input
-  if (missing(unpenalized)) unpenalized <- matrix(,n,0)
-  if (missing(data)) data <-  as.data.frame(matrix(,n,0))
-  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0)) 25 else Inf
-
-  # turn penalized into a matrix if it is not a matrix
-  if (is.data.frame(penalized) || is.vector(penalized)) penalized <- as.matrix(penalized)
-  if (is(penalized, "formula")) {
-    oldcontrasts <- options("contrasts")[[1]]
-    options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))
-    penalized <- model.matrix(penalized, data)
-    options(contrasts = oldcontrasts)
-    penalized <- penalized[,colnames(penalized) != "(Intercept)", drop = FALSE]
-  }
-  m <- ncol(penalized)
-  if (missing(startbeta)) 
-    startbeta <- rep(0, m)
-
-  if (nrow(penalized) != n) {
-    stop("The length of \"response\" (",n, ") does not match the row count of \"penalized\" (", nrow(penalized), ")")
-  }
-  
-  # startgamma is set at the model of infinite penalty
-  if (missing(startgamma)) {
-    startgamma <- switch(model,
-      cox = .coxgamma(response, unpenalized, data),
-      logistic = .logitgamma(response, unpenalized, data),
-      linear = .lmgamma(response, unpenalized, data))
-  }
-  
-  intercept <- (model != "cox")
-  if (is(unpenalized, "formula")) intercept <- intercept && (attr(terms(unpenalized), "intercept") == 1)
-
-  # Join unpenalized and penalized covariates and standardize to the same scale
-  inputlambda1 <- lambda1
-  prepared <- .prepare(penalized, unpenalized, lambda1, lambda2= 1, data, startbeta, 
-    startgamma, intercept = intercept, standardize = standardize)
-  X <- prepared$X 
-  lambda1 <- prepared$lambda1 
-  lambda2 <- prepared$lambda2
-  weights <- prepared$weights
-  beta <- prepared$beta
-  orthogonalizer <- prepared$orthogonalizer
-  rm(prepared)
-  p <- ncol(X)
-
-  # Prepare the model
-  fit <- switch(model,
-    cox = .coxfit(response),
-    logistic = .logitfit(response),
-    linear = .lmfit(response)
+  # prepare the model
+  fit <- switch(prep$model,
+    cox = .coxfit(prep$response),
+    logistic = .logitfit(prep$response),
+    linear = .lmfit(prep$response)
   )
+
+  # retrieve the dimensions for convenience
+  pu <- length(prep$nullgamma)
+  pp <- ncol(prep$X) - pu
+  n <- nrow(prep$X)
   
   # divide the samples into folds for cross-validation
   if (missing(fold)) fold <- n
-  if(length(fold) == 1) {
-    if (fold == n) {
-      groups <- 1:n
-    } else {
-      groups <- sample(n) %% fold + 1
-    }
-  } else {
-    if (length(fold) == n) {
-      groups <- fold 
-      fold <- max(groups)
-    } else {
-      stop("incorrect input of \"fold\"", call.=FALSE)
-    }
-  }
-  if (!all(1:fold %in% groups)) stop("incorrect input of \"fold\"", call.=FALSE)
-  names(groups) <- rownames(X)
+  groups <- .getFolds(fold, n)
+  names(groups) <- rownames(prep$X)
+  fold <- max(groups)
 
   # benchmark: cvl at infinite penalty
-  g <- length(startgamma)
-  if (g > 0) {
-    null <- .cvl(X[,1:g, drop=FALSE], lambda1 = rep(0,g), lambda2 = rep(0,g), beta[1:g], fit=fit$fit, cvl=fit$cvl,
-      prediction = fit$prediction, groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
-    nullgamma <- null$fit$fit$beta
+  if (pu > 0) {
+    null <- .cvl(prep$X[,1:pu, drop=FALSE], lambda1 = rep(0,pu), lambda2 = rep(0,pu),
+      prep$nullgamma, fit=fit$fit, cvl=fit$cvl, prediction = fit$prediction, 
+      groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
+    null$fit$beta <- c(null$fit$beta, numeric(pp))
   } else {
     null <- list()
     null.lp <- numeric(n)
-    names(null.lp) <- rownames(X)
+    names(null.lp) <- rownames(prep$X)
     null$cvl <- fit$cvl(numeric(n), !logical(n))
     null$fit <- list()
-    nullgamma <- numeric(0)
-    null$fit$beta <- c(numeric(m))
-    names(null$fit$beta) <- colnames(X)
+    null$fit$beta <- c(numeric(pu+pp))
+    names(null$fit$beta) <- colnames(prep$X)
     null$fit$fit <- fit$fit(null.lp)
-    null$predictions <- lapply(as.list(null.lp), fit$prediction, nuisance= null$fit$fit$nuisance)
+    null$predictions <- lapply(as.list(null.lp), fit$prediction, 
+      nuisance= null$fit$fit$nuisance)
     null$fit$iterations <- 1
     null$fit$converged <- TRUE
   }
   
   # The function to be optimized
+  # Note: in passing it keeps track of the fit with the best cvl so far
+  # It does this to be able to return more than just the optimal cvl-value
   betas <- NULL
+  beta <- prep$beta
   best <- null
   thiscvl <- function(rellambda) {
     if (trace) {
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(X, lambda1, rellambda*lambda2, beta, fit=fit$fit, cvl=fit$cvl, groups=groups, 
-      prediction = fit$prediction, epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
+    out <- .cvl(prep$X, lambda1 * prep$baselambda1, rellambda*prep$baselambda2, 
+      beta, fit=fit$fit, cvl=fit$cvl, groups=groups, prediction = fit$prediction, 
+      epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
     if (trace) cat("cvl=", out$cvl, "\n")
     if (out$cvl > - Inf) {
       beta <<- out$fit$beta
       if (is.null(betas)) {
         between <- mean(abs(beta - out$fit$beta))
-        within <- mean(abs(out$betas - matrix(out$fit$beta, p, fold)))
+        within <- mean(abs(out$betas - matrix(out$fit$beta, pp+pu, fold)))
         if (between < within) {
           betas <<- out$betas
         } 
@@ -718,22 +488,36 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     right <- 10*left
     rightcvl <- thiscvl(right)
     if (leftcvl < rightcvl || rightcvl == -Inf) {
-      high <- right; highcvl <- rightcvl; low <- left; lowcvl <- leftcvl; fac <- 10
+      high <- right
+      highcvl <- rightcvl
+      low <- left 
+      lowcvl <- leftcvl
+      fac <- 10
     } else {
-      high <- left; highcvl <- leftcvl; low <- right; lowcvl <- rightcvl; fac <- 0.1
+      high <- left
+      highcvl <- leftcvl
+      low <- right
+      lowcvl <- rightcvl
+      fac <- 0.1
     }
     ready <- FALSE
-    # infmax: the maximum is (numerically) at infinite penalty; infmin: the maximum is (numerically) at zero penalty
-    infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
+    # infmax: the maximum is (numerically) at infinite penalty
+    # infmin: the maximum is (numerically) at zero penalty
+    infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && 
+      (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
     infmin <- FALSE
     while (!ready && !infmax) {
       nxt <- high*fac
       nxtcvl <- thiscvl(nxt)
       ready <- nxtcvl < highcvl
       if (!ready) {
-        low <- high; lowcvl <- highcvl; high <- nxt; highcvl <- nxtcvl
+        low <- high
+        lowcvl <- highcvl
+        high <- nxt
+        highcvl <- nxtcvl
       }
-      infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
+      infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && 
+        (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
       infmin <- (fac < 1) && (abs(lowcvl - nxtcvl) / abs(nxtcvl + 0.1) < epsilon) 
     }
     minlambda2 <- min(low, nxt)
@@ -744,11 +528,12 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   
   # phase 2: optimize lambda within the order of magnitude found
   if (!infmax && !infmin) {
-    opt <- opt.brent(thiscvl, sort(c(minlambda2,maxlambda2)), maximum = TRUE, tol = tol)
+    opt <- opt.brent(thiscvl, sort(c(minlambda2,maxlambda2)), maximum = TRUE, 
+      tol = tol)
   } else {
     if (infmax) {
       opt <- list(argmax = Inf, max = null$cvl)
-      names(best$fit$beta) <- colnames(X)
+      names(best$fit$beta) <- colnames(prep$X)
       best$fit$penalty <- c(L1 = 0, L2 = Inf)
     } else {
       best$cvl <- -Inf    # clears bestfit
@@ -757,13 +542,20 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     } 
   } 
 
-  best$predictions <- switch(model, 
+  # merge the cross-validated predictions at the optimal fit
+  best$predictions <- switch(prep$model, 
     cox = .coxmerge(best$predictions),
     logistic = .logitmerge(best$predictions),
     linear = .lmmerge(best$predictions)
   )
 
-  return(list(lambda = opt$argmax, cvl = opt$max, predictions = best$predictions, fold = groups, 
-    fullfit = .makepenfit(best$fit, length(startgamma), model, inputlambda1, opt$argmax, orthogonalizer, weights)))
+  return(list(
+    lambda = opt$argmax, 
+    cvl = opt$max, 
+    predictions = best$predictions, 
+    fold = groups, 
+    fullfit = .makepenfit(best$fit, pu, prep$model, lambda1, opt$argmax, 
+      prep$orthogonalizer, prep$weights)
+  ))
 }
       

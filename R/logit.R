@@ -34,23 +34,6 @@
 }
 
 
-.logitgamma <- function(response, unpenalized, data) {
-
-  if (is.matrix(unpenalized)) {
-    if (ncol(unpenalized) > 0) {
-      .response <- response
-      startgamma <- coefficients(glm(.response ~ ., data = as.data.frame(unpenalized), family = binomial))
-    } else                                                   
-      startgamma <- mean(response)
-  } else {
-    .response <- response
-    terms <- c(attr(terms(unpenalized),"intercept"), attr(terms(unpenalized),"term.labels"))
-    form <- as.formula(paste(".response~", paste(terms, collapse="+")))
-    startgamma <- coefficients(glm(form, data = data, family = binomial))
-  }
-  return(startgamma)
-}
-
 # merges predicted probalities
 .logitmerge <- function(predictions) {
   out <- unlist(predictions)

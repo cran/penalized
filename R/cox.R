@@ -92,23 +92,7 @@
   return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
 
-
-
-.coxgamma <- function(response, unpenalized, data) {
-
-  if (is.matrix(unpenalized)) {
-    if (ncol(unpenalized) > 0) 
-      startgamma <- coefficients(coxph(response ~ ., data = as.data.frame(unpenalized), method = "breslow"))
-    else
-      startgamma <- numeric(0)
-  } else {
-    .response <- response
-    form <- as.formula(paste(".response~", paste(c("1", attr(terms(unpenalized),"term.labels")), collapse="+"))) 
-    startgamma <- coefficients(coxph(form, data = data, method = "breslow"))
-  }
-}
-
-                                        
+                                       
 # merges predicted survival curves with different time points
 # input: a list of breslow objects
 .coxmerge <- function(predictions) {

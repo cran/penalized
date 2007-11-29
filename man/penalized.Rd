@@ -26,11 +26,10 @@ See also under \code{data}.}
 
 \item{unpenalized}{Additional unpenalized covariates.
 Specified as under \code{penalized}.
-Note that an unpenalized intercept is included in the model by default (except in the cox model).
+Note that an unpenalized intercept is included in the model by default (except in the Cox model).
 This can be suppressed by specifying \code{unpenalized = ~0}.}
 
-\item{lambda1, lambda2}{The tuning parameters for L1 and L2 penalization. May be
-vectors if different cavariates are to be penalized differently.}
+\item{lambda1, lambda2}{The tuning parameters for L1 and L2 penalization.}
 
 \item{data}{A \code{data.frame} used to evaluate \code{response}, and the terms of
  \code{penalized} or \code{unpenalized} when these have been specified as a
@@ -73,7 +72,7 @@ In case of tied survival times, the function uses Breslow's version of the parti
 
 \seealso{\code{\link{penfit}} for the \code{penfit} object returned, \code{\link{plotpath}}
 for plotting the solution path, and \code{\link{cvl}} for cross-validation and
-optimizing the tunung parameters.}
+optimizing the tuning parameters.}
 
 \examples{
 

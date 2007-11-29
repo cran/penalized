@@ -16,7 +16,7 @@
 
 \author{Jelle Goeman}
 
-\usepackage{c:/R/R-2.6.0/share/texmf/Sweave}
+\usepackage{c:/R/R-2.6.1/share/texmf/Sweave}
 \begin{document}
 
 \maketitle \tableofcontents \newpage
@@ -174,9 +174,7 @@ In some situations it is desirable that not all covariates are subject to a pena
 
 This adds estrogen receptor status as an unpenalized covariate. Note in the second line that right hand side of the \Rclass{formula} object in the \Rfunarg{response} argument is automatically taken to be the \Rfunarg{unpenalized} argument because the \Rfunarg{penalized} argument was given by the user.
 
-In linear and logistic regression the intercept is by default never penalized.
-
-In rare cases  each covariate may have to penalized in a different way, or some covariates have to be given an L2 penalty and others an L1 penalty. In those cases, the arguments \Rfunarg{lambda1} and \Rfunarg{lambda2} may be supplied as vectors of the same length as the number of covariates in the function argument \Rfunarg{penalized}.
+In linear and logistic regression the intercept is by default never penalized. The use of an intercept can be suppressed with \Robject{penalized = ~0}. The intercept is always removed from the penalized model matrix, unless the penalized model consists of only an intercept.
 
 
 \subsection{factors}
@@ -253,7 +251,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -258.5888
+[1] -263.4301
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -411,13 +409,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.463987
+[1] 2.030236
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -260.4834
+[1] -261.8587
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}

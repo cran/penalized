@@ -1,3 +1,10 @@
+0-9.17
+- New internal function .checkinput() does improved common input preprocessing for penalized(), cvl(), profL1(), profL2(), optL1() and optL2(), removing much code duplication. The function replaces .prepare() which previously did part of the common input preprocessing.
+- Streamlining in .checkinput() also made the functions .lmgamma(), .coxgamma() and .logitgamma() obsolete.
+- A new function .getFolds() for calculating cross-validation folds also removd much duplicated code.
+- The possibility of giving different lambda1 or lambda2-values for different covariates has been removed, as it was badly implemented. The option may return in the future.
+
+
 0.9-16
 - Changed the input checks to allow the format penalized(response~unpenalized, penalized). This is in line with functions such as lme.
 - Fixed a bug in .coxmerge() that resulted in alignment mistakes in the cross-validated predicted survival curves.

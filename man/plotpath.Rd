@@ -8,14 +8,12 @@
 \usage{plotpath(object, labelsize = 0.6, standardize = FALSE, ...) }
 
 \arguments{
-\item{object}{A \code{list} of \code{link{penfit}} objects calculated for the same data but different \code{lambda1} values. This object can be created
-using the \code{link{penalized}} function using the \code{steps} argument.}
+\item{object}{A \code{list} of \code{link{penfit}} objects calculated for the same data but different \code{lambda1} values. This object can be created using the \code{link{penalized}} function using the \code{steps} argument.}
 
 \item{labelsize}{Sets the size of the variable labels in the plot. Set to zero for no variable labels.}
 
-\item{standardize}{If \code{TRUE}, plots the regression coefficients for the 
-  covariates standardize to unit second central moment. See \code{\link{penalized}} for details on standardization. 
-  Note that the standardization in \code{plotpath} can also be used if standarization was not used in \code{\link{penalized}}.}
+\item{standardize}{If \code{TRUE}, plots the regression coefficients for the
+  covariates standardize to unit second central moment. See \code{\link{penalized}} for details on standardization. Note that the standardization in \code{plotpath} can also be used if standarization was not used in \code{\link{penalized}}.}
 
 \item{...}{Any other arguments will be forwarded to the plot function.}
 }
@@ -29,11 +27,12 @@ using the \code{link{penalized}} function using the \code{steps} argument.}
 data(nki70)
 
 # Fit the model with the steps argument and plot
-pen <- penalized(Surv(time, event), penalized = nki70[,8:77], 
+pen <- penalized(Surv(time, event), penalized = nki70[,8:77],
     data = nki70, lambda1=1, steps = 20)
 
 plotpath(pen)
 
 }
 
-\keyword{multivariate} \keyword{regression}
+\keyword{multivariate} 
+\keyword{regression} 

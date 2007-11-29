@@ -36,20 +36,11 @@
 }
 
 
-.lmgamma <- function(response, unpenalized, data) {
+.lmgamma <- function(response, unpenalized) {
 
-  if (is.matrix(unpenalized)) {
-    if (ncol(unpenalized) > 0) {
-      .response <- response
-      startgamma <- coefficients(lm(.response ~ ., data = as.data.frame(unpenalized)))
-    } else
-      startgamma <- mean(response)
-  } else {
-    .response <- response
-    terms <- c(attr(terms(unpenalized),"intercept"), attr(terms(unpenalized),"term.labels"))
-    form <- as.formula(paste(".response~", paste(terms, collapse="+")))
-    startgamma <- coefficients(lm(form, data = data))
-  }
+  startgamma <- coefficients(lm(response ~ 0 + unpenalized))
+  names(startgamma) <- colnames(unpenalized)
+  startgamma
 }
 
 # merges predicted means and variances
