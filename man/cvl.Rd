@@ -12,28 +12,32 @@
 \usage{
 
 cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
-    data, model = c("cox", "logistic", "linear"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
-    trace = TRUE)
+    positive = FALSE, data, model = c("cox", "logistic", "linear"),
+    startbeta, startgamma, fold, epsilon = 1e-10, maxiter,
+    standardize = FALSE, trace = TRUE)
 
 optL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
-    lambda2 = 0, data, model = c("cox", "logistic", "linear"),
-    startbeta, startgamma, fold, epsilon = 1e-10, maxiter = Inf,
-    standardize = FALSE, trace = TRUE, tol = .Machine$double.eps^0.25)
+    lambda2 = 0, positive = FALSE, data,
+    model = c("cox", "logistic", "linear"), startbeta, startgamma,
+    fold, epsilon = 1e-10, maxiter = Inf, standardize = FALSE,
+    trace = TRUE, tol = .Machine$double.eps^0.25)
 
 optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
-    maxlambda2, data, model = c("cox", "logistic", "linear"),
-    startbeta, startgamma, fold, epsilon = 1e-10, maxiter,
-    standardize = FALSE, trace = TRUE, tol = .Machine$double.eps^0.25)
+    maxlambda2, positive = FALSE, data,
+    model = c("cox", "logistic", "linear"), startbeta, startgamma,
+    fold, epsilon = 1e-10, maxiter, standardize = FALSE,
+    trace = TRUE, tol = .Machine$double.eps^0.25)
 
 profL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
-    lambda2 = 0, data, model = c("cox", "logistic", "linear"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter = Inf, standardize = FALSE,
+    lambda2 = 0, positive = FALSE, data,
+    model = c("cox", "logistic", "linear"), startbeta, startgamma,
+    fold, epsilon = 1e-10, maxiter = Inf, standardize = FALSE,
     trace = TRUE, steps = 100, minsteps = steps/4, log = FALSE)
 
 profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
-    maxlambda2, data, model = c("cox", "logistic", "linear"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
+    maxlambda2, positive = FALSE, data,
+    model = c("cox", "logistic", "linear"), startbeta, startgamma,
+    fold, epsilon = 1e-10, maxiter, standardize = FALSE,
     trace = TRUE, steps = 100, minsteps = steps/4, log = TRUE)
 }
 
@@ -48,6 +52,8 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 
 \item{minlambda1, minlambda2, maxlambda1, maxlambda2}{The values of the tuning parameters for L1 or L2 penalization between which the cross-validated likelihood is to be profiled or optimized.}
 
+\item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be positive.}
+
 \item{data}{A \code{data.frame} used to evaluate \code{response}, and the terms of \code{penalized} or \code{unpenalized} when these have been specified as a  \code{\link[stats:formula]{formula}} object.}
 
 \item{model}{The model to be used. If missing, the model will be guessed from the \code{response} input.}
@@ -60,7 +66,7 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 
 \item{epsilon}{The convergence criterion. As in \code{\link[stats:glm.control]{glm}}. Convergence is judged separately on the likelihood and on the penalty.}
 
-\item{maxiter}{The maximum number of iterations allowed. Set by default at 25 when lambda1 = 0, infinite otherwise.}
+\item{maxiter}{The maximum number of iterations allowed. Set by default at 25 when only an L2 penalty is present, infinite otherwise.}
 
 \item{standardize}{If \code{TRUE}, standardizes all penalized covariates to unit central L2-norm before applying penalization.}
 
@@ -114,5 +120,5 @@ plot(prof$lambda, prof$cvl, type="l")
 plotpath(prof$fullfit)
 }
 
-\keyword{multivariate} 
+\keyword{multivariate}
 \keyword{regression} 

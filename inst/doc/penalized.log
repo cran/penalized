@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592-1.40.3 (MiKTeX 2.6) (preloaded format=pdflatex 2007.10.31)  1 DEC 2007 16:56
+This is pdfTeX, Version 3.141592-1.40.3 (MiKTeX 2.6) (preloaded format=pdflatex 2007.10.31)  14 DEC 2007 15:26
 entering extended mode
 **M:/R/packages/penalized/inst/doc/penalized.tex
 (M:\R\packages\penalized\inst\doc\penalized.tex
@@ -200,40 +200,43 @@ LaTeX Font Info:    Try loading font information for T1+aett on input line 39.
 File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
 ) [2] [3] [4] [5] <penalized-stepsplot.pdf, id=27, 433.62pt x 433.62pt>
 File: penalized-stepsplot.pdf Graphic file (type pdf)
-<use penalized-stepsplot.pdf> [6 <penalized-stepsplot.pdf>]
+<use penalized-stepsplot.pdf> [6 <penalized-stepsplot.pdf>] <penalized-positive
+stepsplot.pdf, id=36, 433.62pt x 433.62pt>
+File: penalized-positivestepsplot.pdf Graphic file (type pdf)
+<use penalized-positivestepsplot.pdf> [7 <penalized-positivestepsplot.pdf>]
 
 LaTeX Font Warning: Font shape `T1/aett/bx/n' undefined
-(Font)              using `T1/aett/m/n' instead on input line 238.
+(Font)              using `T1/aett/m/n' instead on input line 281.
 
-[7] <penalized-breslowplot.pdf, id=40, 433.62pt x 433.62pt>
+[8] <penalized-breslowplot.pdf, id=49, 433.62pt x 433.62pt>
 File: penalized-breslowplot.pdf Graphic file (type pdf)
-<use penalized-breslowplot.pdf> [8] [9 <penalized-breslowplot.pdf>] <penalized-
-profplot1.pdf, id=52, 433.62pt x 433.62pt>
+<use penalized-breslowplot.pdf> [9] [10 <penalized-breslowplot.pdf>] <penalized
+-profplot1.pdf, id=61, 433.62pt x 433.62pt>
 File: penalized-profplot1.pdf Graphic file (type pdf)
-<use penalized-profplot1.pdf> <penalized-profplot2.pdf, id=53, 433.62pt x 433.6
+<use penalized-profplot1.pdf> <penalized-profplot2.pdf, id=62, 433.62pt x 433.6
 2pt>
 File: penalized-profplot2.pdf Graphic file (type pdf)
-<use penalized-profplot2.pdf> <penalized-profpathplot.pdf, id=54, 433.62pt x 43
+<use penalized-profplot2.pdf> <penalized-profpathplot.pdf, id=63, 433.62pt x 43
 3.62pt>
 File: penalized-profpathplot.pdf Graphic file (type pdf)
-<use penalized-profpathplot.pdf> [10 <penalized-profplot1.pdf>]
-Underfull \hbox (badness 1824) in paragraph at lines 398--399
+<use penalized-profpathplot.pdf> [11 <penalized-profplot1.pdf>]
+Underfull \hbox (badness 1824) in paragraph at lines 441--442
 []\T1/aer/m/n/10 The ar-gu-ments \T1/aer/m/it/10 min-lambda1 \T1/aer/m/n/10 and
  \T1/aer/m/it/10 maxlambda1\T1/aer/m/n/10 , and \T1/aer/m/it/10 min-lambda2 \T1
 /aer/m/n/10 and
  []
 
-[11 <penalized-profplot2.pdf>] (penalized.bbl [12 <penalized-profpathplot.pdf>]
-) [13] (penalized.aux)
+[12 <penalized-profplot2.pdf>] [13 <penalized-profpathplot.pdf>] (penalized.bbl
+) [14] (penalized.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 2498 strings out of 95294
- 31276 string characters out of 1185001
- 75537 words of memory out of 1076165
- 5535 multiletter control sequences out of 60000
+ 2506 strings out of 95294
+ 31485 string characters out of 1185001
+ 76049 words of memory out of 1076165
+ 5539 multiletter control sequences out of 60000
  33846 words of font info for 69 fonts, out of 1000000 for 2000
  14 hyphenation exceptions out of 8191
  35i,6n,24p,1240b,284s stack positions out of 5000i,500n,10000p,200000b,32768s
@@ -246,9 +249,9 @@ MiKTeX 2.6/fonts/type1/bluesky/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.6/fonts/t
 ype1/bluesky/cm/cmsltt10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/c
 m/cmti10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmti7.pfb><C:/
 Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmtt10.pfb>
-Output written on penalized.pdf (13 pages, 443862 bytes).
+Output written on penalized.pdf (14 pages, 478885 bytes).
 PDF statistics:
- 119 PDF objects out of 300000 (max. 8388607)
+ 128 PDF objects out of 300000 (max. 8388607)
  0 named destinations out of 300000 (max. 131072)
- 26 words of extra memory for PDF output out of 65536 (max. 10000000)
+ 31 words of extra memory for PDF output out of 65536 (max. 10000000)
 

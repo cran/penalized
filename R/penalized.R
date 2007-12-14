@@ -1,17 +1,18 @@
 ####################################           
 # Fits the penalized regression model
 ####################################                                    
-penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, data, model = c("cox", "logistic", "linear"),
-  startbeta, startgamma, steps =1, epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) {
+penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, positive = FALSE, data, 
+  model = c("cox", "logistic", "linear"), startbeta, startgamma, steps =1, epsilon = 1e-10, maxiter, 
+  standardize = FALSE, trace = TRUE) {
                                     
   # Maximum number of iterations depends on the input
-  if (missing(maxiter)) maxiter <- if (lambda1 == 0) 25 else Inf
+  if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
 
   # call the general input checking function
   prep <- .checkinput(match.call(), parent.frame())
 
   # check for the presence of penalty parameters
-  if (ncol(prep$X) >= nrow(prep$X) && lambda1 == 0 && lambda2 == 0)
+  if (ncol(prep$X) >= nrow(prep$X) && lambda1 == 0 && lambda2 == 0 && !any(prep$positive))
     stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
 
   # prepare the model
@@ -34,25 +35,24 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, da
       lp <- numeric(n)
     gradient <- drop(crossprod(prep$X[,pu+1:pp,drop=FALSE], fit(lp)$residuals))
     rel <- gradient / prep$baselambda1[pu+1:pp]
-    from <- max(abs(rel))
+    from <- max(ifelse(prep$positive[pu+1:pp],  rel, abs(rel)))
+    lambda1s <- as.list(seq(from, lambda1, length.out=steps))
   } else {
-    from <- lambda1
+    lambda1s <- lambda1
   }
-  lambda1s <- as.list(seq(from, lambda1, length.out=steps+1))
-  if (steps == 1) lambda1s <- lambda1s[-1]
 
   # fit the model for all lambdas
   beta <- prep$beta
-  outs <- lapply(lambda1s, function(rellambda) {
-    if (!(rellambda == 0)) {
+  outs <- lapply(lambda1s, function(rellambda1) {
+    if (rellambda1 != 0 || any(prep$positive)) {
       if (lambda2 == 0) {
-        out <- .steplasso(beta = beta, lambda = rellambda * prep$baselambda1, 
-          lambda2 = 0, X = prep$X, fit = fit, trace = trace, epsilon = epsilon, 
-          maxiter = maxiter)
+        out <- .steplasso(beta = beta, lambda = rellambda1 * prep$baselambda1, 
+          lambda2 = 0, positive = prep$positive, X = prep$X, fit = fit, trace = trace, 
+          epsilon = epsilon, maxiter = maxiter)
       } else {
-        out <- .lasso(beta = beta, lambda = rellambda * prep$baselambda1, 
-          lambda2 = lambda2 * prep$baselambda2, X = prep$X, fit = fit, 
-          trace = trace, epsilon = epsilon, maxiter = maxiter)
+        out <- .lasso(beta = beta, lambda = rellambda1 * prep$baselambda1, 
+          lambda2 = lambda2 * prep$baselambda2, positive = prep$positive, X = prep$X, 
+          fit = fit, trace = trace, epsilon = epsilon, maxiter = maxiter)
       }
     } else {
       if (pp > n) {

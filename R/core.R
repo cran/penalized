@@ -1,5 +1,5 @@
 ###################################
-# These functions are not user level functions!
+# These functions are not user level functions
 # They require a very specific input format and they 
 # rely on the functions calling them for input checking
 # These functions are not exported in the NAMESPACE file
@@ -9,7 +9,8 @@
 ###################################
 # The core lasso and elastic net algorithm
 ###################################
-.lasso <- function(beta, lambda, lambda2 = 0, X, fit, trace = FALSE, epsilon = 1e-8, maxiter = Inf) {
+.lasso <- function(beta, lambda, lambda2=0, positive, X, fit, trace = FALSE, 
+  epsilon, maxiter) {
          
   # It is a general function for fitting L1-penalized models
   # possibly with an additional L2-penalty
@@ -24,8 +25,10 @@
   
   m <- length(beta)
   n <- nrow(X)
-  enet <- any(lambda2 != 0)   # are we fitting an elastic net?
-  free <- (lambda == 0)       # find regression coefficients without l1-penalty
+  # are we fitting an elastic net?
+  enet <- any(lambda2 != 0)   
+  # find regression coefficients free of L1-penalty or positivity restraint
+  free <- lambda == 0 & !positive      
   
   # initialize
   LL <- -Inf
@@ -84,7 +87,7 @@
     # Calculate the penalized gradient from the likelihood gradient
     direction <- numeric(m)
     direction[nzb] <- grad[nzb] - lambda[nzb] * sign(beta[nzb])
-    newb <- (!nzb) & (abs(grad) > lambda)
+    newb <- (!nzb) & ifelse(positive, grad > lambda, abs(grad) > lambda) 
     direction[newb] <- grad[newb] - lambda[newb] * sign(grad[newb])
     oldactive <- active   
     active <- nzb | newb
@@ -209,7 +212,7 @@
 # Often faster for "pure" lasso
 # Not recommended for elastic net
 ###################################
-.steplasso <- function(beta, lambda, lambda2 = 0, X, fit, trace = FALSE, epsilon = 1e-8, maxiter = Inf) {
+.steplasso <- function(beta, lambda, lambda2=0, positive, X, fit, trace = FALSE, epsilon, maxiter = Inf) {
 
   n <- nrow(X)
   finished <- FALSE
@@ -218,19 +221,19 @@
     lp <- X[,nzb,drop=FALSE] %*% beta[nzb]
     gradient <- drop(crossprod(X[,!nzb,drop=FALSE], fit(lp)$residuals))
     rel <- gradient / lambda[!nzb]
+    rel <- rel[rel>0 | !positive[!nzb]]
     if (length(rel) > n) {
       nextlambda <- sort(abs(rel), decreasing = TRUE)[n]
     } else {
       nextlambda <- 1
     }
     if (nextlambda <= 1) {
-      nextlambda <- 1
       finished <- TRUE
     }
     if(!finished) 
-      out <- .lasso(beta, nextlambda * lambda, lambda2, X, fit, trace, sqrt(epsilon), maxiter)
+      out <- .lasso(beta, nextlambda * lambda, lambda2, positive, X, fit, trace, 1e-4, maxiter)
     else
-      out <- .lasso(beta, nextlambda * lambda, lambda2, X, fit, trace, epsilon, maxiter)
+      out <- .lasso(beta, lambda, lambda2, positive, X, fit, trace, epsilon, maxiter)
     beta <- out$beta
     if (trace && ! finished) cat(rep("\b", 24 + max(1,trunc(log10(sum(beta!=0))+1))), sep = "")
   }
@@ -317,7 +320,7 @@
 ###################################
 # Workhorse function for cross-validated likelihood
 ###################################
-.cvl <- function(X, lambda1, lambda2, beta, fit, cvl, prediction,
+.cvl <- function(X, lambda1, lambda2, positive, beta, fit, cvl, prediction,
     groups, trace = FALSE, betas = NULL, quit.if.failed = TRUE, ...)  {
 
   n <- nrow(X)
@@ -325,7 +328,7 @@
 
   # find the right fitting procedure
   useP <- FALSE
-  if (all(lambda1 == 0)) {
+  if (all(lambda1 == 0) && !any(positive)) {
     if (m <= n) {
       cvfit <- function(leftout, beta) {
         subfit <- function(lp) fit(lp, leftout)
@@ -351,12 +354,14 @@
   } else if (all(lambda2 == 0)) {
     cvfit <- function(leftout, beta) {
       subfit <- function(lp) fit(lp, leftout)
-      .steplasso(beta = beta, lambda = lambda1, X = X[!leftout,,drop = FALSE], fit = subfit, ...)
+      .steplasso(beta = beta, lambda = lambda1, positive = positive, 
+        X = X[!leftout,,drop = FALSE], fit = subfit, ...)
     }
   } else {
     cvfit <- function(leftout, beta) {
       subfit <- function(lp) fit(lp, leftout)
-      .lasso(beta = beta, lambda = lambda1, lambda2 = lambda2, X = X[!leftout,,drop = FALSE], fit = subfit, ...)
+      .lasso(beta = beta, lambda = lambda1, lambda2 = lambda2, positive = positive, 
+        X = X[!leftout,,drop = FALSE], fit = subfit, ...)
     }
   }
 

@@ -8,8 +8,10 @@
 \contentsline {subsection}{\numberline {2.6}unpenalized covariates}{5}
 \contentsline {subsection}{\numberline {2.7}factors}{5}
 \contentsline {subsection}{\numberline {2.8}fitting in steps}{5}
-\contentsline {section}{\numberline {3}Cross-validation and optimization}{6}
-\contentsline {subsection}{\numberline {3.1}cross-validation}{7}
-\contentsline {subsection}{\numberline {3.2}breslow objects}{8}
-\contentsline {subsection}{\numberline {3.3}profiling the cross-validated log likelihood}{8}
-\contentsline {subsection}{\numberline {3.4}optimizing the cross-validated likelihood}{10}
+\contentsline {subsection}{\numberline {2.9}a positivity constraint}{6}
+\contentsline {section}{\numberline {3}Cross-validation and optimization}{7}
+\contentsline {subsection}{\numberline {3.1}cross-validation}{8}
+\contentsline {subsection}{\numberline {3.2}breslow objects}{9}
+\contentsline {subsection}{\numberline {3.3}profiling the cross-validated log likelihood}{9}
+\contentsline {subsection}{\numberline {3.4}optimizing the cross-validated likelihood}{11}
+\contentsline {section}{\numberline {4}A note on standard errors and confidence intervals}{13}

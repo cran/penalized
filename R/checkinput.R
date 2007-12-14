@@ -100,6 +100,12 @@
     stop("the length of \"response\" (",n, ") does not match the row count of \"unpenalized\" (", nrow(penalized), ")")
   }
 
+  # expand positive if necessary
+  if (!missing("positive") && input("positive"))
+    positive <- c(logical(ncol(unpenalized)), !logical(ncol(penalized)))
+  else
+    positive <- logical(ncol(unpenalized) + ncol(penalized))
+
   # get the value of startbeta
   if (missing("startbeta"))
     startbeta <- numeric(ncol(penalized))
@@ -170,6 +176,7 @@
     weights = sds, 
     baselambda1 = baselambda1, 
     baselambda2 = baselambda2,
+    positive = positive,
     orthogonalizer = orthogonalizer, 
     model = model, 
     nullgamma = nullgamma

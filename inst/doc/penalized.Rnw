@@ -159,6 +159,28 @@ plotpath(fit, log="x")
 \end{figure}
 
 
+\subsection{a positivity constraint}
+
+In some applications it is natural to restrict all estimated regression coefficients to be positive. Such a positivity constraint is an alternative type of constrained estimation that is easily combined with L1 and L2 penalization in the algorithm implemented in the \Rpackage{penalized} package.
+
+To add a positivity restriction to the regression coefficients of all penalized covariates, set the function argument \Rfunarg{positive} to \Robject{TRUE} (the default is \Robject{FALSE}). Note that it is not strictly necessary to also include an L1 or L2 penalty; the model can also be fitted with only a positivity constraint.
+
+<<positive, results=hide>>=
+fit <- penalized(Surv(time,event), nki70[,8:77], positive=TRUE)
+@
+<<positivecoefficients>>=
+coefficients(fit)
+@
+
+\begin{figure}
+<<positivestepsplot, fig=TRUE, results=hide>>=
+fit <- penalized(Surv(time,event), nki70[,8:77], positive=TRUE,
+    steps=50)
+plotpath(fit)
+@
+\end{figure}
+
+
 \section{Cross-validation and optimization} \label{cv}
 
 Cross-validation can be used to assess the predictive quality of the penalized prediction model or to compare the predictive ability of different values of the tuning parameter.
@@ -281,6 +303,20 @@ opt1$cvl
 <<opt2,results=hide>>=
 opt2 <- optL2(Surv(time,event), nki70[,50:70], fold=fit2$fold)
 @
+
+
+\section{A note on standard errors and confidence intervals}
+
+It is a very natural question to ask for standard errors of regression coefficients or other estimated quantities. In principle such standard errors can easily be calculated, e.g.\ using the bootstrap. 
+
+Still, this package deliberately does not provide them. The reason for this is that standard errors are not very meaningful for strongly biased estimates such as arise from penalized estimation methods. Penalized estimation is a procedure that reduces the variance of estimators by introducing substantial bias. The bias of each estimator is therefore a major component of its mean squared error, whereas its variance may contribute only a small part.
+
+Unfortunately, in most applications of penalized regression it is impossible to obtain a sufficiently precise estimate of the bias. Any bootstrap-based calculations can only give an assessment of the variance of the estimates. Reliable estimates of the bias are only available if reliable unbiased estimates are available, which is typically not the case in situations in which penalized estimates are used.
+
+Reporting a standard error of a penalized estimate therefore tells only part of the story. It can give a mistaken impression of great precision, completely ignoring the inaccuracy caused by the bias. It is certainly a mistake to make confidence statements that are only based on an assessment of the variance of the estimates, such as bootstrap-based confidence intervals do.
+
+Reliable confidence intervals around the penalized estimates can be obtained in the case of low dimensional models using the standard generalized linear model theory as implemented in \Rfunction{lm}, \Rfunction{glm} and \Rfunction{coxph}. Methods for constructing reliable confidence intervals in the high-dimensional situation are, to my knowledge, not available.
+
 
 \bibliography{penalized}
 

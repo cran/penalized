@@ -13,7 +13,7 @@
     if (missing(leftout)) n <- length(lp) else n <- sum(!leftout)
     loglik <- (-n/2) * (log(2*pi/n) + 1 + log(ss + .Machine$double.xmin))
 
-    return(list(residuals = residuals, loglik = loglik, W = 1, lp = lp, fitted = lp, nuisance = list(sigma2 = ss/n), lp = lp))
+    return(list(residuals = residuals, loglik = loglik, W = 1, lp = lp, fitted = lp, nuisance = list(sigma2 = ss/n)))
   }
 
   cvl <- function(lp, leftout) {
@@ -35,13 +35,6 @@
   return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
 
-
-.lmgamma <- function(response, unpenalized) {
-
-  startgamma <- coefficients(lm(response ~ 0 + unpenalized))
-  names(startgamma) <- colnames(unpenalized)
-  startgamma
-}
 
 # merges predicted means and variances
 .lmmerge <- function(predictions) {

@@ -1,3 +1,7 @@
+0-9-18
+- Added the posibility of putting a positivity constraint on all penalized covariates.
+- Changed the illogical behavior that setting steps=k led to an output list of length k+1
+
 0-9.17
 - New internal function .checkinput() does improved common input preprocessing for penalized(), cvl(), profL1(), profL2(), optL1() and optL2(), removing much code duplication. The function replaces .prepare() which previously did part of the common input preprocessing.
 - Streamlining in .checkinput() also made the functions .lmgamma(), .coxgamma() and .logitgamma() obsolete.
