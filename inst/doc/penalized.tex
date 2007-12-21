@@ -294,7 +294,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -259.6705
+[1] -259.6017
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -337,7 +337,7 @@ A "breslow" object with 144 survival curves and 51 time points.
 [31]  4.2190281  4.4462697  4.6214921  4.6625599  4.9719370  5.1170431
 [37]  6.5653662  6.9952088  8.1286790  8.3039014  8.5284052  8.5612594
 [43]  8.9253936  8.9883641  9.9986311 11.2114990 11.7399042 12.4654346
-[49] 14.0123203 17.4209446 17.6591376
+[49] 14.0123203 17.2402464 17.6591376
 \end{Soutput}
 \begin{Sinput}
 > as.data.frame(basesurv(fit$fullfit))[1:10, ]
@@ -452,13 +452,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.566166
+[1] 2.147047
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -259.4316
+[1] -258.9205
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}

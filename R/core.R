@@ -175,13 +175,13 @@
         tedge[active] <- -activebeta / activedir
         tedge[tedge <= 0] <- 2 * topt
         tedge[free] <- 2* topt
-        wmin <- which.min(tedge)
+        mintedge <- min(tedge)
 
         # recalculate beta
-        if (tedge[wmin] + cumsteps < topt) {
-          beta[active] <- activebeta + tedge[wmin] * activedir   
-          beta[wmin] <- 0 # avoids round-off errors
-          cumsteps <- cumsteps + tedge[wmin]
+        if (mintedge + cumsteps < topt) {
+          beta[active] <- activebeta + mintedge * activedir   
+          beta[tedge == mintedge] <- 0  # avoids round-off errors
+          cumsteps <- cumsteps + mintedge
           newfit <- (cumsteps > retain * topt) || (nvar == 1)  
           NRfailed <- FALSE
           tryNR <- FALSE

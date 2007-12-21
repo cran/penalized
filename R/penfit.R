@@ -58,7 +58,7 @@ setMethod("show", "penfit", function(object) {
   if (object@converged) {
     coefs <- unlist(c(object@penalized, object@unpenalized))
     cat(length(coefs), "regression coefficients")
-    if (any(object@lambda1>0) || any(object@lambda2 == Inf)) cat(" of which", sum(coefs != 0), "are non-zero")
+    if (any(coefs == 0)) cat(" of which", sum(coefs != 0), "are non-zero")
     cat("\n\n")
     cat("Loglikelihood =\t", object@loglik, "\n")
     if (any(object@lambda1 > 0))
