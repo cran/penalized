@@ -9,9 +9,9 @@ and/or L2 (ridge) penalties, or a combination of the two.}
 \usage{
 
 penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
-    positive = FALSE, data, model = c("cox", "logistic", "linear"), 
-    startbeta, startgamma, steps = 1, epsilon = 1e-10, maxiter, 
-    standardize = FALSE, trace = TRUE)
+    positive = FALSE, data, model = c("cox", "logistic", "linear", 
+    "poisson"), startbeta, startgamma, steps = 1, epsilon = 1e-10, 
+    maxiter, standardize = FALSE, trace = TRUE)
 
 }
 

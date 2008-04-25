@@ -1,7 +1,7 @@
-This is pdfTeX, Version 3.141592-1.40.3 (MiKTeX 2.6) (preloaded format=pdflatex 2007.10.31)  16 FEB 2008 23:20
+This is pdfTeX, Version 3.141592-1.40.3 (MiKTeX 2.6) (preloaded format=pdflatex 2007.10.31)  25 APR 2008 16:31
 entering extended mode
-**M:/R/packages/penalized/inst/doc/penalized.tex
-(M:\R\packages\penalized\inst\doc\penalized.tex
+**m:/r/packages/penalized/inst/doc/penalized.tex
+(m:\r\packages\penalized\inst\doc\penalized.tex
 LaTeX2e <2005/12/01>
 Babel <v3.8g> and hyphenation patterns for english, dumylang, nohyphenation, ge
 rman, ngerman, french, loaded.
@@ -200,34 +200,35 @@ LaTeX Font Info:    Try loading font information for T1+aett on input line 39.
 File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
 ) [2] [3] [4] [5] <penalized-stepsplot.pdf, id=27, 433.62pt x 433.62pt>
 File: penalized-stepsplot.pdf Graphic file (type pdf)
-<use penalized-stepsplot.pdf> [6 <penalized-stepsplot.pdf>] <penalized-positive
-stepsplot.pdf, id=36, 433.62pt x 433.62pt>
+<use penalized-stepsplot.pdf> [6] <penalized-positivestepsplot.pdf, id=31, 433.
+62pt x 433.62pt>
 File: penalized-positivestepsplot.pdf Graphic file (type pdf)
-<use penalized-positivestepsplot.pdf> [7 <penalized-positivestepsplot.pdf>]
+<use penalized-positivestepsplot.pdf> [7 <penalized-stepsplot.pdf>] [8 <penaliz
+ed-positivestepsplot.pdf>]
 
 LaTeX Font Warning: Font shape `T1/aett/bx/n' undefined
-(Font)              using `T1/aett/m/n' instead on input line 281.
+(Font)              using `T1/aett/m/n' instead on input line 309.
 
-[8] <penalized-breslowplot.pdf, id=49, 433.62pt x 433.62pt>
+[9] <penalized-breslowplot.pdf, id=52, 433.62pt x 433.62pt>
 File: penalized-breslowplot.pdf Graphic file (type pdf)
-<use penalized-breslowplot.pdf> [9] [10 <penalized-breslowplot.pdf>] <penalized
--profplot1.pdf, id=61, 433.62pt x 433.62pt>
+<use penalized-breslowplot.pdf> [10] [11 <penalized-breslowplot.pdf>] <penalize
+d-profplot1.pdf, id=64, 433.62pt x 433.62pt>
 File: penalized-profplot1.pdf Graphic file (type pdf)
-<use penalized-profplot1.pdf> <penalized-profplot2.pdf, id=62, 433.62pt x 433.6
+<use penalized-profplot1.pdf> <penalized-profplot2.pdf, id=65, 433.62pt x 433.6
 2pt>
 File: penalized-profplot2.pdf Graphic file (type pdf)
-<use penalized-profplot2.pdf> <penalized-profpathplot.pdf, id=63, 433.62pt x 43
+<use penalized-profplot2.pdf> <penalized-profpathplot.pdf, id=66, 433.62pt x 43
 3.62pt>
 File: penalized-profpathplot.pdf Graphic file (type pdf)
-<use penalized-profpathplot.pdf> [11 <penalized-profplot1.pdf>]
-Underfull \hbox (badness 1824) in paragraph at lines 441--442
+<use penalized-profpathplot.pdf> [12 <penalized-profplot1.pdf>]
+Underfull \hbox (badness 1824) in paragraph at lines 483--484
 []\T1/aer/m/n/10 The ar-gu-ments \T1/aer/m/it/10 min-lambda1 \T1/aer/m/n/10 and
  \T1/aer/m/it/10 maxlambda1\T1/aer/m/n/10 , and \T1/aer/m/it/10 min-lambda2 \T1
 /aer/m/n/10 and
  []
 
-[12 <penalized-profplot2.pdf>] [13 <penalized-profpathplot.pdf>] (penalized.bbl
-) [14] (penalized.aux)
+[13 <penalized-profplot2.pdf>] [14 <penalized-profpathplot.pdf>] (penalized.bbl
+[15]) [16] (penalized.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
@@ -235,11 +236,11 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 Here is how much of TeX's memory you used:
  2506 strings out of 95294
  31485 string characters out of 1185001
- 76049 words of memory out of 1076165
+ 76050 words of memory out of 1076166
  5539 multiletter control sequences out of 60000
  33846 words of font info for 69 fonts, out of 1000000 for 2000
  14 hyphenation exceptions out of 8191
- 35i,6n,24p,1240b,284s stack positions out of 5000i,500n,10000p,200000b,32768s
+ 35i,6n,24p,1240b,275s stack positions out of 5000i,500n,10000p,200000b,32768s
 <C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmbx10.pfb><C:/Program Fi
 les/MiKTeX 2.6/fonts/type1/bluesky/cm/cmbx12.pfb><C:/Program Files/MiKTeX 2.6/f
 onts/type1/bluesky/cm/cmmi10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/blues
@@ -249,9 +250,9 @@ MiKTeX 2.6/fonts/type1/bluesky/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.6/fonts/t
 ype1/bluesky/cm/cmsltt10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/c
 m/cmti10.pfb><C:/Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmti7.pfb><C:/
 Program Files/MiKTeX 2.6/fonts/type1/bluesky/cm/cmtt10.pfb>
-Output written on penalized.pdf (14 pages, 477855 bytes).
+Output written on penalized.pdf (16 pages, 480893 bytes).
 PDF statistics:
- 128 PDF objects out of 300000 (max. 8388607)
+ 134 PDF objects out of 300000 (max. 8388607)
  0 named destinations out of 300000 (max. 131072)
  31 words of extra memory for PDF output out of 65536 (max. 10000000)
 

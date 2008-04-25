@@ -1,3 +1,22 @@
+0.9-21
+- Made storing of all cross-validated predictors in profL1 and profL2 optional.
+- Implemented the predict function.
+- Streamlined the cross-validated predictions, so that predictions are calculated and stored per fold rather than per subject.
+- Fixed an input check bug that prevented counting process type input for survival data.
+- Changed the default value of maxlambda1 in profL1 and optL1, so that maxlambda1 is now the maximal value at which any non-zero regressioncoefficient pops up in any cross-validation fold.
+- Added positivity check for survival response
+- Implemented the possibility of including an offset term
+- Added .modelswitch and .predictswitch functions to reduce code duplication
+- Implemented the Poisson model
+- Implemented coef() as an alias for coefficients()
+- Allowed factor response for the logistic model
+- Changed the definition of the Riskset variable in the Cox model so that it is not nxn anymore but nxd, where d is the number of events.
+- Added argument data=data to all calls to terms() in .checkinput() to allow the "." operator in formula objects.
+- Solved a bug in .coxfit() arising in case of tied survival times
+- More informative error message if penalized or unpenalized are given as a data.frame with non-numeric columns.
+- More informative error message if plotpath is called with a penfit object with all zero regression coefficients.
+
+
 0.9-20
 - Solved a bug in .makeP that resulted in a wrong solution basis in case of a combination of L1 and L2 penalties with a high dimensional solution. Thanks to Martin Slawski for pointing out this bug for me. 
 - Changed the index entry of the vignette from "penalized" to "Penalized user guide".
@@ -10,13 +29,13 @@
 
 0-9-18
 - Added the posibility of putting a positivity constraint on all penalized covariates.
-- Changed the illogical behavior that setting steps=k led to an output list of length k+1
+- Changed the illogical behavior that setting steps=k led to an output list of length k+1.
 
 
 0-9.17
 - New internal function .checkinput() does improved common input preprocessing for penalized(), cvl(), profL1(), profL2(), optL1() and optL2(), removing much code duplication. The function replaces .prepare() which previously did part of the common input preprocessing.
 - Streamlining in .checkinput() also made the functions .lmgamma(), .coxgamma() and .logitgamma() obsolete.
-- A new function .getFolds() for calculating cross-validation folds also removd much duplicated code.
+- A new function .getFolds() for calculating cross-validation folds also removed much duplicated code.
 - The possibility of giving different lambda1 or lambda2-values for different covariates has been removed, as it was badly implemented. The option may return in the future.
 
 

@@ -65,4 +65,7 @@ setMethod("as.list", "breslow", function(x, ...) {
   list(time = x@time, curves = x@curves)
 })
 
-
+setGeneric("survival", function(object, ...)  standardGeneric("survival"))
+setMethod("survival", "breslow", function(object, time) {
+  object[,max(which(object@time <= time))]
+})

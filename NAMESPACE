@@ -1,13 +1,13 @@
 importFrom(survival, Surv, coxph, basehaz)
 
-importFrom(stats, coefficients, fitted.values, residuals, time, weights)
+importFrom(stats, coefficients, coef, fitted.values, residuals, time, weights, predict)
 
 importFrom(graphics, plot)
 
 exportClasses(penfit, breslow)
 
-exportMethods(show, residuals, coefficients, penalty, basehaz, penalty, loglik, "[", "[[", 
+exportMethods(show, residuals, coefficients, coef, penalty, basehaz, penalty, loglik, "[", "[[", 
 	as.matrix, as.list, time, plot, fitted.values, weights, linear.predictors, as.data.frame,
-	basesurv)
+	basesurv, predict, survival)
 
 export(penalized, cvl, optL1, optL2, profL1, profL2, plotpath, contr.none, contr.diff)

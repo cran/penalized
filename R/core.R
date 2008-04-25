@@ -1,4 +1,4 @@
-###################################
+###################################                                                           
 # These functions are not user level functions
 # They require a very specific input format and they 
 # rely on the functions calling them for input checking
@@ -320,9 +320,9 @@
 ###################################
 # Workhorse function for cross-validated likelihood
 ###################################
-.cvl <- function(X, lambda1, lambda2, positive, beta, fit, cvl, prediction,
-    groups, trace = FALSE, betas = NULL, quit.if.failed = TRUE, ...)  {
-
+.cvl <- function(X, lambda1, lambda2, positive, beta, fit, groups, trace = FALSE, 
+  betas = NULL, quit.if.failed = TRUE, ...)  {
+                                    
   n <- nrow(X)
   m <- ncol(X)
 
@@ -331,7 +331,7 @@
   if (all(lambda1 == 0) && !any(positive)) {
     if (m <= n) {
       cvfit <- function(leftout, beta) {
-        subfit <- function(lp) fit(lp, leftout)
+        subfit <- function(lp) fit$fit(lp, leftout)
         .ridge(beta = beta, Lambda = lambda2, X = X[!leftout,,drop = FALSE], fit = subfit, ...)
       }
     } else {
@@ -340,7 +340,7 @@
       PX <- P %*% t(X)
       Pl <- P * matrix(sqrt(lambda2), nrow(P), ncol(P), byrow = TRUE)
       cvfit <- function(leftout, beta) {
-        subfit <- function(lp) fit(lp, leftout)
+        subfit <- function(lp) fit$fit(lp, leftout)
         leftoutP <- c(rep(FALSE, nrow(P) - length(leftout)), leftout)
         gams <- .solve(crossprod(t(P[!leftoutP,,drop=FALSE])), P[!leftoutP,,drop=FALSE] %*% beta)
         PlP <- crossprod(t(Pl[!leftoutP,,drop=FALSE]))
@@ -353,13 +353,13 @@
     } 
   } else if (all(lambda2 == 0)) {
     cvfit <- function(leftout, beta) {
-      subfit <- function(lp) fit(lp, leftout)
+      subfit <- function(lp) fit$fit(lp, leftout)
       .steplasso(beta = beta, lambda = lambda1, positive = positive, 
         X = X[!leftout,,drop = FALSE], fit = subfit, ...)
     }
   } else {
     cvfit <- function(leftout, beta) {
-      subfit <- function(lp) fit(lp, leftout)
+      subfit <- function(lp) fit$fit(lp, leftout)
       .lasso(beta = beta, lambda = lambda1, lambda2 = lambda2, positive = positive, 
         X = X[!leftout,,drop = FALSE], fit = subfit, ...)
     }
@@ -380,8 +380,7 @@
   # True cross-validation starts here
   if (fold > 1) {
     failed <- FALSE
-    predictions <- vector("list", n)
-    names(predictions) <- rownames(X)
+    predictions <- vector("list", fold)
     cvls <- sapply(1:fold, function(i) {
       if (!failed) {
         if (trace) {
@@ -389,16 +388,15 @@
           flush.console()
         }
         leaveout <- (groups == i)
-    
         foldfit <- cvfit(leaveout, betas[,i])
         lin.pred <- numeric(n)
-        lin.pred[leaveout] <- X[leaveout, foldfit$beta != 0, drop=FALSE] %*% foldfit$beta[foldfit$beta != 0]
-        lin.pred[!leaveout] <- foldfit$fit$lp
-        predictions[leaveout] <<- lapply(lin.pred[leaveout], prediction, nuisance = foldfit$fit$nuisance)
+        lin.pred[leaveout] <- X[leaveout, foldfit$beta != 0, drop=FALSE] %*% 
+          foldfit$beta[foldfit$beta != 0]
+        lin.pred[!leaveout] <- foldfit$fit$lp0
+        predictions[[i]] <<- fit$prediction(lin.pred[leaveout], foldfit$fit$nuisance)
         betas[,i] <<- foldfit$beta
         if (trace) cat(rep("\b", trunc(log10(i))+1), sep ="")
-
-        out <- cvl(lin.pred, leaveout)
+        out <- fit$cvl(lin.pred, leaveout)
         if (quit.if.failed && (is.na(out) || abs(out) == Inf || foldfit$converged == FALSE)) failed <<- TRUE
       } else {
         out <- NA

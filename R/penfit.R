@@ -1,5 +1,5 @@
 # "penfit" object to store the result of a penalized regression
-# Theseobjects are meant to be accessed by the user, but not made directly by the user
+# These objects are meant to be accessed by the user, but not made directly by the user
 setClass("penfit", 
   representation(
     penalized = "vector", 
@@ -92,6 +92,10 @@ setMethod("coefficients", "penfit", function(object, which = c("nonzero", "all",
   if (standardize) out <- out * object@weights[c(whichunp, whichp)]
   out
 })
+setMethod("coef", "penfit", function(object, which = c("nonzero", "all", "penalized", "unpenalized"), standardize = FALSE) {
+  coefficients(object, which, standardize)
+})
+
 
 # extracts the residuals
 setMethod("residuals", "penfit", function(object, ...) {
@@ -130,6 +134,7 @@ setMethod("basesurv", "penfit", function(fit, centered = TRUE) {
     return(NULL)
 })
 
+# calculates a cumulative hazard from a survival curve
 setGeneric("basehaz")
 setMethod("basehaz", "penfit", function(fit, centered = TRUE) {
   if (fit@model == "cox") {
@@ -150,4 +155,95 @@ setMethod("penalty", "penfit", function(object, ...) {
 setGeneric("loglik", function(object, ...) standardGeneric("loglik"))
 setMethod("loglik", "penfit", function(object, ...) {
   object@loglik
+})
+
+# predicts on new data
+setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
+                                                          
+  # determine defaults
+  if (missing(unpenalized)) {
+    if (length(object@unpenalized) == 0)
+      unpenalized <- ~0
+    else if (length(object@unpenalized) == 1 && object@model != "cox")
+      unpenalized <- ~1
+    else
+      stop("argument \"unpenalized\" is missing.")
+  }
+  if (missing(data)) data <- NULL
+
+  # coerce unpenalized into a matrix and find the offset term
+  if (is.data.frame(unpenalized) || is.vector(unpenalized)) {
+    if (all(sapply(unpenalized, is.numeric))) {
+      unpenalized <- as.matrix(unpenalized)
+    } else {
+      stop("argument \"unpenalized\" could not be coerced into a matrix")
+    }
+    offset <- 0
+  }
+  if (is(unpenalized, "formula")) {
+    if(is.null(data)) data <- as.data.frame(matrix(,nrow(penalized),0))
+    offset <- model.offset(model.frame(unpenalized, data=data))
+    if (is.null(offset)) offset <- 0
+    has.intercept <- attr(terms(unpenalized), "intercept") == 1
+    unpenalized <- model.matrix(unpenalized, data)
+    # suppress intercept if necessary
+    if (object@model == "cox" && has.intercept) 
+      unpenalized <- unpenalized[,-1,drop=FALSE]
+  }
+
+  # coerce penalized into a matrix
+  if (is.data.frame(penalized) || is.vector(penalized))
+    if (all(sapply(penalized, is.numeric))) {
+      penalized <- as.matrix(penalized)
+    } else {
+      stop("argument \"penalized\" could not be coerced into a matrix")
+    }
+  if (is(penalized, "formula")) {
+    has.intercept <- attr(terms(penalized), "intercept") == 1
+    if(is.null(data)) data <- as.data.frame(matrix(,nrow(unpenalized),0))
+    oldcontrasts <- unlist(options("contrasts"))
+    options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))
+    penalized <- terms(penalized, data=data)
+    # suppress intercept
+    attr(penalized, "intercept") <- 1
+    penalized <- model.matrix(penalized, data)
+    if (has.intercept) penalized <- penalized[,-1,drop=FALSE]
+    options(contrasts = oldcontrasts)
+  }
+  
+  # find n
+  n <- max(nrow(penalized), nrow(unpenalized))
+  if (nrow(penalized) != nrow(unpenalized))
+    stop("row counts of \"penalized\", \"unpenalized\" and/or \"data\" do not match")
+
+  # check if dimensions and names match
+  if (length(object@penalized) != ncol(penalized))
+    stop("the dimension of \"penalized\" does not match the fitted model object")
+  if (!is.null(names(object@penalized)) && !is.null(colnames(penalized))
+    && !all(names(object@penalized) == colnames(penalized)))
+    if (setequal(names(object@penalized), colnames(penalized)))
+      penalized <- penalized[,names(object@penalized)]
+    else
+      warning("variable names in \"penalized\" do not match those in the fitted model")
+  if (length(object@penalized) != ncol(penalized))
+    stop("the dimension of \"unpenalized\" does not match the fitted model object")
+  if (!is.null(names(object@unpenalized)) && !is.null(colnames(unpenalized)) &&
+    !all(names(object@unpenalized) == colnames(unpenalized)))
+    if (setequal(names(object@unpenalized), colnames(unpenalized)))
+      unpenalized <- unpenalized[,names(object@unpenalized)]
+    else
+      warning("variable names in \"unpenalized\" do not match those in the fitted model")
+
+  # find the linear predictors
+  lp <- offset + drop(penalized %*% object@penalized) + drop(unpenalized %*% object@unpenalized)
+  
+  # find the predictions
+  predictions <- switch(object@model,
+    cox = .coxpredict(lp, object@nuisance),
+    linear = .lmpredict(lp, object@nuisance),
+    logistic = .logitpredict(lp, object@nuisance),
+    poisson = .poissonpredict(lp, object@nuisance)
+  )
+  
+  return(predictions)
 })

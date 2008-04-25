@@ -1,10 +1,15 @@
-.logitfit <- function(response) {
+.logitfit <- function(response, offset) {
 
   # Finds local gradient and subject weights
   fit <- function(lp, leftout) {
-
-    if (!missing(leftout))
+                       
+    if (!missing(leftout)) {
       response <- response[!leftout]
+      offset <- offset[!leftout]
+    }
+    
+    lp0 <- lp
+    if (!is.null(offset)) lp <- lp + offset
     probs <- exp(lp) / (1+exp(lp))
     ws <- probs * (1-probs)
 
@@ -15,27 +20,32 @@
     loglik <- sum(log(probs[response == 1])) + sum(log(1-probs[response == 0]))
     if (!is.na(loglik) && (loglik == - Inf)) loglik <- NA
 
-    return(list(residuals = residuals, loglik = loglik, W = ws, lp = lp, fitted = probs, nuisance = list()))
+    return(list(residuals = residuals, loglik = loglik, W = ws, lp = lp, lp0 = lp0, fitted = probs, nuisance = list()))
   }
 
+  # cross-validated likelihood
   cvl <- function(lp, leftout) {
+    if (!is.null(offset)) lp <- lp + offset
     probs <- exp(lp) / (1+exp(lp))
     return(sum(log(probs[response == 1 & leftout])) + sum(log(1-probs[response == 0 & leftout])))
   }
 
   # mapping from the linear predictor lp to an actual prediction
-  prediction <- function(lp, nuisance) {
-    out <- exp(lp) / (1+exp(lp))
-    out
-  }
-
-
+  prediction <- .logitpredict
+  
   return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
 
 
+# mapping from the linear predictor lp to an actual prediction
+.logitpredict <- function(lp, nuisance) {
+  out <- exp(lp) / (1+exp(lp))
+  out
+}
+
+
 # merges predicted probalities
-.logitmerge <- function(predictions) {
-  out <- unlist(predictions)
+.logitmerge <- function(predictions, groups) {
+  out <- unlist(predictions)[sort.list(sort.list(groups))]
   out
 }

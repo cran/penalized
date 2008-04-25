@@ -13,6 +13,7 @@ plotpath <- function(object, labelsize = 0.6, standardize = FALSE, ...) {
   
   # Do not plot the regression coefficients of covariates that are always zero
   remove <- apply(betas, 1, function(bet) all(bet == 0) )
+  if (all(remove)) stop("all coefficients are zero for all values of lambda in this object")
 
   # Take lambda1, unless all lambda1 are equal. Then take lambda2
   lambda <- sapply(object, function(object) object@lambda1)

@@ -12,33 +12,36 @@
 \usage{
 
 cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
-    positive = FALSE, data, model = c("cox", "logistic", "linear"),
-    startbeta, startgamma, fold, epsilon = 1e-10, maxiter,
-    standardize = FALSE, trace = TRUE)
+    positive = FALSE, data,
+    model = c("cox", "logistic", "linear", "poisson"), startbeta,
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
+    trace = TRUE)
 
 optL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
     lambda2 = 0, positive = FALSE, data,
-    model = c("cox", "logistic", "linear"), startbeta, startgamma,
-    fold, epsilon = 1e-10, maxiter = Inf, standardize = FALSE,
-    trace = TRUE, tol = .Machine$double.eps^0.25)
+    model = c("cox", "logistic", "linear", "poisson"), startbeta,
+    startgamma, fold, epsilon = 1e-10, maxiter = Inf,
+    standardize = FALSE, tol = .Machine$double.eps^0.25, trace = TRUE)
 
 optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
     maxlambda2, positive = FALSE, data,
-    model = c("cox", "logistic", "linear"), startbeta, startgamma,
-    fold, epsilon = 1e-10, maxiter, standardize = FALSE,
-    trace = TRUE, tol = .Machine$double.eps^0.25)
+    model = c("cox", "logistic", "linear", "poisson"), startbeta,
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+    tol = .Machine$double.eps^0.25, trace = TRUE)
 
 profL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
     lambda2 = 0, positive = FALSE, data,
-    model = c("cox", "logistic", "linear"), startbeta, startgamma,
-    fold, epsilon = 1e-10, maxiter = Inf, standardize = FALSE,
-    trace = TRUE, steps = 100, minsteps = steps/4, log = FALSE)
+    model = c("cox", "logistic", "linear", "poisson"), startbeta,
+    startgamma, fold, epsilon = 1e-10, maxiter = Inf,
+    standardize = FALSE, steps = 100, minsteps = steps/4, log = FALSE, 
+    save.predictions = FALSE, trace = TRUE)
 
 profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
     maxlambda2, positive = FALSE, data,
-    model = c("cox", "logistic", "linear"), startbeta, startgamma,
-    fold, epsilon = 1e-10, maxiter, standardize = FALSE,
-    trace = TRUE, steps = 100, minsteps = steps/4, log = TRUE)
+    model = c("cox", "logistic", "linear", "poisson"), startbeta,
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+    steps = 100, minsteps = steps/4, log = TRUE, save.predictions = FALSE, 
+    trace = TRUE)
 }
 
 \arguments{
@@ -70,8 +73,6 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 
 \item{standardize}{If \code{TRUE}, standardizes all penalized covariates to unit central L2-norm before applying penalization.}
 
-\item{trace}{If \code{TRUE}, prints progress information. Note that setting \code{trace=TRUE} may slow down the algorithm (but it often feels quicker)}
-
 \item{steps}{The maximum number of steps between \code{minlambda1} and \code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} at which the cross-validated likelihood is to be calculated.}
 
 \item{minsteps}{The minimum number of steps between \code{minlambda1} and \code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} at which the cross-validated likelihood is to be calculated. If \code{minsteps} is smaller than \code{steps}, the algorithm will automatically stop when the cross-validated likelihood drops below the cross-validated likelihood of the null model, provided it has done at least \code{minsteps} steps.}
@@ -79,6 +80,10 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 \item{log}{If \code{FALSE}, the steps between \code{minlambda1} and \code{maxlambda1} or \code{minlambda2} and \code{maxlambda2} are equidistant on a linear scale, if \code{TRUE} on a logarithmic scale. Please note the different default between \code{optL1} (\code{FALSE}) and \code{optL2} (\code{TRUE}).}
 
 \item{tol}{The tolerance of the Brent algorithm used for minimization. See also \code{\link[stats:optimize]{optimize}}.}
+
+\item{save.predictions}{Controls whether or not to save cross-validated predictions for all values of lambda.} 
+
+\item{trace}{If \code{TRUE}, prints progress information. Note that setting \code{trace=TRUE} may slow down the algorithm (but it often feels quicker)}
 }
 
 
@@ -87,7 +92,7 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 \item{\code{lambda}:}{For \code{optL1} and \code{optL2} \code{lambda} gives the optimal value of the tuning parameters found. For \code{profL1} and \code{profL2} \code{lambda} is the vector of values of the tuning parameter for which the cross-validated likelihood has been calculated. Absent in the output of \code{cvl}.}
 \item{\code{cvl}:}{The value(s) of the cross-validated likelihood. For \code{optL1}, \code{optL2} this is the cross-validated likelihood at the optimal value of the tuning parameter.}
 \item{\code{fold}:}{Returns the precise allocation of the subjects into the cross-validation folds. Note that the same allocation is used for all cross-validated likelihood calculations in each call to \code{optL1}, \code{optL2}, \code{profL1}, \code{profL2}.}
-\item{\code{predictions}:}{The cross-validated predictions for the left-out samples. The precise format of the cross-validated predictions depends on the type of generalized linear model (see \code{\link{breslow}} for survival models. The functions \code{profL1} and \code{profL2} return a list here, whereas \code{optL1}, \code{optL2} return the predictions for the optimal value of the tuning parameter only.}
+\item{\code{predictions}:}{The cross-validated predictions for the left-out samples. The precise format of the cross-validated predictions depends on the type of generalized linear model (see \code{\link{breslow}} for survival models. The functions \code{profL1} and \code{profL2} return a list here (only if \code{save.predictions = TRUE}), whereas \code{optL1}, \code{optL2} return the predictions for the optimal value of the tuning parameter only.}
 \item{\code{fullfit}:}{The fitted model on the full data. The functions \code{profL1} and \code{profL2} return a list here, whereas \code{optL1}, \code{optL2} return the full data fit for the optimal value of the tuning parameter only.}
   }
 }

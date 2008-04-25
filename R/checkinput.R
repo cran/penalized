@@ -18,7 +18,7 @@
     if (missing("data"))
       response <- eval(attr(terms(response), "variables"), environment(response))[[attr(terms(response), "response")]]
     else
-      response <- eval(attr(terms(response), "variables"), data, environment(response))[[attr(terms(response), "response")]]
+      response <- eval(attr(terms(response, data=data), "variables"), data, environment(response))[[attr(terms(response, data=data), "response")]]
   } else {
     formula.response <- NULL
   }
@@ -26,12 +26,21 @@
   # determine the model if missing
   if (missing("model")) {
     if (is(response, "Surv")) model <- "cox"
-    else if (all(response %in% 0:1)) model <- "logistic"
+    else if (all(response %in% 0:1) || is.factor(response)) model <- "logistic"
+    else if (all(response >= 0) && all(response == trunc(response))) model <- "poisson"
     else if (is.numeric(response)) model <- "linear"
     else stop("Model could not be determined from the input. Please specify the model.")
   } else {
-    model <- match.arg(input("model"), c("cox", "logistic", "linear"))
+    model <- match.arg(input("model"), c("cox", "logistic", "linear", "poisson"))
   }
+  
+  # coerce factor response to 0,1
+  if (is.factor(response))
+    response <- response != levels(response)[1]
+    
+  # check positivity of survival response
+  if (is(response, "Surv") && any(as.vector(response) < 0))
+    stop("negative survival times")
 
   # determine penalized and unpenalized
   if (!missing("penalized")) {
@@ -58,11 +67,22 @@
   if (!is.null(formula.response))
     warning("right hand side of response formula ignored")
 
-  # coerce unpenalized into a matrix
-  if (is.data.frame(unpenalized) || is.vector(unpenalized))
-    unpenalized <- as.matrix(unpenalized)
+  # coerce unpenalized into a matrix and find the offset term
+  offset <- NULL
+  if (is.data.frame(unpenalized) || is.vector(unpenalized)) 
+    if (all(sapply(unpenalized, is.numeric))) {
+      unpenalized <- as.matrix(unpenalized)
+    } else {
+      stop("argument \"unpenalized\" could not be coerced into a matrix")
+    }
   if (is(unpenalized, "formula")) {
-    unpenalized <- terms(unpenalized)
+    if (missing("data")) {
+      offset <- model.offset(model.frame(unpenalized))
+      unpenalized <- terms(unpenalized)
+    } else {
+      offset <- model.offset(model.frame(unpenalized, data=data))
+      unpenalized <- terms(unpenalized, data=data)
+    }
     # prevent problems for input ~1 or ~0:
     if ((attr(unpenalized, "response") == 0) && (length(attr(unpenalized, "term.labels")) == 0)) {
       if (attr(unpenalized, "intercept") == 1)
@@ -77,11 +97,18 @@
   
   # coerce penalized into a matrix
   if (is.data.frame(penalized) || is.vector(penalized))
-    penalized <- as.matrix(penalized)
+    if (all(sapply(penalized, is.numeric))) {
+      penalized <- as.matrix(penalized)
+    } else {
+      stop("argument \"penalized\" could not be coerced into a matrix")
+    }
   if (is(penalized, "formula")) {
     oldcontrasts <- unlist(options("contrasts"))
     options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))
-    penalized <- terms(penalized)
+    if (missing("data"))
+      penalized <- terms(penalized)
+    else
+      penalized <- terms(penalized, data=data)
     # prevent problems for input ~1 or ~0:
     if (length(attr(penalized, "term.labels")) == 0) 
       penalized <- terms(response ~ 1)
@@ -92,7 +119,14 @@
   }
 
   # check dimensions of response, penalized and unpenalized
-  n <- if (model == "cox") length(response)/2 else length(response)
+  if (model == "cox") {
+    if (attr(response, "type") == "right")
+      n <- length(response)/2 
+    else if (attr(response, "type") == "counting")
+      n <- length(response)/3
+  } else {
+    n <- length(response)
+  }
   if (nrow(penalized) != n) {
     stop("the length of \"response\" (",n, ") does not match the row count of \"penalized\" (", nrow(penalized), ")")
   }
@@ -119,11 +153,21 @@
 
   # get the value of startgamma
   if (ncol(unpenalized) > 0) {
-    nullgamma <- switch(model,
-      cox = coefficients(coxph(response ~ unpenalized)),
-      logistic = coefficients(glm(response ~ 0 + unpenalized, family = binomial)),
-      linear = coefficients(lm(response ~ 0 + unpenalized))
-    )
+    if (is.null(offset)) {
+      nullgamma <- switch(model,
+        cox = coefficients(coxph(response ~ unpenalized)),
+        logistic = coefficients(glm(response ~ 0 + unpenalized, family = binomial)),
+        linear = coefficients(lm(response ~ 0 + unpenalized)),
+        poisson = coefficients(glm(response ~ 0 + unpenalized, family = poisson))
+      )
+    } else {
+      nullgamma <- switch(model,
+        cox = coefficients(coxph(response ~ offset(offset) + unpenalized)),
+        logistic = coefficients(glm(response ~ 0 + offset(offset) + unpenalized, family = binomial)),
+        linear = coefficients(lm(response ~ 0 + offset(offset) + unpenalized)),
+        poisson = coefficients(glm(response ~ 0 + offset(offset) + unpenalized, family = poisson))
+      )
+    }
     names(nullgamma) <- colnames(unpenalized)
   } else nullgamma <- numeric(0)
   if (missing("startgamma")) {
@@ -179,6 +223,26 @@
     positive = positive,
     orthogonalizer = orthogonalizer, 
     model = model, 
-    nullgamma = nullgamma
+    nullgamma = nullgamma,
+    offset = offset
   ))
+}
+
+# Switch functions to choose the appropriate function for a specific model
+.modelswitch <- function(model, response, offset) {
+  switch(model,
+    cox = .coxfit(response, offset),
+    logistic = .logitfit(response, offset),
+    linear = .lmfit(response, offset),
+    poisson = .poissonfit(response, offset)
+  )
+}
+
+.predictswitch <- function(model, predictions, groups) {
+  switch(model, 
+    cox = .coxmerge(predictions, groups),
+    logistic = .logitmerge(predictions, groups),
+    linear = .lmmerge(predictions, groups),
+    poisson = .poissonmerge(predictions, groups)
+  )
 }

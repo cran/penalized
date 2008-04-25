@@ -25,7 +25,7 @@
 
 This short note explains the use of the \Rpackage{penalized} package. The package is designed for penalized estimation in generalized linear models.
 
-The supported models at this moment are linear regression, logistic regression and the Cox proportional hazards model, but others are likely to be included in the future. As to penalties, the package allows an L1 absolute value (``lasso'') penalty \citep{Tibshirani1996, Tibshirani1997}, an L2 quadratic (``ridge'') penalty \citep{Hoerl1970, Cessie1992, Verweij1994}, or a combination of the two \citep[the ``naive elastic net'' of][]{Zou2005}. The package also includes facilities for likelihood cross-validation and for optimization of the tuning parameter.
+The supported models at this moment are linear regression, logistic regression, poisson regression and the Cox proportional hazards model, but others are likely to be included in the future. As to penalties, the package allows an L1 absolute value (``lasso'') penalty \citep{Tibshirani1996, Tibshirani1997}, an L2 quadratic (``ridge'') penalty \citep{Hoerl1970, Cessie1992, Verweij1994}, or a combination of the two \citep[the ``naive elastic net'' of][]{Zou2005}. The package also includes facilities for likelihood cross-validation and for optimization of the tuning parameter.
 
 L1 and L2 penalized estimation methods shrink the estimates of the regression coefficients towards zero relative to the maximum likelihood estimates. The purpose of this shrinkage is to prevent overfit arising due to either collinearity of the covariates or high-dimensionality. Although both methods are shrinkage methods, the effects of L1 and L2 penalization are quite different in practice. Applying an L2 penalty tends to result in all small but non-zero regression coefficients, whereas applying an L1 penalty tends to result in many regression coefficients shrunk exactly to zero and a few other regression coefficients with comparatively little shrinkage. Combining L1 and L2 penalties tends to give a result in between, with fewer regression coefficients set to zero than in a pure L1 setting, and more shrinkage of the other coefficients. The amount of shrinkage is determined by tuning parameters $\lambda_1$ and $\lambda_2$. A value of zero always means no shrinkage (= maximum likelihood estimation) and a value of infinity means infinite shrinkage (= setting all regression coefficients to zero). For more details about the methods, please refer to the above-mentioned papers.
 
@@ -36,7 +36,7 @@ The main algorithm for L1 penalized estimation that used in this package will be
 
 \section{Penalized likelihood estimation}
 
-The basic function of the package is the \Rfunction{penalized} function, which performs penalized estimation for fixed values of $\lambda_1$ and $\lambda_2$. Its syntax has been loosely modeled on that of the functions \Rfunction{glm} (package \Rpackage{stats}) and \Rfunction{coxph} (package \Rpackage{survival}), but it is slightly more flexible. Two main input types are allowed: one using \Rclass{formula} objects, one using matrices.
+The basic function of the package is the \Rfunction{penalized} function, which performs penalized estimation for fixed values of $\lambda_1$ and $\lambda_2$. Its syntax has been loosely modeled on that of the functions \Rfunction{glm} (package \Rpackage{stats}) and \Rfunction{coxph} (package \Rpackage{survival}), but it is slightly more flexible in some respects. Two main input types are allowed: one using \Rclass{formula} objects, one using matrices.
 
 \subsection{the nki70 data}
 
@@ -53,16 +53,13 @@ This loads a \Rclass{data.frame} with 144 breast cancer patients and 77 covariat
 
 \subsection{the penalized function}
 
-To fit a model to predict survival (\Robject{Surv(time,event)}) with the two markers ``DIAPH3'' and ``NUSAP1'' at $\lambda_1 = 0$ and $\lambda_2 = 1$, we can say (all are equivalent)
+The \Rfunction{penalized} function can be used to fit a penalized prediction model for prediction of a response. For example, to predict the Estrogen Receptor status \Robject{ER} for the patients in the \Robject{nki70} data with the two markers ``DIAPH3'' and ``NUSAP1'' at $\lambda_1 = 0$ and $\lambda_2 = 1$, we can say (all are equivalent)
 
 \begin{Schunk}
 \begin{Sinput}
-> fit <- penalized(Surv(time, event), ~DIAPH3 + NUSAP1, data = nki70, 
-      lambda2 = 1)
-> fit <- penalized(Surv(time, event), nki70[, 10:11], data = nki70, 
-      lambda2 = 1)
-> fit <- penalized(Surv(time, event) ~ DIAPH3 + NUSAP1, data = nki70, 
-      lambda2 = 1)
+> fit <- penalized(ER, ~DIAPH3 + NUSAP1, data = nki70, lambda2 = 1)
+> fit <- penalized(ER, nki70[, 10:11], data = nki70, lambda2 = 1)
+> fit <- penalized(ER ~ DIAPH3 + NUSAP1, data = nki70, lambda2 = 1)
 \end{Sinput}
 \end{Schunk}
 
@@ -70,7 +67,18 @@ The covariates may be specified in the second function argument (\Rfunarg{penali
 
 For consistency with \Rfunction{glm} and \Rfunction{coxph} the third option is also allowed, in which the covariates are included in the first function argument.
 
-Use \Rfunction{attach} to avoid specifying the \Rfunarg{data} argument every time.
+The \Rfunction{penalized} function tries to determine the appropriate generalized linear model from the \Rfunarg{response} variable. This automatic choice may not always be appropriate. In such cases the model may be specified explicitly using the \Rfunarg{model} argument.
+
+For the examples in the rest of this vignette we use the Cox proportional hazerds model, using the survival time (\Robject{Surv(time,event)}) as the response to be predicted. This is a \Rclass{Surv} object.
+
+\begin{Schunk}
+\begin{Sinput}
+> fit <- penalized(Surv(time, event) ~ DIAPH3 + NUSAP1, data = nki70, 
+      lambda2 = 1)
+\end{Sinput}
+\end{Schunk}
+
+We use \Rfunction{attach} to avoid specifying the \Rfunarg{data} argument every time.
 
 \begin{Schunk}
 \begin{Sinput}
@@ -130,6 +138,24 @@ The \Rfunction{coefficients} function extracts the named vector of regression co
 \end{Soutput}
 \end{Schunk}
 
+The \Rclass{penfit} object can also be used to generate predictions for new data using the \Rfunction{predict} function. Pretending that the first three subjects in the \Robject{nki70} data are new subjects, we can find their predicted survival curves with either of
+
+\begin{Schunk}
+\begin{Sinput}
+> predict(fit, ~DIAPH3 + NUSAP1, data = nki70[1:3, ])
+\end{Sinput}
+\begin{Soutput}
+A "breslow" object with 3 survival curves and 50 time points.
+\end{Soutput}
+\begin{Sinput}
+> predict(fit, nki70[1:3, c("DIAPH3", "NUSAP1")])
+\end{Sinput}
+\begin{Soutput}
+A "breslow" object with 3 survival curves and 50 time points.
+\end{Soutput}
+\end{Schunk}
+
+
 \subsection{standardization}
 
 If the covariates are not naturally on the same scale, it is advisable to standardize them. The function argument \Rfunarg{standardize} (default: \Robject{FALSE}) standardizes the covariates to unit second central moment before applying penalization. This standardization makes sure that each covariate is affected more or less equally by the penalization.
@@ -174,7 +200,7 @@ In some situations it is desirable that not all covariates are subject to a pena
 
 This adds estrogen receptor status as an unpenalized covariate. Note in the second line that right hand side of the \Rclass{formula} object in the \Rfunarg{response} argument is automatically taken to be the \Rfunarg{unpenalized} argument because the \Rfunarg{penalized} argument was given by the user.
 
-In linear and logistic regression the intercept is by default never penalized. The use of an intercept can be suppressed with \Robject{penalized = ~0}. The intercept is always removed from the penalized model matrix, unless the penalized model consists of only an intercept.
+In linear and logistic regression the intercept is by default never penalized. The use of an intercept can be suppressed with \Robject{penalized = $\tilde{}$0}. The intercept is always removed from the penalized model matrix, unless the penalized model consists of only an intercept.
 
 
 \subsection{factors}
@@ -188,6 +214,8 @@ Ordered factors are turned into dummy variables that code for the difference bet
 When fitting a model with factors with more than two levels with an L1 penalty, it is advisable to add a small L2 penalty as well in order to speed up convergence. By varying the L2 penalty it can be checked that the L2 penalty is not so large that it influences the estimates.
 
 To override the automatic choice of contrasts, use \Rfunction{C} (package \Rpackage{stats}).
+
+The \Rfunarg{response} argument may also be also be specified as a \Rclass{factor} in a logistic regression model. In that case, the value \Robject{levels(response)[1]} is treated as a failure (0), and all other values as a success (1).
 
 
 \subsection{fitting in steps}
@@ -294,7 +322,7 @@ The function \Rfunction{cvl} returns a names \Rclass{list} with four elements:
 > fit$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -256.2541
+[1] -250.6316
 \end{Soutput}
 \begin{Sinput}
 > fit$fullfit
@@ -368,6 +396,20 @@ A "breslow" object with 144 survival curves and 51 time points.
 \end{Schunk}
 \includegraphics{penalized-breslowplot}
 \end{figure}
+
+We can easily extract the 5 year cross-validated survival probabilities
+
+\begin{Schunk}
+\begin{Sinput}
+> survival(fit$predictions, 5)[1:10]
+\end{Sinput}
+\begin{Soutput}
+        1         2         3         4         5         6         7         8 
+0.9234936 0.6437382 0.7866102 0.9020304 0.7237517 0.6651425 0.7799128 0.5625462 
+        9        10 
+0.5723356 0.8842442 
+\end{Soutput}
+\end{Schunk}
 
 \subsection{profiling the cross-validated log likelihood}
 
@@ -452,13 +494,13 @@ The functions \Rfunction{optL1} and \Rfunction{optL2} return a named list just a
 > opt1$lambda
 \end{Sinput}
 \begin{Soutput}
-[1] 2.159248
+[1] 2.360132
 \end{Soutput}
 \begin{Sinput}
 > opt1$cvl
 \end{Sinput}
 \begin{Soutput}
-[1] -259.2635
+[1] -259.1734
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}

@@ -2,8 +2,8 @@
 # Fits the penalized regression model
 ####################################                                    
 penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, positive = FALSE, data, 
-  model = c("cox", "logistic", "linear"), startbeta, startgamma, steps =1, epsilon = 1e-10, maxiter, 
-  standardize = FALSE, trace = TRUE) {
+  model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, steps =1, epsilon = 1e-10, 
+  maxiter, standardize = FALSE, trace = TRUE) {
                                     
   # Maximum number of iterations depends on the input
   if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
@@ -16,11 +16,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
 
   # prepare the model
-  fit <- switch(prep$model,
-    cox = .coxfit(prep$response)$fit,
-    logistic = .logitfit(prep$response)$fit,
-    linear = .lmfit(prep$response)$fit
-  )
+  fit <- .modelswitch(prep$model, prep$response, prep$offset)$fit
   
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
