@@ -49,7 +49,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
 ######################################
 profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lambda2 = 0, 
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold, 
-  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, steps = 100, minsteps = steps/4, 
+  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, steps = 100, minsteps = steps/2, 
   log = FALSE, save.predictions = FALSE, trace = TRUE) {
 
   # call the general input checking function
@@ -174,7 +174,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
 ######################################
 profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, 
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, 
-  fold, epsilon = 1e-10, maxiter, standardize = FALSE, steps = 100, minsteps = steps/4, 
+  fold, epsilon = 1e-10, maxiter, standardize = FALSE, steps = 100, minsteps = steps/2, 
   log = TRUE, save.predictions = FALSE, trace = TRUE) {
 
   # Maximum number of iterations depends on the input

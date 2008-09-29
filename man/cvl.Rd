@@ -26,21 +26,21 @@ optL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
 optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
     maxlambda2, positive = FALSE, data,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
     tol = .Machine$double.eps^0.25, trace = TRUE)
 
 profL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
     lambda2 = 0, positive = FALSE, data,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
     startgamma, fold, epsilon = 1e-10, maxiter = Inf,
-    standardize = FALSE, steps = 100, minsteps = steps/4, log = FALSE, 
+    standardize = FALSE, steps = 100, minsteps = steps/2, log = FALSE,
     save.predictions = FALSE, trace = TRUE)
 
 profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
     maxlambda2, positive = FALSE, data,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
-    steps = 100, minsteps = steps/4, log = TRUE, save.predictions = FALSE, 
+    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
+    steps = 100, minsteps = steps/2, log = TRUE, save.predictions = FALSE,
     trace = TRUE)
 }
 
@@ -81,7 +81,7 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 
 \item{tol}{The tolerance of the Brent algorithm used for minimization. See also \code{\link[stats:optimize]{optimize}}.}
 
-\item{save.predictions}{Controls whether or not to save cross-validated predictions for all values of lambda.} 
+\item{save.predictions}{Controls whether or not to save cross-validated predictions for all values of lambda.}
 
 \item{trace}{If \code{TRUE}, prints progress information. Note that setting \code{trace=TRUE} may slow down the algorithm (but it often feels quicker)}
 }
@@ -93,7 +93,7 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 \item{\code{cvl}:}{The value(s) of the cross-validated likelihood. For \code{optL1}, \code{optL2} this is the cross-validated likelihood at the optimal value of the tuning parameter.}
 \item{\code{fold}:}{Returns the precise allocation of the subjects into the cross-validation folds. Note that the same allocation is used for all cross-validated likelihood calculations in each call to \code{optL1}, \code{optL2}, \code{profL1}, \code{profL2}.}
 \item{\code{predictions}:}{The cross-validated predictions for the left-out samples. The precise format of the cross-validated predictions depends on the type of generalized linear model (see \code{\link{breslow}} for survival models. The functions \code{profL1} and \code{profL2} return a list here (only if \code{save.predictions = TRUE}), whereas \code{optL1}, \code{optL2} return the predictions for the optimal value of the tuning parameter only.}
-\item{\code{fullfit}:}{The fitted model on the full data. The functions \code{profL1} and \code{profL2} return a list here, whereas \code{optL1}, \code{optL2} return the full data fit for the optimal value of the tuning parameter only.}
+\item{\code{fullfit}:}{The fitted model on the full data. The functions \code{profL1} and \code{profL2} return a list of \code{\link{penfit}} objects here, whereas \code{optL1}, \code{optL2} return the full data fit (a single \code{\link{penfit}} object) for the optimal value of the tuning parameter only.}
   }
 }
 

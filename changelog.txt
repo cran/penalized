@@ -1,4 +1,13 @@
-0.9-21
+0.9-22 (2008-09-29)
+- repaired the link to penfit in the penalized man file
+- Added to option "center=TRUE" for basesurv explicitly to the penfit man file
+- Corrected the error message in case the number of rows of unpenalized was incorrect
+- changed the default of minsteps from steps/4 to steps/2
+- removed an unnessessary warning in case of unpenalized = ~1 or ~0, and data missing
+
+
+0.9-21 (2008-04-25)
+- Implemented the survival function for breslow objects
 - Made storing of all cross-validated predictors in profL1 and profL2 optional.
 - Implemented the predict function.
 - Streamlined the cross-validated predictions, so that predictions are calculated and stored per fold rather than per subject.
@@ -17,39 +26,39 @@
 - More informative error message if plotpath is called with a penfit object with all zero regression coefficients.
 
 
-0.9-20
+0.9-20 (2008-02-17)
 - Solved a bug in .makeP that resulted in a wrong solution basis in case of a combination of L1 and L2 penalties with a high dimensional solution. Thanks to Martin Slawski for pointing out this bug for me. 
 - Changed the index entry of the vignette from "penalized" to "Penalized user guide".
 
 
-0.9-19
+0.9-19 (2007-12-21)
 - Updated the show function for penfit objects so that it always gives the number of non-zero coefficients whenever any coefficient is exactly zero.
 - Solved a numerical imprecision problem in .lasso() that arose when some variables were exactly duplicated.
 
 
-0-9-18
+0-9-18 (2007-12-14)
 - Added the posibility of putting a positivity constraint on all penalized covariates.
 - Changed the illogical behavior that setting steps=k led to an output list of length k+1.
 
 
-0-9.17
+0-9.17 (2007-12-01)
 - New internal function .checkinput() does improved common input preprocessing for penalized(), cvl(), profL1(), profL2(), optL1() and optL2(), removing much code duplication. The function replaces .prepare() which previously did part of the common input preprocessing.
 - Streamlining in .checkinput() also made the functions .lmgamma(), .coxgamma() and .logitgamma() obsolete.
 - A new function .getFolds() for calculating cross-validation folds also removed much duplicated code.
 - The possibility of giving different lambda1 or lambda2-values for different covariates has been removed, as it was badly implemented. The option may return in the future.
 
 
-0.9-16
+0.9-16 (2007-11-16)
 - Changed the input checks to allow the format penalized(response~unpenalized, penalized). This is in line with functions such as lme.
 - Fixed a bug in .coxmerge() that resulted in alignment mistakes in the cross-validated predicted survival curves.
 - Added the advice to the vignette to add an L2 penalty in case of multi-level factors.
 
 
-0.9-15
+0.9-15 (2007-11-07)
 - Fixed a bug in penalized() and all cvl-functions that sometimes caused name conflicts because the terms of user-supplied formulae would first be evaluated in the package name space. All eval() calls are now explicitly directed to the correct environment.
 
 
-0.9-14
+0.9-14 (2007-11-05)
 - New method basesurv() returns the baseline suvival.
 - basehaz() now returns the baseline hazard instead of the baseline survival curve.
 - The center argument in basehaz() and basesurv() implemented.

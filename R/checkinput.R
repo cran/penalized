@@ -69,30 +69,34 @@
 
   # coerce unpenalized into a matrix and find the offset term
   offset <- NULL
-  if (is.data.frame(unpenalized) || is.vector(unpenalized)) 
+  if (is.data.frame(unpenalized) || is.vector(unpenalized)) {
     if (all(sapply(unpenalized, is.numeric))) {
       unpenalized <- as.matrix(unpenalized)
     } else {
       stop("argument \"unpenalized\" could not be coerced into a matrix")
     }
+  }
   if (is(unpenalized, "formula")) {
     if (missing("data")) {
-      offset <- model.offset(model.frame(unpenalized))
-      unpenalized <- terms(unpenalized)
+      tup <- terms(unpenalized) 
+      # prevent problems for input ~1 or ~0:
+      if ((attr(tup, "response") == 0) && (length(attr(tup, "term.labels")) == 0)) {
+        if (attr(tup, "intercept") == 1)
+          unpenalized <- terms(response ~ 1)
+        else
+          unpenalized <- terms(response ~ 0)
+      } else {
+        offset <- model.offset(model.frame(unpenalized))
+        unpenalized <- tup
+      }
     } else {
       offset <- model.offset(model.frame(unpenalized, data=data))
       unpenalized <- terms(unpenalized, data=data)
     }
-    # prevent problems for input ~1 or ~0:
-    if ((attr(unpenalized, "response") == 0) && (length(attr(unpenalized, "term.labels")) == 0)) {
-      if (attr(unpenalized, "intercept") == 1)
-        unpenalized <- terms(response ~ 1)
-      else
-        unpenalized <- terms(response ~ 0)
-    }
-    unpenalized <- model.matrix(unpenalized, data)
     # suppress intercept if necessary
-    if (model == "cox" ) unpenalized <- unpenalized[,-1,drop=FALSE]
+    if (model == "cox") attr(unpenalized, "intercept") <- 1
+    unpenalized <- model.matrix(unpenalized, data)
+    if (model == "cox") unpenalized <- unpenalized[,-1,drop=FALSE]
   }
   
   # coerce penalized into a matrix
@@ -114,8 +118,8 @@
       penalized <- terms(response ~ 1)
     attr(penalized, "intercept") <- 1
     penalized <- model.matrix(penalized, data)
-    options(contrasts = oldcontrasts)
     penalized <- penalized[,-1,drop=FALSE]
+    options(contrasts = oldcontrasts)
   }
 
   # check dimensions of response, penalized and unpenalized
@@ -131,7 +135,7 @@
     stop("the length of \"response\" (",n, ") does not match the row count of \"penalized\" (", nrow(penalized), ")")
   }
   if (nrow(unpenalized) != n) {
-    stop("the length of \"response\" (",n, ") does not match the row count of \"unpenalized\" (", nrow(penalized), ")")
+    stop("the length of \"response\" (",n, ") does not match the row count of \"unpenalized\" (", nrow(unpenalized), ")")
   }
 
   # expand positive if necessary

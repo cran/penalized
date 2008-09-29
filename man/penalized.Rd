@@ -9,8 +9,8 @@ and/or L2 (ridge) penalties, or a combination of the two.}
 \usage{
 
 penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
-    positive = FALSE, data, model = c("cox", "logistic", "linear", 
-    "poisson"), startbeta, startgamma, steps = 1, epsilon = 1e-10, 
+    positive = FALSE, data, model = c("cox", "logistic", "linear",
+    "poisson"), startbeta, startgamma, steps = 1, epsilon = 1e-10,
     maxiter, standardize = FALSE, trace = TRUE)
 
 }
@@ -47,7 +47,7 @@ penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
 
 \details{The \code{penalized} function fits  regression models for a given combination of L1 and L2 penalty parameters.}
 
-\value{\code{penalized} returns a \code{link{penfit}} object when \code{steps = 1} or a list of such objects if \code{steps > 1}.}
+\value{\code{penalized} returns a \code{\link{penfit}} object when \code{steps = 1} or a list of such objects if \code{steps > 1}.}
 
 \note{The \code{response} argument of the function also accepts formula input as in  \code{\link{lm}} and related functions. In that case, the right hand side of the \code{response} formula is used as the \code{penalized} argument or, if that is already given, as the \code{unpenalized} argument. For example, the input \code{penalized(y~x)} is equivalent to \code{penalized(y, ~x)} and \code{penalized(y~x, ~z)} to \code{penalized(y, ~z, ~x)}.
 

@@ -138,6 +138,8 @@ This adds estrogen receptor status as an unpenalized covariate. Note in the seco
 
 In linear and logistic regression the intercept is by default never penalized. The use of an intercept can be suppressed with \Robject{penalized = $\tilde{}$0}. The intercept is always removed from the penalized model matrix, unless the penalized model consists of only an intercept.
 
+It is possible to include an offset term in the model. Use the \Rfunction{offset} function in the \Rfunarg{unpenalized} argument, which must then be of \Rfunarg{formula} type.
+
 
 \subsection{factors}
 
@@ -265,7 +267,7 @@ The minimum and maximum values between which the cross-validated log likelihood 
 
 The number of steps between the minimal and maximal values can be given in the \Rfunarg{steps} argument (default 100). These steps are equally spaced if the argument \Rfunarg{log} is \Robject{FALSE} or equally spaced on the log scale if the argument \Rfunarg{log} is \Robject{TRUE}. Note that the default value of \Rfunarg{log} differs between \Rfunction{profL1} (\Robject{FALSE}) and \Rfunction{profL2} (\Robject{TRUE}). If \Rfunarg{log} is \Robject{TRUE}, \Rfunarg{minlambda1} or \Rfunarg{minlambda2} must be given by the user as the default value is not usable.
 
-By default, the profiling is stopped prematurely when the cross-validated log likelihood drops below the cross-validated log likelihood of the null model with all penalized regression coefficients equal to zero. This is done because it avoids lengthy calculations at small values of $\lambda$ when the models are most likely not interesting. The automatic stopping can be controlled using the option \Rfunarg{minsteps} (default \Rfunarg{steps}/4). The algorithm only considers stopping prematurely after it has done at least \Rfunarg{minsteps} steps. Setting \Robject{minsteps=steps} cancels the automatic stopping.
+By default, the profiling is stopped prematurely when the cross-validated log likelihood drops below the cross-validated log likelihood of the null model with all penalized regression coefficients equal to zero. This is done because it avoids lengthy calculations at small values of $\lambda$ when the models are most likely not interesting. The automatic stopping can be controlled using the option \Rfunarg{minsteps} (default \Rfunarg{steps}/2). The algorithm only considers early stopping after it has done at least \Rfunarg{minsteps} steps. Setting \Robject{minsteps} equal to \Rfunarg{steps} cancels the automatic stopping.
 
 The functions \Rfunction{profL1} and \Rfunction{profL2} return a named list with the same elements as returned by \Rfunction{cvl}, but each of \Robject{cvl}, \Robject{predictions}, \Robject{fullfit} is now a \Rclass{vector} or a \Rclass{list} (as appropriate) as multiple cross-validated likelihoods were calculated. An additional vector \Robject{lambda} is returned which lists the values of $\lambda_1$ or $\lambda_2$ at which the cross-validated likelihood was calculated.
 
