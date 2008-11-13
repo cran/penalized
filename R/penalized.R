@@ -8,6 +8,12 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   # Maximum number of iterations depends on the input
   if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
 
+  # Park and Hastie type steps?
+  if (steps == "Park" || steps == "park") {
+    steps <- 1
+    park <- TRUE
+  } else park <- FALSE
+
   # call the general input checking function
   prep <- .checkinput(match.call(), parent.frame())
 
@@ -16,7 +22,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
 
   # prepare the model
-  fit <- .modelswitch(prep$model, prep$response, prep$offset)$fit
+  fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)$fit
   
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
@@ -24,7 +30,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   n <- nrow(prep$X)
 
   # If a steps argument is given, determine where to start
-  if (steps > 1) { 
+  if (park || steps > 1) { 
     if (pu > 0) 
       lp <- drop(prep$X[,1:pu,drop=FALSE] %*% prep$nullgamma)
     else 
@@ -32,14 +38,22 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     gradient <- drop(crossprod(prep$X[,pu+1:pp,drop=FALSE], fit(lp)$residuals))
     rel <- gradient / prep$baselambda1[pu+1:pp]
     from <- max(ifelse(prep$positive[pu+1:pp],  rel, abs(rel)))
-    lambda1s <- as.list(seq(from, lambda1, length.out=steps))
   } else {
-    lambda1s <- lambda1
+    from <- lambda1
   }
+  lambda1s <- seq(from, lambda1, length.out=steps)
 
   # fit the model for all lambdas
   beta <- prep$beta
-  outs <- lapply(lambda1s, function(rellambda1) {
+  louts <- if (park) 4*pp else length(lambda1s)
+  outs <- vector("list", louts)
+  rellambda1 <- lambda1s[1]
+  ready <- FALSE
+  i <- 0
+  while (!ready) {
+    ready <- (rellambda1 == lambda1)
+    i <- i+1
+  
     if (rellambda1 != 0 || any(prep$positive)) {
       if (lambda2 == 0) {
         out <- .steplasso(beta = beta, lambda = rellambda1 * prep$baselambda1, 
@@ -70,14 +84,31 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
       }
     }
     if (trace) cat("\n")
-    beta <<- out$beta
+    beta <- out$beta
+    
+    if (!ready) {
+      if (park) {
+        newpark <- .park(beta = beta, lambda = rellambda1 * prep$baselambda1, 
+            lambda2 = 0, positive = prep$positive, X = prep$X, fit = out$fit)
+        rellambda1 <- rellambda1 * (1-newpark$hh)
+        if (rellambda1 < lambda1 || rellambda1 == Inf) {
+          rellambda1 <- lambda1
+          beta <- out$beta
+        } else {
+          beta <- newpark$beta
+        }
+        lambda1s <- c(lambda1s, rellambda1)
+      } else {
+        rellambda1 <- lambda1s[i+1]
+        beta <- out$beta
+      }
+    }
+    
+    outs[[i]] <- out
+  }
 
-    out$beta <- out$beta / prep$weights
-    out
-  })
-  
   # put the output in a penfit object
-  outs <- sapply(1:length(outs), function(nr) {
+  outs <- sapply(1:i, function(nr) {
     thislambda1 <- lambda1s[[nr]]
     .makepenfit(outs[[nr]], pu, prep$model, thislambda1, lambda2, 
       prep$orthogonalizer, prep$weights)

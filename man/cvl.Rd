@@ -111,9 +111,9 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 \examples{
 
 data(nki70)
+attach(nki70)
 
 # Finding an optimal cross-validated likelihood
-attach(nki70)
 opt <- optL1(Surv(time, event), penalized = nki70[,8:77], fold = 10)
 coefficients(opt$fullfit)
 plot(opt$predictions)

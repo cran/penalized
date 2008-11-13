@@ -30,9 +30,13 @@
     return(sum(log(probs[response == 1 & leftout])) + sum(log(1-probs[response == 0 & leftout])))
   }
 
-  # mapping from the linear predictor lp to an actual prediction
-  prediction <- .logitpredict
-  
+  # cross-validated prediction
+  prediction <- function(lp, nuisance, which) {
+    if (!is.null(offset)) lp <- lp + offset[which]
+    out <- exp(lp) / (1+exp(lp))
+    out
+  }
+
   return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
 

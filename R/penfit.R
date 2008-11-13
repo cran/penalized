@@ -23,8 +23,10 @@ setClass("penfit",
 .makepenfit <- function(object, unpenalized, model, lambda1, lambda2, orthogonalizer, weights) {
   out <- new("penfit")
   
+  object$beta <- object$beta / weights
+
   beta <- object$beta[unpenalized + seq_len(length(object$beta) - unpenalized)]
-  gamma <- object$beta[seq_len(unpenalized)] - as.vector(orthogonalizer %*% beta)
+  gamma <- object$beta[seq_len(unpenalized)] - drop(orthogonalizer %*% beta)
    
   out@unpenalized <- gamma
   out@penalized <- beta
@@ -42,6 +44,8 @@ setClass("penfit",
   
   out@model <- model
   
+  if ("baseline" %in% names(object$fit$nuisance))
+    object$fit$nuisance$baseline <- object$fit$nuisance$baseline()
   out@nuisance <- object$fit$nuisance
   
   out@lambda1 <- lambda1
@@ -135,11 +139,12 @@ setMethod("basesurv", "penfit", function(fit, centered = TRUE) {
 })
 
 # calculates a cumulative hazard from a survival curve
-setGeneric("basehaz")
+setGeneric("basehaz", package = "survival")
 setMethod("basehaz", "penfit", function(fit, centered = TRUE) {
   if (fit@model == "cox") {
     bs <- basesurv(fit, centered)
-    out <- data.frame(hazard = -log(drop(bs@curves)), time = time(bs))
+    if (nrow(bs@curves) == 1) rownames(bs@curves) <- "hazard"
+    out <- data.frame(-log(t(bs@curves)), time = time(bs), check.names=FALSE)
     return(out)
   } else
     return(NULL)
@@ -171,7 +176,7 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
   }
   if (missing(data)) data <- NULL
 
-  # coerce unpenalized into a matrix and find the offset term
+  # coerce unpenalized into a matrix and find the offset and strata terms
   if (is.data.frame(unpenalized) || is.vector(unpenalized)) {
     if (all(sapply(unpenalized, is.numeric))) {
       unpenalized <- as.matrix(unpenalized)
@@ -183,11 +188,21 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
   if (is(unpenalized, "formula")) {
     if(is.null(data)) data <- as.data.frame(matrix(,nrow(penalized),0))
     offset <- model.offset(model.frame(unpenalized, data=data))
+    unpenalized <- terms(unpenalized)
     if (is.null(offset)) offset <- 0
-    has.intercept <- attr(terms(unpenalized), "intercept") == 1
-    unpenalized <- model.matrix(unpenalized, data)
     # suppress intercept if necessary
-    if (object@model == "cox" && has.intercept) 
+    if (object@model == "cox") {
+      if (length(attr(unpenalized, "specials")$strata) > 0) {
+        strata <- untangle.specials(unpenalized, "strata", 1)
+        strata.nrs <- strata$terms                            # indices of the strata variables in the terms object
+        strata.nrs2 <- attr(unpenalized, "specials")$strata   # indices of the strata variables in attr(unpenalized, "variables")
+        strata <- strata(attr(unpenalized, "variables")[strata.nrs2], shortlabel=TRUE)
+        unpenalized <- unpenalized[-strata.nrs]
+      } else strata <- NULL
+      attr(unpenalized, "intercept") <- 1
+    } 
+    unpenalized <- model.matrix(unpenalized, data)
+    if (object@model == "cox") 
       unpenalized <- unpenalized[,-1,drop=FALSE]
   }
 
@@ -239,7 +254,7 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
   
   # find the predictions
   predictions <- switch(object@model,
-    cox = .coxpredict(lp, object@nuisance),
+    cox = .coxpredict(lp, object@nuisance, strata),
     linear = .lmpredict(lp, object@nuisance),
     logistic = .logitpredict(lp, object@nuisance),
     poisson = .poissonpredict(lp, object@nuisance)

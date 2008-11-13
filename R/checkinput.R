@@ -78,7 +78,7 @@
   }
   if (is(unpenalized, "formula")) {
     if (missing("data")) {
-      tup <- terms(unpenalized) 
+      tup <- terms(unpenalized, specials = "strata") 
       # prevent problems for input ~1 or ~0:
       if ((attr(tup, "response") == 0) && (length(attr(tup, "term.labels")) == 0)) {
         if (attr(tup, "intercept") == 1)
@@ -91,12 +91,25 @@
       }
     } else {
       offset <- model.offset(model.frame(unpenalized, data=data))
-      unpenalized <- terms(unpenalized, data=data)
+      unpenalized <- terms(unpenalized, specials="strata", data=data)
     }
-    # suppress intercept if necessary
-    if (model == "cox") attr(unpenalized, "intercept") <- 1
+    # Cox: suppress intercept if necessary and extract strata
+    if (model == "cox") {
+      if (length(attr(unpenalized, "specials")$strata) > 0) {
+        strata <- untangle.specials(unpenalized, "strata", 1)
+        strata.nrs <- strata$terms                            # indices of the strata variables in the terms object
+        strata.nrs2 <- attr(unpenalized, "specials")$strata   # indices of the strata variables in attr(unpenalized, "variables")
+        if (missing("data"))
+          strata <- strata(eval(attr(unpenalized, "variables"), environment(unpenalized))[strata.nrs2], shortlabel=TRUE)
+        else
+          strata <- strata(eval(attr(unpenalized, "variables"), data, environment(unpenalized))[strata.nrs2], shortlabel=TRUE)
+        unpenalized <- unpenalized[-strata.nrs]
+      } else strata <- NULL
+      attr(unpenalized, "intercept") <- 1
+    } else strata <- NULL
     unpenalized <- model.matrix(unpenalized, data)
-    if (model == "cox") unpenalized <- unpenalized[,-1,drop=FALSE]
+    if (model == "cox") 
+      unpenalized <- unpenalized[,-1, drop=FALSE]
   }
   
   # coerce penalized into a matrix
@@ -228,14 +241,15 @@
     orthogonalizer = orthogonalizer, 
     model = model, 
     nullgamma = nullgamma,
-    offset = offset
+    offset = offset,
+    strata = strata
   ))
 }
 
 # Switch functions to choose the appropriate function for a specific model
-.modelswitch <- function(model, response, offset) {
+.modelswitch <- function(model, response, offset, strata) {
   switch(model,
-    cox = .coxfit(response, offset),
+    cox = .coxfit(response, offset, strata),
     logistic = .logitfit(response, offset),
     linear = .lmfit(response, offset),
     poisson = .poissonfit(response, offset)

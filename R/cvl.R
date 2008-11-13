@@ -16,7 +16,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
     stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
 
   # prepare the model
-  fit <- .modelswitch(prep$model, prep$response, prep$offset)
+  fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)
 
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
@@ -56,7 +56,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   prep <- .checkinput(match.call(), parent.frame())
 
   # prepare the model
-  fit <- .modelswitch(prep$model, prep$response, prep$offset)
+  fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)
 
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
@@ -73,7 +73,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   if (pu > 0) {
     nullfit <- .cvl(prep$X[,1:pu, drop=FALSE], lambda1 = rep(0,pu), 
       lambda2 = rep(0,pu), positive = FALSE, beta = prep$nullgamma, fit=fit, 
-      groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE)
+      groups=groups, epsilon=epsilon, maxiter=maxiter, trace = FALSE, save.predictions = FALSE)
     nullgammas <- nullfit$betas
     nullcvl <- nullfit$cvl
     nullfit <- nullfit$fit
@@ -132,7 +132,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
     out <- .cvl(prep$X, rellambda*prep$baselambda1, lambda2*prep$baselambda2, 
       positive = prep$positive, beta = beta, fit=fit, groups=groups, 
       epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, 
-      quit.if.failed=FALSE)
+      quit.if.failed=FALSE, save.predictions = save.predictions)
     if (trace) cat("cvl=", out$cvl, "\n")
     beta <- out$fit$beta
     betas <- out$betas
@@ -184,7 +184,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   prep <- .checkinput(match.call(), parent.frame())
 
   # prepare the model
-  fit <- .modelswitch(prep$model, prep$response, prep$offset)
+  fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)
 
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
@@ -209,7 +209,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   if (pu > 0) {
     nullfit <- .cvl(prep$X[,1:pu, drop=FALSE], lambda1 = rep(0,pu), lambda2 = rep(0,pu),
       positive = FALSE, beta = prep$nullgamma, fit=fit, groups=groups, epsilon=epsilon, 
-      maxiter=maxiter, trace = FALSE)
+      maxiter=maxiter, trace = FALSE, save.predictions = FALSE)
     nullcvl <- nullfit$cvl
     nullfit <- nullfit$fit
   } else {
@@ -238,7 +238,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
     out <- .cvl(prep$X, lambda1*prep$baselambda1, rellambda*prep$baselambda2, 
       positive = prep$positive, beta = beta, fit=fit, groups=groups, 
       epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, 
-      quit.if.failed=FALSE)
+      quit.if.failed=FALSE, save.predictions = save.predictions)
     if (trace) if (fold > 1) cat("cvl=", out$cvl, "\n") else cat("\n")
     beta <- out$fit$beta
     betas <- out$betas
@@ -287,7 +287,7 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
   prep <- .checkinput(match.call(), parent.frame())
 
   # prepare the model
-  fit <- .modelswitch(prep$model, prep$response, prep$offset)
+  fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)
 
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
@@ -385,7 +385,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   prep <- .checkinput(match.call(), parent.frame())
 
   # prepare the model
-  fit <- .modelswitch(prep$model, prep$response, prep$offset)
+  fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)
 
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
@@ -413,8 +413,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     null$fit$beta <- c(numeric(pu+pp))
     names(null$fit$beta) <- colnames(prep$X)
     null$fit$fit <- fit$fit(null.lp)
-    null$predictions <- lapply(as.list(null.lp), fit$prediction, 
-      nuisance= null$fit$fit$nuisance)
+    null$predictions <- lapply(as.list(1:n), function(i) fit$prediction(null.lp, nuisance= null$fit$fit$nuisance, which=i))
     null$fit$iterations <- 1
     null$fit$converged <- TRUE
   }

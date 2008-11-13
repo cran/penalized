@@ -30,8 +30,13 @@
     return(sum(respl * log(lambda)) - sum(lambda) - sum(lfactorial(respl)))
   }
 
-  prediction <- .poissonpredict
- 
+  # crossvalidated prediction
+  prediction <- function(lp, nuisance, which) {
+    if (!is.null(offset)) lp <- lp + offset[which]
+    out <- exp(lp)
+    out
+  }
+
   return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
 

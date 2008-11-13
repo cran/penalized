@@ -1,3 +1,16 @@
+0.9-23
+- implemented strata for the cox model
+- bug repaired: cross-validated predictions did not use the offset term
+- made sure cross-validated predictions are not calculated by .cvl when they are not needed
+- survival package removed from depends field in description file
+- possibility of steps = "Park" implemented in the penalized() function to take steps at the approximate places where the active set changes
+- predictor step of Park algorithm added for steps = "Park"
+- bug repaired: event at t=0 led to crash of .coxmerge. Repaired in .coxfit.
+- bug repaired: linear model with leave-one out cross-validation gave error in .lmmerge
+- bug repaired: survival predictions function was not correct
+- bug repaired: optL1, optL2 did not reweight the regression coefficients before returning them in fullfit
+
+
 0.9-22 (2008-09-29)
 - repaired the link to penfit in the penalized man file
 - Added to option "center=TRUE" for basesurv explicitly to the penfit man file

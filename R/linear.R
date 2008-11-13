@@ -30,7 +30,11 @@
     return(-(sum(leftout)/2) * log(2*pi*sigma2) - ss / (2*sigma2))
   }
   
-  prediction <- .lmpredict
+  prediction <- function(lp, nuisance, which) {
+    if (!is.null(offset)) lp <- lp + offset[which]
+    out <- cbind(mu = lp, sigma2 = nuisance$sigma2)
+    out
+  }
 
   return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
@@ -45,6 +49,7 @@
 
 # merges predicted means and variances
 .lmmerge <- function(predictions, groups) {
+
   out <- matrix(0, sum(sapply(predictions, nrow)), 2)
   for (i in 1:length(predictions)) {
     out[groups==i,] <- predictions[[i]]

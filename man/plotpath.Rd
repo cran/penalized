@@ -34,5 +34,5 @@ plotpath(pen)
 
 }
 
-\keyword{multivariate} 
+\keyword{multivariate}
 \keyword{regression} 

@@ -239,8 +239,58 @@
   }
   out
 }
-  
 
+
+###################################
+# Park & Hastie's suggestion for the next lambda where the active set changes
+###################################
+.park <- function(beta, lambda, lambda2=0, positive, X, fit) {
+          
+  gradient <- drop(crossprod(X[,drop=FALSE], fit$residuals))
+  if (all(positive))
+    active <- (beta > 0) | ((gradient - lambda) / lambda > -1e4)
+  else
+    active <- (beta != 0) | ((abs(gradient) - lambda) / lambda > -1e-4)
+  if (sum(active) > 0) {
+    activeX <- X[,active,drop=FALSE]
+    if (is.list(fit$W)) {
+      XadW <- activeX * matrix(sqrt(fit$W$diagW), nrow(activeX), ncol(activeX))  
+      XaWXa <- crossprod(XadW) - crossprod(crossprod(fit$W$P, activeX))
+      XdW <- X * matrix(sqrt(fit$W$diagW), nrow(X), ncol(X))  
+      XWXa <- crossprod(XdW, XadW) - crossprod(crossprod(fit$W$P, X), crossprod(fit$W$P, activeX))    
+    } else if (length(fit$W) > 1) {
+      XaW <- activeX * matrix(sqrt(fit$W), nrow(activeX), ncol(activeX))
+      XaWXa <- crossprod(XW)
+      XW <- X * matrix(sqrt(fit$W), nrow(X), ncol(X))
+      XWXa <- crossprod(XW, XaW)
+    } else {
+      XaWXa <- crossprod(activeX)
+      XWXa <- crossprod(X, activeX)
+    } 
+    signbetaactive <- ifelse(sign(beta[active]) == 0, sign(gradient[active]), sign(beta[active]))
+    temp <- solve(XaWXa, signbetaactive * lambda[active])
+    aa <- XWXa %*% temp / lambda
+    hh1 <- (1 - gradient / lambda) / (1-aa) 
+    hh1[hh1 < 0] <- Inf  
+    hh2 <- (1 + gradient / lambda) / (1+aa)
+    hh2[hh2 < 0] <- Inf
+    hh3 <- - beta[active] / temp
+    hh <- numeric(length(beta))
+    hh[!active] <- pmin(hh1[!active], hh2[!active])
+    hh[active] <- hh3      
+    if (all(hh <= 0)) hh <- Inf else hh <- min(hh[hh>=0])
+    if (hh < 1e-4) {hh <- 1e-4 }
+  } else {
+    hh <- 1e-4
+  }
+  newbeta <- beta
+  newbeta[active] <- newbeta[active] + hh * temp
+  list(hh = hh, beta = newbeta)
+}
+
+
+  
+  
 ###################################
 # The core ridge algorithm
 ###################################
@@ -321,7 +371,7 @@
 # Workhorse function for cross-validated likelihood
 ###################################
 .cvl <- function(X, lambda1, lambda2, positive, beta, fit, groups, trace = FALSE, 
-  betas = NULL, quit.if.failed = TRUE, ...)  {
+  betas = NULL, quit.if.failed = TRUE, save.predictions = TRUE, ...)  {
                                     
   n <- nrow(X)
   m <- ncol(X)
@@ -393,7 +443,8 @@
         lin.pred[leaveout] <- X[leaveout, foldfit$beta != 0, drop=FALSE] %*% 
           foldfit$beta[foldfit$beta != 0]
         lin.pred[!leaveout] <- foldfit$fit$lp0
-        predictions[[i]] <<- fit$prediction(lin.pred[leaveout], foldfit$fit$nuisance)
+        if (save.predictions)
+          predictions[[i]] <<- fit$prediction(lin.pred[leaveout], foldfit$fit$nuisance, leaveout)
         betas[,i] <<- foldfit$beta
         if (trace) cat(rep("\b", trunc(log10(i))+1), sep ="")
         out <- fit$cvl(lin.pred, leaveout)

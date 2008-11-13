@@ -34,7 +34,7 @@ penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
 
 \item{startgamma}{Starting values for the regression coefficients of the unpenalized covariates.}
 
-\item{steps}{If greater than 1, the algorithm will fit the model for a range of \code{steps} \code{lambda1}-values, starting from the maximal value down to the value of \code{lambda1} specified. This is useful for making plots as in \code{\link{plotpath}}.}
+\item{steps}{If greater than 1, the algorithm will fit the model for a range of \code{steps} \code{lambda1}-values, starting from the maximal value down to the value of \code{lambda1} specified. This is useful for making plots as in \code{\link{plotpath}}. With \code{steps = "Park"} it is possible to choose the steps in such a way that they are at the approximate value at which the active set changes, following Park and Haste (2007).}
 
 \item{epsilon}{The convergence criterion. As in \code{\link[stats:glm.control]{glm}}. Convergence is judged separately on the likelihood and on the penalty.}
 
