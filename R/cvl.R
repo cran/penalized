@@ -399,43 +399,50 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   fold <- max(groups)
 
   # benchmark: cvl at infinite penalty
-  if (pu > 0) {
-    null <- .cvl(prep$X[,1:pu, drop=FALSE], lambda1 = rep(0,pu), lambda2 = rep(0,pu),
-      positive = FALSE, beta = prep$nullgamma, fit=fit, groups=groups, epsilon=epsilon, 
-      maxiter=maxiter, trace = FALSE)
-    null$fit$beta <- c(null$fit$beta, numeric(pp))
-  } else {
-    null <- list()
-    null.lp <- numeric(n)
-    names(null.lp) <- rownames(prep$X)
-    null$cvl <- fit$cvl(numeric(n), !logical(n))
-    null$fit <- list()
-    null$fit$beta <- c(numeric(pu+pp))
-    names(null$fit$beta) <- colnames(prep$X)
-    null$fit$fit <- fit$fit(null.lp)
-    null$predictions <- lapply(as.list(1:n), function(i) fit$prediction(null.lp, nuisance= null$fit$fit$nuisance, which=i))
-    null$fit$iterations <- 1
-    null$fit$converged <- TRUE
+  thiscvlinf <- function() {
+    if (pu > 0) {
+      null <- .cvl(prep$X[,1:pu, drop=FALSE], lambda1 = rep(0,pu), lambda2 = rep(0,pu),
+        positive = FALSE, beta = prep$nullgamma, fit=fit, groups=groups, epsilon=epsilon, 
+        maxiter=maxiter, trace = FALSE)
+      null$fit$beta <- c(null$fit$beta, numeric(pp))
+    } else {
+      null <- list()
+      null.lp <- numeric(n)
+      names(null.lp) <- rownames(prep$X)
+      null$cvl <- fit$cvl(numeric(n), !logical(n))
+      null$fit <- list()
+      null$fit$beta <- c(numeric(pu+pp))
+      null$fit$penalty <- c(L1 = 0, L2 = 0)
+      names(null$fit$beta) <- colnames(prep$X)
+      null$fit$fit <- fit$fit(null.lp)
+      null$predictions <- lapply(as.list(1:n), function(i) fit$prediction(null.lp, nuisance= null$fit$fit$nuisance, which=i))
+      null$fit$iterations <- 1
+      null$fit$converged <- TRUE
+    }
+    null
   }
-  
+                 
   # The function to be optimized
   # Note: in passing it keeps track of the fit with the best cvl so far
   # It does this to be able to return more than just the optimal cvl-value
   betas <- NULL
   beta <- prep$beta
-  best <- null
+  best <- list(cvl=-Inf)
   thiscvl <- function(rellambda) {
     if (trace) {
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(prep$X, lambda1 * prep$baselambda1, rellambda*prep$baselambda2, 
-      positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
-      maxiter=maxiter, trace = trace, betas = betas)
+    if (rellambda == Inf)
+      out <- thiscvlinf()
+    else
+      out <- .cvl(prep$X, lambda1 * prep$baselambda1, rellambda*prep$baselambda2, 
+        positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
+        maxiter=maxiter, trace = trace, betas = betas)
     if (trace) cat("cvl=", out$cvl, "\n")
     if (out$cvl > - Inf) {
       beta <<- out$fit$beta
-      if (is.null(betas)) {
+      if (is.null(betas) && !is.null(out$fit$betas)) {
         between <- mean(abs(beta - out$fit$beta))
         within <- mean(abs(out$betas - matrix(out$fit$beta, pp+pu, fold)))
         if (between < within) {
@@ -444,7 +451,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
       } else {
         betas <<- out$betas
       }
-      if (out$cvl >= best$cvl) {
+      if (out$cvl > best$cvl) {
         best <<- out
       }
     }
@@ -452,6 +459,10 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   }
   
   # phase 1: find the order of magnitude of lambda if not given by the user
+  if (missing(maxlambda2))
+    nullcvl <- thiscvl(Inf)
+  else
+    nullcvl <- thiscvl(maxlambda2)
   if (missing(minlambda2) || missing(maxlambda2)) {
     if (missing(minlambda2) && missing(maxlambda2)) {
       left <- 1
@@ -462,7 +473,10 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     }
     leftcvl <- thiscvl(left)
     right <- 10*left
-    rightcvl <- thiscvl(right)
+    if (missing(maxlambda2))
+      rightcvl <- thiscvl(right)
+    else
+      rightcvl <- nullcvl
     if (leftcvl < rightcvl || rightcvl == -Inf) {
       high <- right
       highcvl <- rightcvl
@@ -476,51 +490,57 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
       lowcvl <- rightcvl
       fac <- 0.1
     }
-    ready <- FALSE
+    ready <- (missing(maxlambda2) && fac < 1) || (missing(minlambda2) && fac > 1)
     # infmax: the maximum is (numerically) at infinite penalty
     # infmin: the maximum is (numerically) at zero penalty
-    infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && 
-      (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
+    infmax <- FALSE
     infmin <- FALSE
-    while (!ready && !infmax) {
-      nxt <- high*fac
-      nxtcvl <- thiscvl(nxt)
-      ready <- nxtcvl < highcvl
-      if (!ready) {
-        low <- high
-        lowcvl <- highcvl
-        high <- nxt
-        highcvl <- nxtcvl
+    if (!ready) {
+      while (!ready && !infmax) {
+        nxt <- high*fac
+        nxtcvl <- thiscvl(nxt)
+        ready <- nxtcvl < highcvl
+        if (!ready) {
+          low <- high
+          lowcvl <- highcvl
+          high <- nxt
+          highcvl <- nxtcvl
+        }
+        infmax <- ((abs(lowcvl - nullcvl) / abs(nullcvl + 0.1) < epsilon) && 
+          (abs(highcvl - nullcvl) / abs(nullcvl + 0.1) < epsilon))
+        infmin <- (fac < 1) && (abs(lowcvl - nxtcvl) / abs(nxtcvl + 0.1) < epsilon) 
       }
-      infmax <- ((abs(lowcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon) && 
-        (abs(highcvl - null$cvl) / abs(null$cvl + 0.1) < epsilon))
-      infmin <- (fac < 1) && (abs(lowcvl - nxtcvl) / abs(nxtcvl + 0.1) < epsilon) 
+      minlambda2 <- min(low, nxt)
+      maxlambda2 <- max(low, nxt)
+    } else {
+      minlambda2 <- min(low, high)
+      maxlambda2 <- max(low, high)
     }
-    minlambda2 <- min(low, nxt)
-    maxlambda2 <- max(low, nxt)
   } else {
     infmax <- infmin <- FALSE
   }
-  
+                                
   # phase 2: optimize lambda within the order of magnitude found
   if (!infmax && !infmin) {
     opt <- opt.brent(thiscvl, sort(c(minlambda2,maxlambda2)), maximum = TRUE, 
       tol = tol)
+    if (opt$max <= nullcvl) {
+      opt <- list(argmax = maxlambda2, max = nullcvl)
+    }
   } else {
     if (infmax) {
-      opt <- list(argmax = Inf, max = null$cvl)
+      opt <- list(argmax = Inf, max = nullcvl)
       names(best$fit$beta) <- colnames(prep$X)
-      best$fit$penalty <- c(L1 = 0, L2 = Inf)
     } else {
       best$cvl <- -Inf    # clears bestfit
       best$cvl <- thiscvl(0)
       opt <- list(argmax = 0, max = best$cvl) 
     } 
-  } 
-
+  }
+                                
   # merge the cross-validated predictions at the optimal fit
   best$predictions <- .predictswitch(prep$model, best$predictions, groups)
-
+                                                  
   return(list(
     lambda = opt$argmax, 
     cvl = opt$max, 

@@ -32,7 +32,7 @@
     \item{\code{residuals}:}{Object of class "vector". Unstandardized residuals for each subject in the fitted model. Martingale residuals are given for the cox model.}
     \item{\code{fitted}:}{Object of class "vector". Fitted values (means) for each subject in the fitted model. In the cox model, this slot holds the relative risks.}
     \item{\code{lin.pred}:}{Object of class "vector". Linear predictors for each subject in the fitted model.}
-    \item{\code{loglik}:}{Object of class "numeric". Log likelihood of the fitted model.}
+    \item{\code{loglik}:}{Object of class "numeric". Log likelihood of the fitted model. For the Cox model, reports the full likelihood rather than the partial likelihood.}
     \item{\code{penalty}:}{Object of class "vector". L1 and L2 penalties of the fitted model.}
     \item{\code{iterations}:}{Object of class "numeric". Number of iterations used in the fitting process.}
     \item{\code{converged}:}{Object of class "logical". Whether the fitting process was judged to be converged.}

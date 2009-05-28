@@ -1,3 +1,9 @@
+0.9-24
+- Repaired optL2: gives exactly maxlambda2 as optimum if that is the optimum
+- repaired minor bug in optL2.
+- mentioned the preprint of the paper in the Vignette
+- CITATION file added
+
 0.9-23
 - implemented strata for the cox model
 - bug repaired: cross-validated predictions did not use the offset term

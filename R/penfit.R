@@ -22,7 +22,7 @@ setClass("penfit",
 # creation method for a penfit object 
 .makepenfit <- function(object, unpenalized, model, lambda1, lambda2, orthogonalizer, weights) {
   out <- new("penfit")
-  
+                                              
   object$beta <- object$beta / weights
 
   beta <- object$beta[unpenalized + seq_len(length(object$beta) - unpenalized)]
@@ -34,7 +34,7 @@ setClass("penfit",
   out@residuals <- object$fit$residuals
   out@fitted <- object$fit$fitted
   out@lin.pred <- object$fit$lp
-  
+                                    
   out@loglik <- if (is.na(object$fit$loglik)) -Inf else object$fit$loglik
   out@penalty <- object$penalty
   

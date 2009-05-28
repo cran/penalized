@@ -1,0 +1,30 @@
+citHeader("To cite the penalized package in publications use:")
+
+citEntry(entry="Manual",
+    title = "Penalized: L1 (lasso) and L2 (ridge) penalized estimation in GLMs and in the Cox model",
+    author = personList(as.person("J. J. Goeman")),
+    year = substring(packageDescription("penalized")$Date,1,4),
+    note = paste("R package version", packageDescription("penalized")$version),
+    textVersion =
+      paste("Jelle J. Goeman (",
+        substring(packageDescription("penalized")$Date,1,4),
+        ") Penalized ",
+        "R package, version ", packageDescription("penalized")$Version,
+        ".", sep = "")
+)
+
+citEntry(entry="Article",
+    title = "L1 penalized estimation in the Cox proportional hazards model",
+    author = personList(as.person("J. J. Goeman")),
+    journal = "Biometrical Journal",
+    number = 51,
+    pages = "in press",
+    year = 2009,
+    textVersion =
+      paste("Jelle J. Goeman (2009)",
+		"L1 penalized estimation in the Cox proportional hazards model,",
+        	"Biometrical Journal, 51, in press.")
+)
+
+
+
