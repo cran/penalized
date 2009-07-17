@@ -140,6 +140,7 @@
 
 # mapping from the linear predictor lp to an actual prediction
 .coxpredict <- function(lp, nuisance, strata) {
+  if (is.null(strata)) strata <- rep(1, length(lp))
   out <- nuisance$baseline
   out@curves <- out@curves[strata,,drop=FALSE]
   out@curves <- out@curves ^ matrix(exp(lp), nrow(out@curves), ncol(out@curves))

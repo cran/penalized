@@ -119,7 +119,7 @@ predict(fit, nki70[1:3,c("DIAPH3","NUSAP1")])
 
 If the covariates are not naturally on the same scale, it is advisable to standardize them. The function argument \Rfunarg{standardize} (default: \Robject{FALSE}) standardizes the covariates to unit second central moment before applying penalization. This standardization makes sure that each covariate is affected more or less equally by the penalization.
 
-The fitted regression coefficients that the function returns have been scaled back and correspond to the original scale of the covariates. To extract the regression coefficients of the standardized covariates, use the \Rfunction{coefficients} function with \Robject{standardize = FALSE}. This option is also available if the model was not fitted with standardized covariates, as the covariates are always standardized internally for numerical stability. To find the weights used by the function, use \Robject{weights(fit)}.
+The fitted regression coefficients that the function returns have been scaled back and correspond to the original scale of the covariates. To extract the regression coefficients of the standardized covariates, use the \Rfunction{coefficients} function with \Robject{standardize = TRUE}. This option is also available if the model was not fitted with standardized covariates, as the covariates are always standardized internally for numerical stability. To find the weights used by the function, use \Robject{weights(fit)}.
 
 <<weights>>=
 coefficients(fit)

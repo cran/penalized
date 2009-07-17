@@ -1,3 +1,6 @@
+0.9-25
+- Repaired bug in predict function for the Cox model in absence of strata
+
 0.9-24
 - Repaired optL2: gives exactly maxlambda2 as optimum if that is the optimum
 - repaired minor bug in optL2.
