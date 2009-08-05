@@ -295,7 +295,7 @@
 # The core ridge algorithm
 ###################################
 .ridge <- function(beta, eta, Lambda, X, fit, trace = FALSE, epsilon = 1e-8, maxiter = 25) {
-
+                                               
   if (missing(eta)) eta <- drop(X %*% beta)
 
   iter <- 0
@@ -372,7 +372,7 @@
 ###################################
 .cvl <- function(X, lambda1, lambda2, positive, beta, fit, groups, trace = FALSE, 
   betas = NULL, quit.if.failed = TRUE, save.predictions = TRUE, ...)  {
-                                    
+                                                           
   n <- nrow(X)
   m <- ncol(X)
 
@@ -417,7 +417,7 @@
 
   # "groups" input lists fold allocation for each subject %in% 1:fold
   fold <- max(groups)
-  
+                                      
   # fit the full model and make an m x fold matrix of beta if necessary
   fullfit <- cvfit(logical(n), beta)
   if (is.null(betas)) {

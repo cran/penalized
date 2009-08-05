@@ -1,3 +1,6 @@
+0.9-26
+- Repaired optL2 bug: "Error in X %*% beta : non-conformable arguments"
+
 0.9-25
 - Repaired bug in predict function for the Cox model in absence of strata
 

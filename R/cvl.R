@@ -372,12 +372,12 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
 
 ######################################
 # Finds the optimal cross-validated L2-penalty for a given L1-penalty
-######################################
+######################################                       
 optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, 
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, 
   fold, epsilon = 1e-10, maxiter, standardize = FALSE, tol = .Machine$double.eps^0.25, 
   trace = TRUE) {
-
+                                                                  
   # maximum number of iterations depends on the input
   if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
 
@@ -433,27 +433,28 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    if (rellambda == Inf)
+    if (rellambda == Inf) 
       out <- thiscvlinf()
-    else
+    else {
       out <- .cvl(prep$X, lambda1 * prep$baselambda1, rellambda*prep$baselambda2, 
         positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
         maxiter=maxiter, trace = trace, betas = betas)
-    if (trace) cat("cvl=", out$cvl, "\n")
-    if (out$cvl > - Inf) {
-      beta <<- out$fit$beta
-      if (is.null(betas) && !is.null(out$fit$betas)) {
-        between <- mean(abs(beta - out$fit$beta))
-        within <- mean(abs(out$betas - matrix(out$fit$beta, pp+pu, fold)))
-        if (between < within) {
+      if (out$cvl > - Inf) {
+        beta <<- out$fit$beta
+        if (is.null(betas) && !is.null(out$fit$betas)) {
+          between <- mean(abs(beta - out$fit$beta))
+          within <- mean(abs(out$betas - matrix(out$fit$beta, pp+pu, fold)))
+          if (between < within) {
+            betas <<- out$betas
+          } 
+        } else {
           betas <<- out$betas
-        } 
-      } else {
-        betas <<- out$betas
+        }
       }
-      if (out$cvl > best$cvl) {
-        best <<- out
-      }
+    }
+    if (trace) cat("cvl=", out$cvl, "\n")
+    if (out$cvl > best$cvl) {
+      best <<- out
     }
     out$cvl
   }
