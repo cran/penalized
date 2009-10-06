@@ -111,7 +111,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   outs <- sapply(1:i, function(nr) {
     thislambda1 <- lambda1s[[nr]]
     .makepenfit(outs[[nr]], pu, prep$model, thislambda1, lambda2, 
-      prep$orthogonalizer, prep$weights)
+      prep$orthogonalizer, prep$weights, prep$formula)
   })
 
   if(length(outs)==1) 

@@ -50,9 +50,11 @@ library(survival)
 data(nki70)
 @
 
-This loads a \Rclass{data.frame} with 144 breast cancer patients and 77 covariates. The first two covariates indicate the survival time and event status (time is in months), the next five are clinical covariates (diameter of the tumor, lymph node status, estrogen receptor status, grade of the tumor and age of the patients), and the other 70 are gene expression measurements of the 70 molecular markers.
+This loads a \Rclass{data.frame} with 144 breast cancer patients and 77 covariates. The first two covariates indicate the survival time and event status (time is in months), the next five are clinical covariates (diameter of the tumor, lymph node status, estrogen receptor status, grade of the tumor and age of the patients), and the other 70 are gene expression measurements of the 70 molecular markers. As we are interested in survival as an outcome, we also need the survival package.
 
-As we are interested in survival as an outcome, we also need the survival package.
+<<setseed>>=
+set.seed(1)
+@
 
 \subsection{the penalized function}
 

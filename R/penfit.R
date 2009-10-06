@@ -15,12 +15,13 @@ setClass("penfit",
     lambda1 = "vector",
     lambda2 = "vector",
     nuisance = "list",
-    weights = "vector" 
+    weights = "vector",
+    formula = "list" 
   )
 )
 
 # creation method for a penfit object 
-.makepenfit <- function(object, unpenalized, model, lambda1, lambda2, orthogonalizer, weights) {
+.makepenfit <- function(object, unpenalized, model, lambda1, lambda2, orthogonalizer, weights, formula) {
   out <- new("penfit")
                                               
   object$beta <- object$beta / weights
@@ -43,6 +44,8 @@ setClass("penfit",
   out@converged <- object$converged
   
   out@model <- model
+  
+  out@formula <- formula
   
   if ("baseline" %in% names(object$fit$nuisance))
     object$fit$nuisance$baseline <- object$fit$nuisance$baseline()
@@ -171,7 +174,9 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
       unpenalized <- ~0
     else if (length(object@unpenalized) == 1 && object@model != "cox")
       unpenalized <- ~1
-    else
+    else if (!is.null(object@formula$unpenalized))
+      unpenalized <- object@formula$unpenalized
+    else 
       stop("argument \"unpenalized\" is missing.")
   }
   if (missing(data)) data <- NULL
@@ -205,8 +210,13 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
     if (object@model == "cox") 
       unpenalized <- unpenalized[,-1,drop=FALSE]
   }
-
+ 
   # coerce penalized into a matrix
+  if (missing(penalized)) 
+    if (!is.null(object@formula$penalized))
+      penalized <- object@formula$penalized
+    else
+      stop("\"penalized\" argument is missing with no default.")
   if (is.data.frame(penalized) || is.vector(penalized))
     if (all(sapply(penalized, is.numeric))) {
       penalized <- as.matrix(penalized)
@@ -214,7 +224,7 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
       stop("argument \"penalized\" could not be coerced into a matrix")
     }
   if (is(penalized, "formula")) {
-    has.intercept <- attr(terms(penalized), "intercept") == 1
+    has.intercept <- attr(terms(penalized, data=data), "intercept") == 1
     if(is.null(data)) data <- as.data.frame(matrix(,nrow(unpenalized),0))
     oldcontrasts <- unlist(options("contrasts"))
     options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))

@@ -39,7 +39,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
     predictions = res$predictions, 
     fold = groups, 
     fullfit = .makepenfit(res$fit, pu, prep$model, lambda1, 
-      lambda2, prep$orthogonalizer, prep$weights)
+      lambda2, prep$orthogonalizer, prep$weights, prep$formula)
   ))
 }
 
@@ -158,7 +158,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   # create all the penfit objects
   makethisfit <- function(iter)
     .makepenfit(fits[[iter]], pu, prep$model, lambda1s[[iter]], lambda2, 
-    prep$orthogonalizer, prep$weights)
+    prep$orthogonalizer, prep$weights, prep$formula)
 
   return(list(
     lambda = lambda1s, 
@@ -264,7 +264,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   # create the penfit objects                          
   makethisfit <- function(iter)
     .makepenfit(fits[[iter]], pu, prep$model, lambda1, lambda2s[[iter]], 
-      prep$orthogonalizer, prep$weights)
+      prep$orthogonalizer, prep$weights, prep$formula)
 
   return(list(
     lambda = lambda2s, 
@@ -366,7 +366,7 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
     predictions = best$predictions, 
     fold = groups, 
     fullfit = .makepenfit(best$fit, pu, prep$model, opt$argmax, lambda2, 
-      prep$orthogonalizer, prep$weights)
+      prep$orthogonalizer, prep$weights, prep$formula)
   ))
 }
 
@@ -548,7 +548,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     predictions = best$predictions, 
     fold = groups, 
     fullfit = .makepenfit(best$fit, pu, prep$model, lambda1, opt$argmax, 
-      prep$orthogonalizer, prep$weights)
+      prep$orthogonalizer, prep$weights, prep$formula)
   ))
 }
       

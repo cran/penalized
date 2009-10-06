@@ -41,6 +41,7 @@
     \item{\code{lambda2}:}{Object of class "vector". The lambda2 parameter(s) used.}
     \item{\code{nuisance}:}{Object of class "list". The maximum likelihood estimates of any nuisance parameters in the model.}
     \item{\code{weights}:}{Object of class "vector". The weights of the covariates used for standardization.}
+    \item{\code{formula}:}{Object of class "list". A named list containing the unpenalized and penalized formula objects, if present.}
   }
 }
 
@@ -57,6 +58,7 @@
     \item{residuals}{(penfit): Returns the residuals.}
     \item{show}{(penfit): Summarizes the fitted model.}
     \item{weights}{(penfit): Returns the weights used for standardization.}
+    \item{predict}{(penfit): Calculates predictions for new subjects. See \code{\link[penalized:predict]{predict}}.}
   }
 }
 

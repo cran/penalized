@@ -35,8 +35,11 @@
   }
   
   # coerce factor response to 0,1
-  if (is.factor(response))
+  if (is.factor(response)) {
+    if (length(levels(response)) != 2)
+      stop("response has ", length(levels(response)), " levels. Only two-level factor response supported.")
     response <- response != levels(response)[1]
+  }
     
   # check positivity of survival response
   if (is(response, "Surv") && any(as.vector(response) < 0))
@@ -66,6 +69,7 @@
   # Has the response formula been used?
   if (!is.null(formula.response))
     warning("right hand side of response formula ignored")
+  formula.input <- list()     # stores input formula
 
   # coerce unpenalized into a matrix and find the offset term
   offset <- NULL
@@ -77,6 +81,7 @@
     }
   }
   if (is(unpenalized, "formula")) {
+    formula.input$unpenalized <- unpenalized
     if (missing("data")) {
       tup <- terms(unpenalized, specials = "strata") 
       # prevent problems for input ~1 or ~0:
@@ -120,6 +125,7 @@
       stop("argument \"penalized\" could not be coerced into a matrix")
     }
   if (is(penalized, "formula")) {
+    formula.input$penalized <- penalized
     oldcontrasts <- unlist(options("contrasts"))
     options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))
     if (missing("data"))
@@ -242,7 +248,8 @@
     model = model, 
     nullgamma = nullgamma,
     offset = offset,
-    strata = strata
+    strata = strata,
+    formula = formula.input
   ))
 }
 

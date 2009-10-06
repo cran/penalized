@@ -1,5 +1,11 @@
+0.9-27
+- added set.seed to vignette.
+- added link to predict.Rd from penfit.Rd
+- added formula slot to penfit
+- changed predict() to use penfit's formula slot
+
 0.9-26
-- Repaired optL2 bug: "Error in X %*% beta : non-conformable arguments"
+- Repaired optL2 bug: "Error in X %*% beta : non-conformable arguments" for optL2 with non-penalized covariates.
 
 0.9-25
 - Repaired bug in predict function for the Cox model in absence of strata
