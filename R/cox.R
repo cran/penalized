@@ -144,6 +144,7 @@
   out <- nuisance$baseline
   out@curves <- out@curves[strata,,drop=FALSE]
   out@curves <- out@curves ^ matrix(exp(lp), nrow(out@curves), ncol(out@curves))
+  row.names(out@curves) <- names(lp)
   out
 }
 

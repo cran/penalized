@@ -1,3 +1,6 @@
+0.9-29
+- added check for repeated columns in .makeP to ensure full rank. Prevented singularity errors when using penalized in combination with bootstrap
+
 0.9-28
 - added explanation of loglik() and penalty() to the vignette.
 - added reference to globaltest pretesting to the vignette

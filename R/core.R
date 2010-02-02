@@ -391,12 +391,11 @@
       Pl <- P * matrix(sqrt(lambda2), nrow(P), ncol(P), byrow = TRUE)
       cvfit <- function(leftout, beta) {
         subfit <- function(lp) fit$fit(lp, leftout)
-        leftoutP <- c(rep(FALSE, nrow(P) - length(leftout)), leftout)
-        gams <- .solve(crossprod(t(P[!leftoutP,,drop=FALSE])), P[!leftoutP,,drop=FALSE] %*% beta)
-        PlP <- crossprod(t(Pl[!leftoutP,,drop=FALSE]))
-        out <- .ridge(beta = gams, Lambda = PlP, X = t(PX[!leftoutP,!leftout,drop = FALSE]), 
+        gams <- .solve(tcrossprod(P), P %*% beta)
+        PlP <- tcrossprod(Pl)
+        out <- .ridge(beta = gams, Lambda = PlP, X = t(PX[,!leftout,drop = FALSE]), 
           fit = subfit, ...)
-        out$beta <- drop(crossprod(P[!leftoutP,,drop=FALSE], out$beta))
+        out$beta <- drop(crossprod(P, out$beta))
         names(out$beta) <- names(beta)
         out
       }
@@ -495,6 +494,16 @@
   if (!free1) {          
     P[n+m+1,m + seq_len(p-m)] <- (lambda1*signbeta/lambda2)[!free2]
   }
+                    
+  # check for singularity
+  rownames(P) <- paste("V", 1:nrow(P))
+  qrP <- qr(t(P))  # not efficient?
+  if (qrP$rank < nrow(P)) {
+    qR <- qr.R(qrP)
+    keep <- colnames(qR)[sort.list(abs(diag(qR)), decr=T)[1:qrP$rank]]
+    P <- P[keep,]
+  }
+  colnames(P) <- NULL
   
   # Numerical stabilization          
   #P <- P / matrix(apply(P, 1, sd), nrow(P), ncol(P), byrow=F)
