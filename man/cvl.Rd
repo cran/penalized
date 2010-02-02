@@ -45,7 +45,7 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 }
 
 \arguments{
-\item{response}{The response variable (vector). This should be a numeric vector for linear regression, a \code{\link[survival:Surv]{Surv}} object for Cox regression and a vector of 0/1 values for logistic regression.}
+\item{response}{The response variable (vector). This should be a numeric vector for linear regression, a \code{\link[survival:Surv]{Surv}} object for Cox regression and \code{factor} or a vector of 0/1 values for logistic regression.}
 
 \item{penalized}{The penalized covariates. These may be specified either as a matrix or as a (one-sided) \code{\link[stats:formula]{formula}} object. See also under \code{data}.}
 

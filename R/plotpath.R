@@ -26,7 +26,7 @@ plotpath <- function(object, labelsize = 0.6, standardize = FALSE, ...) {
   # Adjust the margins to make sure the labels fit
   labwidth <- ifelse(labelsize > 0, max(strwidth(rownames(betas[!remove,]),"inches",labelsize)), 0)
   margins <- par("mai")
-  par("mai" = c(margins[1:3], max(margins[3], labwidth*1.4)))
+  par("mai" = c(margins[1:3], max(margins[4], labwidth*1.4)))
   
   # Plot
   matplot(lambda, t(betas[!remove,,drop=FALSE]), type ="l", ylab = "coefficient", xlab = label, col=rainbow(sum(!remove)), xlim = rev(range(lambda)), ...)

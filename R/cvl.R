@@ -491,11 +491,11 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
       lowcvl <- rightcvl
       fac <- 0.1
     }
-    ready <- (missing(maxlambda2) && fac < 1) || (missing(minlambda2) && fac > 1)
+    ready <- (!missing(maxlambda2) && fac > 1) || (!missing(minlambda2) && fac < 1)
     # infmax: the maximum is (numerically) at infinite penalty
     # infmin: the maximum is (numerically) at zero penalty
     infmax <- FALSE
-    infmin <- FALSE
+    infmin <- FALSE          
     if (!ready) {
       while (!ready && !infmax) {
         nxt <- high*fac

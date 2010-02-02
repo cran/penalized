@@ -1,8 +1,16 @@
+0.9-28
+- added explanation of loglik() and penalty() to the vignette.
+- added reference to globaltest pretesting to the vignette
+- fixed bug in order-of-magnitude finding in optL2
+- fixed bug in right margin size calculation in plotpath()
+
 0.9-27
 - added set.seed to vignette.
 - added link to predict.Rd from penfit.Rd
 - added formula slot to penfit
 - changed predict() to use penfit's formula slot
+- repaired bug in predict with ~. formula (thanks to Bernd Bischl for pointing this out)
+- added error message in case of multi-level response (thanks to Ming-Chung Li for pointing this out)
 
 0.9-26
 - Repaired optL2 bug: "Error in X %*% beta : non-conformable arguments" for optL2 with non-penalized covariates.
