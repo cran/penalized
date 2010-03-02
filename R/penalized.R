@@ -106,7 +106,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     
     outs[[i]] <- out
   }
-
+                                    
   # put the output in a penfit object
   outs <- sapply(1:i, function(nr) {
     thislambda1 <- lambda1s[[nr]]

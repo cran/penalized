@@ -26,8 +26,8 @@
   # determine the model if missing
   if (missing("model")) {
     if (is(response, "Surv")) model <- "cox"
-    else if (all(response %in% 0:1) || is.factor(response)) model <- "logistic"
-    else if (all(response >= 0) && all(response == trunc(response))) model <- "poisson"
+    else if (is.logical(response) || all(response %in% 0:1) || is.factor(response)) model <- "logistic"
+    #else if (all(response >= 0) && all(response == trunc(response))) model <- "poisson"
     else if (is.numeric(response)) model <- "linear"
     else stop("Model could not be determined from the input. Please specify the model.")
   } else {

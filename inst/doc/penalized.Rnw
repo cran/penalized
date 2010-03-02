@@ -22,7 +22,7 @@
 
 \section{Introduction}
 
-This short note explains the use of the \Rpackage{penalized} package. The package is designed for penalized estimation in generalized linear models. The lasso and elastic net algorithm that it implements is described in \cite{Goeman2009}. A preprint can be downloaded from \verb:www.msbi.nl/goeman: Please cite that paper if you use this package.
+This short note explains the use of the \Rpackage{penalized} package. The package is designed for penalized estimation in generalized linear models. The lasso and elastic net algorithm that it implements is described in \cite{Goeman2010}. Please cite that paper if you use this package.
 
 The supported models at this moment are linear regression, logistic regression, poisson regression and the Cox proportional hazards model, but others are likely to be included in the future. As to penalties, the package allows an L1 absolute value (``lasso'') penalty \citep{Tibshirani1996, Tibshirani1997}, an L2 quadratic (``ridge'') penalty \citep{Hoerl1970, Cessie1992, Verweij1994}, or a combination of the two \citep[the ``naive elastic net'' of][]{Zou2005}. The package also includes facilities for likelihood cross-validation and for optimization of the tuning parameter.
 

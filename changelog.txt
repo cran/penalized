@@ -1,5 +1,12 @@
+0.9-30
+- updated reference to Biometrical Journal paper
+- changed default model choice. A reponse with all non-negative whole numbers now defaults to linear rather than poisson.
+- logical response now defaults to logistic model
+
 0.9-29
-- added check for repeated columns in .makeP to ensure full rank. Prevented singularity errors when using penalized in combination with bootstrap
+- added check for repeated columns in .makeP to ensure full rank. This prevents singularity errors when two subjects have identical covariate values
+- repaired labels of predict breslow object for survival
+- added example to predict paragraph in Vignette
 
 0.9-28
 - added explanation of loglik() and penalty() to the vignette.

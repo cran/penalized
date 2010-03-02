@@ -17,13 +17,13 @@ citEntry(entry="Article",
     title = "L1 penalized estimation in the Cox proportional hazards model",
     author = personList(as.person("J. J. Goeman")),
     journal = "Biometrical Journal",
-    number = 51,
-    pages = "in press",
-    year = 2009,
+    number = 52,
+    pages = 70-84, 
+    year = 2010,
     textVersion =
-      paste("Jelle J. Goeman (2009)",
+      paste("Jelle J. Goeman (2010)",
 		"L1 penalized estimation in the Cox proportional hazards model,",
-        	"Biometrical Journal, 51, in press.")
+        	"Biometrical Journal, 52 (1) 70-84.")
 )
 
 
