@@ -38,6 +38,12 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     gradient <- drop(crossprod(prep$X[,pu+1:pp,drop=FALSE], fit(lp)$residuals))
     rel <- gradient / prep$baselambda1[pu+1:pp]
     from <- max(ifelse(prep$positive[pu+1:pp],  rel, abs(rel)))
+    if (from < lambda1) {
+      warning("Chosen lambda1 greater than maximal lambda1: \"steps\" argument ignored")
+      steps <- 1
+      park <- FALSE
+      from <- lambda1
+    }
   } else {
     from <- lambda1
   }

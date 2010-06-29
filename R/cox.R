@@ -117,7 +117,7 @@
       pij <- ws[k] / somw
       if (status[k] == 1) {
         dk <- which(whichd == k)
-        cvls[k] <- sum(log(1 - pij[Riskset[k,] & dtimes < time[k]])) + log(pij[dk])
+        cvls[k] <- sum(log(1 - pij[Riskset[k,] & (seq_along(dtimes) != dk)])) + log(pij[dk])
       } else {
         cvls[k] <- sum(log(1 - pij[Riskset[k,]]))
       }

@@ -1,5 +1,6 @@
 \name{Prediction from penalized models}
 \alias{predict,penfit-method}
+\alias{predict}
 
 \title{Prediction based on penfit objects}
 

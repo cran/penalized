@@ -119,6 +119,9 @@ setMethod("linear.predictors", "penfit", function(object, ...) {
 setMethod("fitted.values", "penfit", function(object, ...) {
   object@fitted
 })
+setMethod("fitted", "penfit", function(object, ...) {
+  object@fitted
+})
 
 # extracts the weights
 setMethod("weights", "penfit", function(object, ...) {

@@ -27,7 +27,6 @@
   if (missing("model")) {
     if (is(response, "Surv")) model <- "cox"
     else if (is.logical(response) || all(response %in% 0:1) || is.factor(response)) model <- "logistic"
-    #else if (all(response >= 0) && all(response == trunc(response))) model <- "poisson"
     else if (is.numeric(response)) model <- "linear"
     else stop("Model could not be determined from the input. Please specify the model.")
   } else {
@@ -79,6 +78,7 @@
     } else {
       stop("argument \"unpenalized\" could not be coerced into a matrix")
     }
+    strata <- NULL
   }
   if (is(unpenalized, "formula")) {
     formula.input$unpenalized <- unpenalized
@@ -140,6 +140,10 @@
     penalized <- penalized[,-1,drop=FALSE]
     options(contrasts = oldcontrasts)
   }
+
+  # check missing values in penalized
+  if (any(is.na(penalized)))
+    stop("missing values in \"penalized\" argument")
 
   # check dimensions of response, penalized and unpenalized
   if (model == "cox") {

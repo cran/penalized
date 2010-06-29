@@ -97,7 +97,7 @@ The penalized function returns a \Rclass{penfit} object, from which useful infor
 
 <<extract>>=
 residuals(fit)[1:10]
-fitted.values(fit)[1:10]
+fitted(fit)[1:10]
 basesurv(fit)
 @
 
@@ -191,6 +191,11 @@ plotpath(fit, log="x")
 @
 
 Following \cite{Park2007} it is possible to choose the values of $\lambda_1$ in such a way that these are the change-points at which the active set changes. This can be done by setting \Rfunarg{steps = "Park"}.
+
+<<steps>>=
+fit <- penalized(Surv(time,event), nki70[,8:77], lambda1=1,
+    steps="Park", trace = FALSE)
+@
 
 Note that \Rfunction{plotpath} plots the unstandardized coefficients by default. Standardized coefficients can be plotted (even when the model was not fitted with standardized coefficients) with the \Rfunarg{standardize} argument.
 

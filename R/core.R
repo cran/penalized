@@ -247,10 +247,9 @@
 .park <- function(beta, lambda, lambda2=0, positive, X, fit) {
           
   gradient <- drop(crossprod(X[,drop=FALSE], fit$residuals))
-  if (all(positive))
-    active <- (beta > 0) | ((gradient - lambda) / lambda > -1e4)
-  else
-    active <- (beta != 0) | ((abs(gradient) - lambda) / lambda > -1e-4)
+  active1 <- ifelse(positive, (gradient - lambda) / lambda > -1e-4, (abs(gradient) - lambda) / lambda > -1e-4)
+  active2 <- ifelse(positive, beta > 0, beta != 0)
+  active <- active2 | active1
   if (sum(active) > 0) {
     activeX <- X[,active,drop=FALSE]
     if (is.list(fit$W)) {
@@ -260,7 +259,7 @@
       XWXa <- crossprod(XdW, XadW) - crossprod(crossprod(fit$W$P, X), crossprod(fit$W$P, activeX))    
     } else if (length(fit$W) > 1) {
       XaW <- activeX * matrix(sqrt(fit$W), nrow(activeX), ncol(activeX))
-      XaWXa <- crossprod(XW)
+      XaWXa <- crossprod(XaW)
       XW <- X * matrix(sqrt(fit$W), nrow(X), ncol(X))
       XWXa <- crossprod(XW, XaW)
     } else {
@@ -307,7 +306,7 @@
     localfit <- fit(eta)
     if (is.na(localfit$loglik) || iter == maxiter) {
       if (trace) {
-        cat(rep("\b", trunc(log10(iter))+1), sep ="")
+        if (iter > 0) cat(rep("\b", trunc(log10(iter))+1), sep ="")
         warning("Model does not converge: please increase lambda.", call.=FALSE)
       }
       converged <- FALSE

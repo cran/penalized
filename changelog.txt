@@ -1,3 +1,13 @@
+0.9-31
+- corrected calculation of cross-validated partial likelihood in case of ties.
+- improved documentation of predict
+- fixed bug log10(iter) for iter=0.
+- added check for missing values in penalized argument
+- added fitted() as synonym of fitted.values
+- fixed bug "Error in strata[status == 1] : object of type 'closure' is not subsettable" (Thanks to Melania Pintilie for pointing this out)
+- fixed bug in step="Park" in logistic regression (Thanks to Hélène rousseau for pointing this out)
+- added warning using steps if lambda1 is greater than maximal lambda1
+
 0.9-30
 - updated reference to Biometrical Journal paper
 - changed default model choice. A reponse with all non-negative whole numbers now defaults to linear rather than poisson.

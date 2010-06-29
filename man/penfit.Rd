@@ -8,6 +8,7 @@
 \alias{coef,penfit-method}
 \alias{residuals,penfit-method}
 \alias{fitted.values,penfit-method}
+\alias{fitted,penfit-method}
 \alias{penalty,penfit-method}
 \alias{weights,penfit-method}
 \alias{loglik,penfit-method}
@@ -50,8 +51,9 @@
     \item{basehaz}{(penfit): Returns the baseline hazard (a \code{data.frame}) if a cox model was fitted, \code{NULL} otherwise. An additional argument \code{center} (default (\code{TRUE}) can be used to give the survival curve at the covariate mean (\code{center = TRUE}) rather than at zero.}
     \item{basesurv}{(penfit): Returns the baseline survival curve (a \code{\link{breslow}} object) if a cox model was fitted, \code{NULL} otherwise. An additional argument \code{center} (default (\code{TRUE}) can be used to give the survival curve at the covariate mean (\code{center = TRUE}) rather than at zero.}
     \item{coef}{(penfit): Returns the regression coefficients. Accepts a second argument "which", that takes values "nonzero" (the default), "all", "penalized" or "unpenalized" for extracting only the non-zero, the penalized or the unpenalized regression coefficients. A third argument "standardize" (default FALSE) can be used to let the method return the regression coefficients for the standardized covariates.}
-    \item{coefficients}{(penfit): alias for \code{coef} above.}
-    \item{fitted.values}{(penfit): Returns the fitted values for each subject (i.e. the predicted means). In the Cox model, this method returns the relative risks for each individual.}
+    \item{coefficients}{(penfit): synonym for \code{coef} above.}
+    \item{fitted}{(penfit): Returns the fitted values for each subject (i.e. the predicted means). In the Cox model, this method returns the relative risks for each individual.}
+    \item{fitted.values}{(penfit): synonym for \code{fitted} above.}
     \item{linear.predictors}{(penfit): Returns the linear predictors for each subject.}
     \item{loglik}{(penfit): Returns the log likelihood of the fitted model.}
     \item{penalty}{(penfit): Returns the L1 and L2 penalties of the fitted model.}
