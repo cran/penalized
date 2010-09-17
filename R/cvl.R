@@ -113,6 +113,8 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   } else {
     lambda1s <- seq(maxlambda1, minlambda1, length.out = steps)
   }
+  if (pp+pu >= n) # HD model
+    lambda1s <- lambda1s[lambda1s != 0]
 
   # the actual repeated cvl-calculation
   betas <- NULL

@@ -43,6 +43,9 @@
   # check positivity of survival response
   if (is(response, "Surv") && any(as.vector(response) < 0))
     stop("negative survival times")
+  # avoid problems with Design package
+  if (is(response, "Surv") && "labelled" %in% class(response))
+    class(response) <- "Surv"
 
   # determine penalized and unpenalized
   if (!missing("penalized")) {

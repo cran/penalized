@@ -106,6 +106,8 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 
 \author{Jelle Goeman: \email{j.j.goeman@lumc.nl}}
 
+\references{Goeman J.J. (2010). L-1 Penalized Estimation in the Cox Proportional Hazards Model. Biometrical Journal 52 (1) 70-84.}
+
 \seealso{\code{\link{penalized}}, \code{\link{penfit}}, \code{\link{plotpath}}.}
 
 \examples{

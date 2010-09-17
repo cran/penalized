@@ -31,7 +31,7 @@ setClass("penfit",
    
   out@unpenalized <- gamma
   out@penalized <- beta
-  
+
   out@residuals <- object$fit$residuals
   out@fitted <- object$fit$fitted
   out@lin.pred <- object$fit$lp

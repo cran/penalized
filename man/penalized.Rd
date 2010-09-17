@@ -55,6 +55,8 @@ In case of tied survival times, the function uses Breslow's version of the parti
 
 \author{Jelle Goeman: \email{j.j.goeman@lumc.nl}}
 
+\references{Goeman J.J. (2010). L-1 Penalized Estimation in the Cox Proportional Hazards Model. Biometrical Journal 52 (1) 70-84.}
+
 \seealso{\code{\link{penfit}} for the \code{penfit} object returned, \code{\link{plotpath}}
 for plotting the solution path, and \code{\link{cvl}} for cross-validation and
 optimizing the tuning parameters.}
@@ -80,6 +82,8 @@ pen <- penalized(Surv(time, event), penalized = nki70[,8:77],
     data = nki70, lambda1 = 1, steps = 20)
 plotpath(pen)
 }
+
+
 
 \keyword{multivariate}
 \keyword{regression} 

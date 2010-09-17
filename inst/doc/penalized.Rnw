@@ -192,7 +192,7 @@ plotpath(fit, log="x")
 
 Following \cite{Park2007} it is possible to choose the values of $\lambda_1$ in such a way that these are the change-points at which the active set changes. This can be done by setting \Rfunarg{steps = "Park"}.
 
-<<steps>>=
+<<steps park>>=
 fit <- penalized(Surv(time,event), nki70[,8:77], lambda1=1,
     steps="Park", trace = FALSE)
 @

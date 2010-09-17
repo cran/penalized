@@ -1,3 +1,8 @@
+0.9-32
+- worked around bug in Design package causing error in penalized.
+- made sure profL1 does not go all the way to lambda1=0 if model is high-dimensional
+- Added reference field to penalized.Rd and cvl.Rd.
+
 0.9-31
 - corrected calculation of cross-validated partial likelihood in case of ties.
 - improved documentation of predict
