@@ -16,7 +16,7 @@ plotpath <- function(object, labelsize = 0.6, standardize = FALSE, ...) {
   if (all(remove)) stop("all coefficients are zero for all values of lambda in this object")
 
   # Take lambda1, unless all lambda1 are equal. Then take lambda2
-  lambda <- sapply(object, function(object) object@lambda1)
+  lambda <- sapply(object, function(object) object@lambda1[1])
   label <- "lambda1"
   if (all(lambda == lambda[1])) {
     lambda <- sapply(object, function(object) object@lambda2)

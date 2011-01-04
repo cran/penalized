@@ -22,9 +22,9 @@ penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
 
 \item{unpenalized}{Additional unpenalized covariates. Specified as under \code{penalized}. Note that an unpenalized intercept is included in the model by default (except in the Cox model). This can be suppressed by specifying \code{unpenalized = ~0}.}
 
-\item{lambda1, lambda2}{The tuning parameters for L1 and L2 penalization.}
+\item{lambda1, lambda2}{The tuning parameters for L1 and L2 penalization. Each must be either a single positive numbers or a vector with length equal to the number of covariates in \code{penalized} argument. In the latter case, each covariate is given its own penalty weight.}
 
-\item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be positive.}
+\item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be positive. If a logical vector with the length of the number of covariates in \code{penalized}, constrains the estimated regression coefficients of a subset of the penalized covariates to be positive.}
 
 \item{data}{A \code{data.frame} used to evaluate \code{response}, and the terms of  \code{penalized} or \code{unpenalized} when these have been specified as a  \code{\link[stats:formula]{formula}} object.}
 

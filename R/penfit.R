@@ -75,7 +75,7 @@ setMethod("show", "penfit", function(object) {
         cat("L1 penalty =\t", object@penalty[1], "\tat lambda1 = ", object@lambda1, "\n") 
     if (any(object@lambda2 > 0))
       if (length(object@lambda2) > 3) 
-        cat("L1 penalty =\t", object@penalty[2], "\tat lambda2 = ", object@lambda2[1:3], "...\n")
+        cat("L2 penalty =\t", object@penalty[2], "\tat lambda2 = ", object@lambda2[1:3], "...\n")
       else
         cat("L2 penalty =\t", object@penalty[2], "\tat lambda2 = ", object@lambda2, "\n") 
   } else {

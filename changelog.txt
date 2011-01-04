@@ -1,3 +1,8 @@
+0.9-33
+- opened option to have positive argument as a vector, forcing only some coefficients to be positive.
+- made reference to the paper to the vignette more explicit.
+- opened option for different (non-zero) penalties for different covariates.
+
 0.9-32
 - worked around bug in Design package causing error in penalized.
 - made sure profL1 does not go all the way to lambda1=0 if model is high-dimensional

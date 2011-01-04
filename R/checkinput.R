@@ -119,7 +119,7 @@
     if (model == "cox") 
       unpenalized <- unpenalized[,-1, drop=FALSE]
   }
-  
+
   # coerce penalized into a matrix
   if (is.data.frame(penalized) || is.vector(penalized))
     if (all(sapply(penalized, is.numeric))) {
@@ -165,8 +165,16 @@
   }
 
   # expand positive if necessary
-  if (!missing("positive") && input("positive"))
-    positive <- c(logical(ncol(unpenalized)), !logical(ncol(penalized)))
+  if (!missing("positive"))
+    if (length(input("positive")) == 1)
+      if (input("positive"))
+        positive <- c(logical(ncol(unpenalized)), !logical(ncol(penalized)))
+      else
+        positive <- c(logical(ncol(unpenalized)), logical(ncol(penalized)))
+    else if (length(input("positive")) == ncol(penalized))
+      positive <- c(logical(ncol(unpenalized)), input("positive"))
+    else
+      stop("length of \"positive\" does not match column count of \"penalized\"")
   else
     positive <- logical(ncol(unpenalized) + ncol(penalized))
 
@@ -232,7 +240,7 @@
   beta[beta != 0] <- beta[beta != 0] * sds[beta != 0]
   nullgamma <- nullgamma * sds[1:length(nullgamma)]
   
-  # find baselambda1 and baselambda2 
+  # find baselambda1 and baselambda2
   # This lambda1 and lambda2 for unit input lambda1=1 and lambda2=1
   if (standardize) {
     baselambda1 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
@@ -248,7 +256,7 @@
     X = X, 
     beta = beta, 
     weights = sds, 
-    baselambda1 = baselambda1, 
+    baselambda1 = baselambda1,
     baselambda2 = baselambda2,
     positive = positive,
     orthogonalizer = orthogonalizer, 

@@ -6,7 +6,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
   epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) {
 
   # Maximum number of iterations depends on the input
-  if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
+  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0) && !positive) 25 else Inf
 
   # call the general input checking function
   prep <- .checkinput(match.call(), parent.frame())
@@ -29,13 +29,24 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
   names(groups) <- rownames(prep$X)
   fold <- max(groups)
   
-  res <- .cvl(prep$X, lambda1 * prep$baselambda1, lambda2 * prep$baselambda2, 
+  # make vectors of lambda1 and lambda2
+  if (length(lambda1) == 1)
+    uselambda1 <- lambda1 * prep$baselambda1
+  else
+    uselambda1 <- c(numeric(pu), lambda1) * prep$baselambda1
+  if (length(lambda2) == 1)
+    uselambda2 <- lambda2 * prep$baselambda2
+  else
+    uselambda2 <- c(numeric(pu), lambda2) * prep$baselambda2
+    
+  res <- .cvl(prep$X, uselambda1, uselambda2,
     positive = prep$positive, beta = prep$beta, fit=fit, groups=groups, 
     epsilon=epsilon, maxiter=maxiter, trace = trace, quit.if.failed = FALSE)
   res$predictions <- .predictswitch(prep$model, res$predictions, groups)
 
   return(list(
-    cvl = res$cvl, 
+    cvl = res$cvl,
+    cvls = res$cvls,
     predictions = res$predictions, 
     fold = groups, 
     fullfit = .makepenfit(res$fit, pu, prep$model, lambda1, 
@@ -47,7 +58,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
 ######################################
 # Finds the curve of the cross-validated likelihood for a given L2-penalty and a range of L1-penalty values
 ######################################
-profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lambda2 = 0, 
+profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0,
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold, 
   epsilon = 1e-10, maxiter = Inf, standardize = FALSE, steps = 100, minsteps = steps/2, 
   log = FALSE, save.predictions = FALSE, trace = TRUE) {
@@ -68,6 +79,17 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
   groups <- .getFolds(fold, n)
   names(groups) <- rownames(prep$X)
   fold <- max(groups)
+
+  # make vectors of lambda1 and lambda2
+  if (missing(base1)) {
+    baselambda1 <- prep$baselambda1
+    base1 <- 1
+  } else
+    baselambda1 <- c(numeric(pu), base1) * prep$baselambda1
+  if (length(lambda2) == 1)
+    uselambda2 <- lambda2 * prep$baselambda2
+  else
+    uselambda2 <- c(numeric(pu), lambda2) * prep$baselambda2
              
   # benchmark: cvl at infinite penalty
   if (pu > 0) {
@@ -94,7 +116,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
     gradients <- sapply(1:fold, function(ff) {
       drop(crossprod(prep$X[groups!=ff,pu+1:pp,drop=FALSE], fit$fit(lps[groups!=ff,ff], groups==ff)$residuals))
     })
-    rel <- gradients / matrix(prep$baselambda1[pu+1:pp], pp, ncol(lps))
+    rel <- gradients / matrix(baselambda1[pu+1:pp], pp, ncol(lps))
     maxlambda1 <- max(apply(rel, 2, function (ff)
       max(ifelse(prep$positive[pu+1:pp], ff, abs(ff)))
     ))
@@ -131,7 +153,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(prep$X, rellambda*prep$baselambda1, lambda2*prep$baselambda2, 
+    out <- .cvl(prep$X, rellambda*baselambda1, uselambda2,
       positive = prep$positive, beta = beta, fit=fit, groups=groups, 
       epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, 
       quit.if.failed=FALSE, save.predictions = save.predictions)
@@ -158,9 +180,10 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
     predictions <- lapply(predictions, function(preds) .predictswitch(prep$model, preds, groups))
   
   # create all the penfit objects
-  makethisfit <- function(iter)
-    .makepenfit(fits[[iter]], pu, prep$model, lambda1s[[iter]], lambda2, 
+  makethisfit <- function(iter) {
+    .makepenfit(fits[[iter]], pu, prep$model, lambda1s[[iter]]*base1, lambda2,
     prep$orthogonalizer, prep$weights, prep$formula)
+  }
 
   return(list(
     lambda = lambda1s, 
@@ -174,7 +197,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lam
 ######################################
 # Finds the curve of the cross-validated likelihood for a given L2-penalty and a range of L1-penalty values
 ######################################
-profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, 
+profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2,
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, 
   fold, epsilon = 1e-10, maxiter, standardize = FALSE, steps = 100, minsteps = steps/2, 
   log = TRUE, save.predictions = FALSE, trace = TRUE) {
@@ -192,6 +215,17 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   pu <- length(prep$nullgamma)
   pp <- ncol(prep$X) - pu
   n <- nrow(prep$X)
+
+  # make vectors of lambda1 and lambda2
+  if (length(lambda1) == 1)
+    uselambda1 <- lambda1 * prep$baselambda1
+  else
+    uselambda1 <- c(numeric(pu), lambda1) * prep$baselambda1
+  if (missing(base2)) {
+    base2 <- 1
+    baselambda2 <- prep$baselambda2
+  } else
+    baselambda2 <- c(numeric(pu), base2) * prep$baselambda2
 
   # divide the samples into folds for cross-validation
   if (missing(fold)) fold <- n
@@ -237,7 +271,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(prep$X, lambda1*prep$baselambda1, rellambda*prep$baselambda2, 
+    out <- .cvl(prep$X, uselambda1, rellambda*baselambda2,
       positive = prep$positive, beta = beta, fit=fit, groups=groups, 
       epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, 
       quit.if.failed=FALSE, save.predictions = save.predictions)
@@ -264,9 +298,10 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
     predictions <- lapply(predictions, function(preds) .predictswitch(prep$model, preds, groups))
     
   # create the penfit objects                          
-  makethisfit <- function(iter)
-    .makepenfit(fits[[iter]], pu, prep$model, lambda1, lambda2s[[iter]], 
+  makethisfit <- function(iter) {
+    .makepenfit(fits[[iter]], pu, prep$model, lambda1, lambda2s[[iter]]*base2,
       prep$orthogonalizer, prep$weights, prep$formula)
+  }
 
   return(list(
     lambda = lambda2s, 
@@ -280,7 +315,7 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
 ######################################
 # Finds the optimal cross-validated L1-penalty for a given L2-penalty
 ######################################
-optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lambda2 = 0, 
+optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0,
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold, 
   epsilon = 1e-10, maxiter = Inf, standardize = FALSE, tol = .Machine$double.eps^0.25, 
   trace = TRUE) {
@@ -295,6 +330,17 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
   pu <- length(prep$nullgamma)
   pp <- ncol(prep$X) - pu
   n <- nrow(prep$X)
+
+  # make vectors of lambda1 and lambda2
+  if (missing(base1)) {
+    baselambda1 <- prep$baselambda1
+    base1 <- 1
+  } else
+    baselambda1 <- c(numeric(pu), base1) * prep$baselambda1
+  if (length(lambda2) == 1)
+    uselambda2 <- lambda2 * prep$baselambda2
+  else
+    uselambda2 <- c(numeric(pu), lambda2) * prep$baselambda2
 
   # divide the samples into folds for cross-validation
   if (missing(fold)) fold <- n
@@ -316,7 +362,7 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
     gradients <- sapply(1:fold, function(ff) {
       drop(crossprod(prep$X[groups!=ff,pu+1:pp,drop=FALSE], fit$fit(lps[groups!=ff,ff], groups==ff)$residuals))
     })
-    rel <- gradients / matrix(prep$baselambda1[pu+1:pp], pp, ncol(lps))
+    rel <- gradients / matrix(baselambda1[pu+1:pp], pp, ncol(lps))
     maxlambda1 <- max(apply(rel, 2, function (ff)
       max(ifelse(prep$positive[pu+1:pp], ff, abs(ff)))
     ))
@@ -335,7 +381,7 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(prep$X, rellambda*prep$baselambda1, lambda2 * prep$baselambda2, 
+    out <- .cvl(prep$X, rellambda*baselambda1, uselambda2,
       positive = prep$positive, beta = beta, fit=fit, groups=groups, 
       epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas)
     if (trace) cat("cvl=", out$cvl, "\n")
@@ -367,7 +413,7 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
     cvl = opt$max, 
     predictions = best$predictions, 
     fold = groups, 
-    fullfit = .makepenfit(best$fit, pu, prep$model, opt$argmax, lambda2, 
+    fullfit = .makepenfit(best$fit, pu, prep$model, opt$argmax*base1, lambda2,
       prep$orthogonalizer, prep$weights, prep$formula)
   ))
 }
@@ -375,7 +421,7 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, lamb
 ######################################
 # Finds the optimal cross-validated L2-penalty for a given L1-penalty
 ######################################                       
-optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, 
+optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2,
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, 
   fold, epsilon = 1e-10, maxiter, standardize = FALSE, tol = .Machine$double.eps^0.25, 
   trace = TRUE) {
@@ -393,7 +439,18 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   pu <- length(prep$nullgamma)
   pp <- ncol(prep$X) - pu
   n <- nrow(prep$X)
-  
+
+  # make vectors of lambda1 and lambda2
+  if (length(lambda1) == 1)
+    uselambda1 <- lambda1 * prep$baselambda1
+  else
+    uselambda1 <- c(numeric(pu), lambda1) * prep$baselambda1
+  if (missing(base2)) {
+    base2 <- 1
+    baselambda2 <- prep$baselambda2
+  } else
+    baselambda2 <- c(numeric(pu), base2) * prep$baselambda2
+
   # divide the samples into folds for cross-validation
   if (missing(fold)) fold <- n
   groups <- .getFolds(fold, n)
@@ -438,7 +495,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     if (rellambda == Inf) 
       out <- thiscvlinf()
     else {
-      out <- .cvl(prep$X, lambda1 * prep$baselambda1, rellambda*prep$baselambda2, 
+      out <- .cvl(prep$X, uselambda1, rellambda*baselambda2,
         positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
         maxiter=maxiter, trace = trace, betas = betas)
       if (out$cvl > - Inf) {
@@ -549,7 +606,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     cvl = opt$max, 
     predictions = best$predictions, 
     fold = groups, 
-    fullfit = .makepenfit(best$fit, pu, prep$model, lambda1, opt$argmax, 
+    fullfit = .makepenfit(best$fit, pu, prep$model, lambda1, opt$argmax*base2,
       prep$orthogonalizer, prep$weights, prep$formula)
   ))
 }

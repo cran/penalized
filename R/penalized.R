@@ -1,4 +1,4 @@
-####################################           
+####################################
 # Fits the penalized regression model
 ####################################                                    
 penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, positive = FALSE, data, 
@@ -29,15 +29,30 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   pp <- ncol(prep$X) - pu
   n <- nrow(prep$X)
 
+  # make weights for lambda1 that is a vector
+  if (length(lambda1) == pp && (!all(lambda1==0))) {
+    wl1 <- c(numeric(pu), lambda1)
+    lambda1 <- 1
+  } else {
+    wl1 <- 1
+  }
+  if (length(lambda2) == pp)
+    lambda2 <- c(numeric(pu), lambda2)
+
   # If a steps argument is given, determine where to start
-  if (park || steps > 1) { 
-    if (pu > 0) 
+  if (park || steps > 1) {
+    if (pu > 0)
       lp <- drop(prep$X[,1:pu,drop=FALSE] %*% prep$nullgamma)
     else 
       lp <- numeric(n)
-    gradient <- drop(crossprod(prep$X[,pu+1:pp,drop=FALSE], fit(lp)$residuals))
-    rel <- gradient / prep$baselambda1[pu+1:pp]
-    from <- max(ifelse(prep$positive[pu+1:pp],  rel, abs(rel)))
+    chck <- (wl1 > 0)
+    gradient <- drop(crossprod(prep$X[,chck,drop=FALSE], fit(lp)$residuals))
+    if (length(wl1)>1) {
+      rel <- gradient / (wl1[chck] * prep$baselambda1[chck])
+    } else {
+      rel <- gradient / (wl1 * prep$baselambda1[chck])
+    }
+    from <- max(ifelse(prep$positive[chck],  rel, abs(rel)))
     if (from < lambda1) {
       warning("Chosen lambda1 greater than maximal lambda1: \"steps\" argument ignored")
       steps <- 1
@@ -62,11 +77,11 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   
     if (rellambda1 != 0 || any(prep$positive)) {
       if (lambda2 == 0) {
-        out <- .steplasso(beta = beta, lambda = rellambda1 * prep$baselambda1, 
+        out <- .steplasso(beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
           lambda2 = 0, positive = prep$positive, X = prep$X, fit = fit, trace = trace, 
           epsilon = epsilon, maxiter = maxiter)
       } else {
-        out <- .lasso(beta = beta, lambda = rellambda1 * prep$baselambda1, 
+        out <- .lasso(beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
           lambda2 = lambda2 * prep$baselambda2, positive = prep$positive, X = prep$X, 
           fit = fit, trace = trace, epsilon = epsilon, maxiter = maxiter)
       }
@@ -94,7 +109,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     
     if (!ready) {
       if (park) {
-        newpark <- .park(beta = beta, lambda = rellambda1 * prep$baselambda1, 
+        newpark <- .park(beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
             lambda2 = 0, positive = prep$positive, X = prep$X, fit = out$fit)
         rellambda1 <- rellambda1 * (1-newpark$hh)
         if (rellambda1 < lambda1 || rellambda1 == Inf) {
@@ -114,8 +129,10 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   }
                                     
   # put the output in a penfit object
+  if (length(lambda2)>1)
+    lambda2 <- lambda2[pu+1:pp]
   outs <- sapply(1:i, function(nr) {
-    thislambda1 <- lambda1s[[nr]]
+    thislambda1 <- lambda1s[[nr]] * ifelse(length(wl1)>1, wl1[pu+1:pp], wl1)
     .makepenfit(outs[[nr]], pu, prep$model, thislambda1, lambda2, 
       prep$orthogonalizer, prep$weights, prep$formula)
   })

@@ -20,9 +20,13 @@
 
 \maketitle \tableofcontents \newpage
 
+\section{Citing \Rpackage{penalized}.}
+
+To cite the package \Rpackage{penalized}, please cite Goeman, J. J., L1 penalized estimation in the Cox proportional hazards model. \emph{Biometrical Journal} 52(1), 70--84.
+
 \section{Introduction}
 
-This short note explains the use of the \Rpackage{penalized} package. The package is designed for penalized estimation in generalized linear models. The lasso and elastic net algorithm that it implements is described in \cite{Goeman2010}. Please cite that paper if you use this package.
+This short note explains the use of the \Rpackage{penalized} package. The package is designed for penalized estimation in generalized linear models. The lasso and elastic net algorithm that it implements is described in \cite{Goeman2010}.
 
 The supported models at this moment are linear regression, logistic regression, poisson regression and the Cox proportional hazards model, but others are likely to be included in the future. As to penalties, the package allows an L1 absolute value (``lasso'') penalty \citep{Tibshirani1996, Tibshirani1997}, an L2 quadratic (``ridge'') penalty \citep{Hoerl1970, Cessie1992, Verweij1994}, or a combination of the two \citep[the ``naive elastic net'' of][]{Zou2005}. The package also includes facilities for likelihood cross-validation and for optimization of the tuning parameter.
 
@@ -30,7 +34,7 @@ L1 and L2 penalized estimation methods shrink the estimates of the regression co
 
 It is important to note that shrinkage methods are generally not invariant to the relative scaling of the covariates. Before fitting a model, it is prudent to consider if the covariates already have a natural scaling relative to each other or whether they should be standardized.
 
-The main algorithm for L1 penalized estimation that used in this package will be documented in a forthcoming paper. It has been combined with ideas from \cite{Eilers2001} and \cite{Houwelingen2006} for efficient L2 penalized estimation.
+The main algorithm for L1 penalized estimation (lasso and elastic net) that used in this package is documented in \cite{Goeman2010}. It has been combined with ideas from \cite{Eilers2001} and \cite{Houwelingen2006} for efficient L2 penalized estimation.
 
 <<options, echo=FALSE>>=
 options(continue = "  ")
@@ -89,6 +93,17 @@ attach(nki70)
 It is difficult to say in advance which value of \Rfunarg{lambda1} or \Rfunarg{lambda2} to use. The \Rpackage{penalized} package offers ways of finding optimal values using cross-validation. This is explained in Section \ref{cv}
 
 Note that for small values of \Rfunarg{lambda1} or \Rfunarg{lambda2} the algorithm be very slow, may fail to converge or may run into numerical problems, especially in high-dimensional data. When this happens, increase the value of \Rfunarg{lambda1} or \Rfunarg{lambda2}.
+
+It is possible to specify both \Rfunarg{lambda1} or \Rfunarg{lambda2}. In this case both types of penalties apply, and a so-called \emph{elastic net}.
+
+<<elastic net, results=hide>>=
+fit <- penalized(Surv(time,event)~DIAPH3+NUSAP1, data=nki70, lambda1=1, lambda2=1)
+@
+
+Sometimes it can be useful to have different values of \Rfunarg{lambda1} or \Rfunarg{lambda2} for different covariates. This can be done in \Rpackage{penalized} by specifying \Rfunarg{lambda1} or \Rfunarg{lambda2} as a vector.
+<<vector lambda, results=hide>>=
+fit <- penalized(Surv(time,event)~DIAPH3+NUSAP1, data=nki70, lambda2=c(1,2))
+@
 
 
 \subsection{penfit objects}
@@ -227,6 +242,12 @@ plotpath(fit)
 @
 \end{figure}
 
+It is also possible to constrain only part of the regression coefficients to be positive by giving the \Rfunarg{positive} argument as a logical vector.
+
+<<partpositive, results=hide>>=
+coef(penalized(Surv(time,event), nki70[,8:16], positive=c(F,rep(T,8))))
+@
+
 
 \section{Pretesting}
 
@@ -354,6 +375,7 @@ plotpath(fit2$fullfit, log="x")
 plotpath(fit2$fullfit, log="x")
 @
 \end{figure}
+
 
 \subsection{optimizing the cross-validated likelihood}
 

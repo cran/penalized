@@ -462,7 +462,7 @@
     betas <- NA
   }
 
-  list(cvl = sum(cvls), fit = fullfit, betas = betas, predictions = predictions)
+  list(cvl = sum(cvls), cvls=cvls, fit = fullfit, betas = betas, predictions = predictions)
 }
 
 #######################################
