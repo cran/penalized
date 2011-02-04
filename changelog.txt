@@ -1,6 +1,10 @@
+0.9-34
+- added all to "if (lambda2==0)" in penalized()
+- removed zipData=yes from description
+
 0.9-33
 - opened option to have positive argument as a vector, forcing only some coefficients to be positive.
-- made reference to the paper to the vignette more explicit.
+- made reference to the paper in the vignette more explicit.
 - opened option for different (non-zero) penalties for different covariates.
 
 0.9-32

@@ -76,7 +76,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     i <- i+1
   
     if (rellambda1 != 0 || any(prep$positive)) {
-      if (lambda2 == 0) {
+      if (all(lambda2 == 0)) {
         out <- .steplasso(beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
           lambda2 = 0, positive = prep$positive, X = prep$X, fit = fit, trace = trace, 
           epsilon = epsilon, maxiter = maxiter)
