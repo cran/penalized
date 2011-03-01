@@ -34,14 +34,14 @@ profL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
     startgamma, fold, epsilon = 1e-10, maxiter = Inf,
     standardize = FALSE, steps = 100, minsteps = steps/2, log = FALSE,
-    save.predictions = FALSE, trace = TRUE)
+    save.predictions = FALSE, trace = TRUE, plot = FALSE)
 
 profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
     maxlambda2, base2, positive = FALSE, data,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
     startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
     steps = 100, minsteps = steps/2, log = TRUE, save.predictions = FALSE,
-    trace = TRUE)
+    trace = TRUE, plot = FALSE)
 }
 
 \arguments{
@@ -54,8 +54,8 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 \item{lambda1, lambda2}{The fixed values of the tuning parameters for L1 and L2 penalization. Each must be either a single positive numbers or a vector with length equal to the number of covariates in \code{penalized} argument. In the latter case, each covariate is given its own penalty weight.}
 
 \item{minlambda1, minlambda2, maxlambda1, maxlambda2}{The values of the tuning parameters for L1 or L2 penalization between which the cross-validated likelihood is to be profiled or optimized.}
-    
-\item{base1, base2}{An optional vector of length equal to the number of covariates in penalized. If supplied, profiling or optimization is performed between \code{base1*minlambda1} and \code{base1*maxlambda2}; analogous for \code{base2}.}
+
+\item{base1, base2}{An optional vector of length equal to the number of covariates in penalized. If supplied, profiling or optimization is performed between \code{base1*minlambda1} and \code{base1*maxlambda1}; analogous for \code{base2}.}
 
 \item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be positive. If a logical vector with the length of the number of covariates in \code{penalized}, constrains the estimated regression coefficients of a subset of the penalized covariates to be positive.}
 
@@ -86,7 +86,8 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 \item{save.predictions}{Controls whether or not to save cross-validated predictions for all values of lambda.}
 
 \item{trace}{If \code{TRUE}, prints progress information. Note that setting \code{trace=TRUE} may slow down the algorithm (but it often feels quicker)}
-}
+    
+\item{plot}{If \code{TRUE}, makes a plot of cross-validated likelihood versus lambda.}    }
 
 
 \details{All five functions return a list with the following named elements:
@@ -113,6 +114,8 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 \seealso{\code{\link{penalized}}, \code{\link{penfit}}, \code{\link{plotpath}}.}
 
 \examples{
+# More examples in the package vignette:
+#  type vignette("penalized")
 
 data(nki70)
 attach(nki70)

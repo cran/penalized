@@ -130,7 +130,7 @@
     if (!is.null(offset)) lp <- lp + offset
     out <- nuisance$baseline()
     out@curves <- out@curves[strata[which],,drop=FALSE]
-    out@curves <- out@curves ^ matrix(exp(lp[which]), nrow(out@curves), ncol(out@curves))
+    out@curves <- out@curves ^ matrix(exp(lp), nrow(out@curves), ncol(out@curves))
     out
   }
 

@@ -62,6 +62,8 @@ for plotting the solution path, and \code{\link{cvl}} for cross-validation and
 optimizing the tuning parameters.}
 
 \examples{
+# More examples in the package vignette:
+#  type vignette("penalized")
 
 data(nki70)
 

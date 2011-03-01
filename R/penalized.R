@@ -4,7 +4,7 @@
 penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, positive = FALSE, data, 
   model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, steps =1, epsilon = 1e-10, 
   maxiter, standardize = FALSE, trace = TRUE) {
-                                    
+
   # Maximum number of iterations depends on the input
   if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
 
@@ -45,7 +45,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
       lp <- drop(prep$X[,1:pu,drop=FALSE] %*% prep$nullgamma)
     else 
       lp <- numeric(n)
-    chck <- (wl1 > 0)
+    chck <- (wl1 > 0) & c(rep(FALSE, pu), rep(TRUE, pp))
     gradient <- drop(crossprod(prep$X[,chck,drop=FALSE], fit(lp)$residuals))
     if (length(wl1)>1) {
       rel <- gradient / (wl1[chck] * prep$baselambda1[chck])

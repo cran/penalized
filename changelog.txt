@@ -1,3 +1,9 @@
+0.9-35
+- patched problem with steps="park" (thanks to Clive Hoggart for the bug report)
+- patched problem with cross-validated predictions in cvl() with survival data
+- patched as.data.frame names for breslow objects
+- added reference to vignette in Rd files
+
 0.9-34
 - added all to "if (lambda2==0)" in penalized()
 - removed zipData=yes from description

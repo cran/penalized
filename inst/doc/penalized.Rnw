@@ -344,9 +344,10 @@ The allocation of the subjects into cross-validation folds is done only once, so
 
 It is also possible in these functions to set \Robject{fold = 1}. This will cause no cross-validation to be performed, but will let only the full data fits be calculated. This can be used in a similar way to the use of the \Rfunction{penalized} function with its \Rfunarg{steps} argument, only with more flexibility.
 
+The profiles can be plotted using the output of \Rfunction{profL1} and \Rfunction{profL2} or directly using the \Rfunarg{plot} arguments of these functions.
+
 <<prof,results=hide>>=
-fit1 <- profL1(Surv(time,event), nki70[,50:70], fold=10)
-plot(fit1$lambda, fit1$cvl, type="l")
+fit1 <- profL1(Surv(time,event), nki70[,50:70], fold=10, plot=TRUE)
 fit2 <- profL2(Surv(time,event), nki70[,50:70], fold=fit1$fold,
     minl = 0.01, maxl = 1000)
 plot(fit2$lambda, fit2$cvl, type="l", log="x")

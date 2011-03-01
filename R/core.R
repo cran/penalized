@@ -11,7 +11,7 @@
 ###################################
 .lasso <- function(beta, lambda, lambda2=0, positive, X, fit, trace = FALSE, 
   epsilon, maxiter) {
-         
+
   # It is a general function for fitting L1-penalized models
   # possibly with an additional L2-penalty
   # Input:
@@ -245,7 +245,7 @@
 # Park & Hastie's suggestion for the next lambda where the active set changes
 ###################################
 .park <- function(beta, lambda, lambda2=0, positive, X, fit) {
-          
+
   gradient <- drop(crossprod(X[,drop=FALSE], fit$residuals))
   active1 <- ifelse(positive, (gradient - lambda) / lambda > -1e-4, (abs(gradient) - lambda) / lambda > -1e-4)
   active2 <- ifelse(positive, beta > 0, beta != 0)

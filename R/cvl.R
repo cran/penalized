@@ -61,7 +61,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
 profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0,
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold, 
   epsilon = 1e-10, maxiter = Inf, standardize = FALSE, steps = 100, minsteps = steps/2, 
-  log = FALSE, save.predictions = FALSE, trace = TRUE) {
+  log = FALSE, save.predictions = FALSE, trace = TRUE, plot = FALSE) {
 
   # call the general input checking function
   prep <- .checkinput(match.call(), parent.frame())
@@ -185,6 +185,9 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, bas
     prep$orthogonalizer, prep$weights, prep$formula)
   }
 
+  if (plot)
+    plot(lambda1s, cvls, type="l", log="x", ylab="cvl", xlab="lambda")
+
   return(list(
     lambda = lambda1s, 
     fold = groups, 
@@ -200,7 +203,7 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, bas
 profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2,
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, 
   fold, epsilon = 1e-10, maxiter, standardize = FALSE, steps = 100, minsteps = steps/2, 
-  log = TRUE, save.predictions = FALSE, trace = TRUE) {
+  log = TRUE, save.predictions = FALSE, trace = TRUE, plot = FALSE) {
 
   # Maximum number of iterations depends on the input
   if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
@@ -302,6 +305,9 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
     .makepenfit(fits[[iter]], pu, prep$model, lambda1, lambda2s[[iter]]*base2,
       prep$orthogonalizer, prep$weights, prep$formula)
   }
+
+  if (plot)
+    plot(lambda2s, cvls, type="l", log="x", ylab="cvl", xlab="lambda")
 
   return(list(
     lambda = lambda2s, 
