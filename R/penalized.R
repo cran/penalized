@@ -6,7 +6,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   maxiter, standardize = FALSE, trace = TRUE) {
 
   # Maximum number of iterations depends on the input
-  if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
+  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0) && !positive) 25 else Inf
 
   # Park and Hastie type steps?
   if (steps == "Park" || steps == "park") {
@@ -18,7 +18,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   prep <- .checkinput(match.call(), parent.frame())
 
   # check for the presence of penalty parameters
-  if (ncol(prep$X) >= nrow(prep$X) && lambda1 == 0 && lambda2 == 0 && !any(prep$positive))
+  if (ncol(prep$X) >= nrow(prep$X) && all(lambda1 == 0) && all(lambda2 == 0) && !any(prep$positive))
     stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
 
   # prepare the model

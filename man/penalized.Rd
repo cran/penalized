@@ -24,7 +24,7 @@ penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
 
 \item{lambda1, lambda2}{The tuning parameters for L1 and L2 penalization. Each must be either a single positive numbers or a vector with length equal to the number of covariates in \code{penalized} argument. In the latter case, each covariate is given its own penalty weight.}
 
-\item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be positive. If a logical vector with the length of the number of covariates in \code{penalized}, constrains the estimated regression coefficients of a subset of the penalized covariates to be positive.}
+\item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be non-negative. If a logical vector with the length of the number of covariates in \code{penalized}, constrains the estimated regression coefficients of a subset of the penalized covariates to be non-negative.}
 
 \item{data}{A \code{data.frame} used to evaluate \code{response}, and the terms of  \code{penalized} or \code{unpenalized} when these have been specified as a  \code{\link[stats:formula]{formula}} object.}
 

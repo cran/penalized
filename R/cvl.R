@@ -42,7 +42,10 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
   res <- .cvl(prep$X, uselambda1, uselambda2,
     positive = prep$positive, beta = prep$beta, fit=fit, groups=groups, 
     epsilon=epsilon, maxiter=maxiter, trace = trace, quit.if.failed = FALSE)
-  res$predictions <- .predictswitch(prep$model, res$predictions, groups)
+  if (!is.na(res$cvl))
+    res$predictions <- .predictswitch(prep$model, res$predictions, groups)
+  else
+    res$predictions <- NA
 
   return(list(
     cvl = res$cvl,
@@ -237,7 +240,9 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   fold <- max(groups)
 
   # Find the sequence from maxlambda2 to minlambda2
-  if (!log && missing(minlambda2)) minlambda2 <- 0
+  if (missing(minlambda2)) 
+    if (!log) minlambda2 <- 0 else stop("Agrument \"minlambda2\" is missing with no default")
+  if (missing(minlambda2)) stop("Agrument \"maxlambda2\" is missing with no default")
   if (steps < 2) stop("please set \"steps\" >= 2", call. = FALSE)
   if (log) 
     lambda2s <- exp(seq(log(maxlambda2), log(minlambda2), length.out = steps))
@@ -480,7 +485,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
       null$fit$penalty <- c(L1 = 0, L2 = 0)
       names(null$fit$beta) <- colnames(prep$X)
       null$fit$fit <- fit$fit(null.lp)
-      null$predictions <- lapply(as.list(1:n), function(i) fit$prediction(null.lp, nuisance= null$fit$fit$nuisance, which=i))
+      null$predictions <- lapply(as.list(1:n), function(i) fit$prediction(null.lp[i], nuisance= null$fit$fit$nuisance, which=i))
       null$fit$iterations <- 1
       null$fit$converged <- TRUE
     }

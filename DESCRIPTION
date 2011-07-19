@@ -1,6 +1,6 @@
 Package: penalized
-Version: 0.9-35
-Date: 2011-03-01
+Version: 0.9-36
+Date: 2011-07-19
 Title: L1 (lasso) and L2 (ridge) penalized estimation in GLMs and in
         the Cox model
 Author: Jelle Goeman <j.j.goeman@lumc.nl>
@@ -21,6 +21,6 @@ Collate: penfit.R breslow.R penalized.R core.R checkinput.R cvl.R
         contrasts.R Brent.R plotpath.R cox.R logit.R linear.R poisson.R
 LazyLoad: yes
 URL: http://www.msbi.nl/goeman
-Packaged: 2011-03-04 09:02:30 UTC; jjgoeman
+Packaged: 2011-08-09 12:27:09 UTC; jjgoeman
 Repository: CRAN
-Date/Publication: 2011-03-04 14:50:15
+Date/Publication: 2011-08-09 14:13:25

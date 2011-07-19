@@ -294,7 +294,7 @@
 # The core ridge algorithm
 ###################################
 .ridge <- function(beta, eta, Lambda, X, fit, trace = FALSE, epsilon = 1e-8, maxiter = 25) {
-                                               
+
   if (missing(eta)) eta <- drop(X %*% beta)
 
   iter <- 0
@@ -371,7 +371,7 @@
 ###################################
 .cvl <- function(X, lambda1, lambda2, positive, beta, fit, groups, trace = FALSE, 
   betas = NULL, quit.if.failed = TRUE, save.predictions = TRUE, ...)  {
-                                                           
+
   n <- nrow(X)
   m <- ncol(X)
 
@@ -484,14 +484,14 @@
   }
 
   # First columns: free variables in case of no L2-penalization
-  for (i in seq_len(m)) P[i, i] <- 1 
+  for (i in seq_len(m)) P[i, which(free2)[i]] <- 1
                                                 
   # Next n columns: column span of X
-  P[m + 1:n, m + seq_len(p-m)] <- X[,!free2,drop=FALSE] * matrix(1/lambda2[!free2], n, p-m, byrow=TRUE)         
+  P[m + 1:n, which(!free2)] <- X[,!free2,drop=FALSE] * matrix(1/lambda2[!free2], n, p-m, byrow=TRUE)
 
   # Additional column due to L1-penalization
   if (!free1) {          
-    P[n+m+1,m + seq_len(p-m)] <- (lambda1*signbeta/lambda2)[!free2]
+    P[n+m+1,which(!free2)] <- (lambda1*signbeta/lambda2)[!free2]
   }
                     
   # check for singularity

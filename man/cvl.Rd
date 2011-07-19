@@ -57,7 +57,7 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 
 \item{base1, base2}{An optional vector of length equal to the number of covariates in penalized. If supplied, profiling or optimization is performed between \code{base1*minlambda1} and \code{base1*maxlambda1}; analogous for \code{base2}.}
 
-\item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be positive. If a logical vector with the length of the number of covariates in \code{penalized}, constrains the estimated regression coefficients of a subset of the penalized covariates to be positive.}
+\item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be non-negative. If a logical vector with the length of the number of covariates in \code{penalized}, constrains the estimated regression coefficients of a subset of the penalized covariates to be non-negative.}
 
 \item{data}{A \code{data.frame} used to evaluate \code{response}, and the terms of \code{penalized} or \code{unpenalized} when these have been specified as a  \code{\link[stats:formula]{formula}} object.}
 

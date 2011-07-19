@@ -1,3 +1,10 @@
+0.9-36
+- more informative error if minlambda2 or maxlambda2 missing in profL2
+- made explicit in the documentation that positivity constraint only gives non-negativity
+- changed likelihood calculation in logistic model to avoid numerical problems (NA likelihood)
+- repaired warnings in optL1 arising from prediction calculations in lambda2=Inf
+- allowed non-initial values of lambda2 equal to zero in makeP
+
 0.9-35
 - patched problem with steps="park" (thanks to Clive Hoggart for the bug report)
 - patched problem with cross-validated predictions in cvl() with survival data
