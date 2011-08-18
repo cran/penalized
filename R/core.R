@@ -4,7 +4,7 @@
 # rely on the functions calling them for input checking
 # These functions are not exported in the NAMESPACE file
 ###################################
- 
+
 
 ###################################
 # The core lasso and elastic net algorithm
@@ -540,4 +540,335 @@
   }
   if (!all(1:fold %in% groups)) stop("incorrect input of \"fold\"", call.=FALSE)
   return(groups)
+}
+
+.cvlapprox <- function(X, lambda1, lambda2, positive, beta, fit, groups,trace=FALSE,
+  betas=NULL, quit.if.failed=TRUE, save.predictions=TRUE, ...)
+{
+  n <- nrow(X)
+  m <- ncol(X)
+
+  fold <- max(groups)
+
+  useP <- FALSE
+  if(m<=n)  #use beta
+  {
+      fullfit = .ridge(beta = beta, Lambda = lambda2, X = X, fit = fit$fit)
+            
+      if(!fullfit$converged)
+      {
+        cvls <- -Inf
+        predictions <- NA
+        betas <- NA
+        return(list(cvl = sum(cvls), cvls=cvls, fit = fullfit, betas = betas, predictions = predictions))  
+      }
+     
+      beta <- fullfit$beta
+      linpreds <- fullfit$fit$lp
+      delta <- fullfit$fit$residuals
+      W <- fullfit$fit$W
+      
+      #check corresponding model: logistic/poisson, linear or Cox by inspection of W (either diag, 1 or list)
+
+      if (is.list(W)) #cox regression
+      {
+          diagW = W$diagW  
+          #W = diag(diagW)
+          beta_int <- c(0,beta)
+          Xint <- cbind(1,X)
+          # XWX = crossprod(W^{1/2}X)
+          # W^{1/2}X = matrix(sqrt(dW), nrow(X), ncol(X)) * X
+          # inv <- solve(t(Xint)%*%W%*%Xint+diag(c(0,lambda))) 
+          # inv <- solve(crossprod(matrix(sqrt(diagW),nrow(X),ncol(X))*X)+diag(c(0,lambda)))
+          XWXlambda <- crossprod(matrix(sqrt(diagW),nrow(Xint),ncol(Xint))*Xint)
+          diag(XWXlambda) <- diag(XWXlambda) + c(0,lambda2)
+          inv_tXint <- solve(XWXlambda,t(Xint))
+          WXint <- matrix(diagW,nrow(Xint),ncol(Xint))*Xint
+          
+          if(fold < n) #kfold
+          {
+              betas <- matrix(0,(m+1),fold)
+              
+              for(i in 1:fold)
+              {
+                  #beta_k <- .getBeta(Xint,beta_int,groups,i,W,delta,inv)
+                  beta_k <- .getBeta2(WXint,beta_int,groups,i,delta,inv_tXint)
+                  betas[,i] <- beta_k
+              }          
+          }
+          else #loocv
+          {
+              #V <- W^(1/2)%*%Xint%*%inv%*%t(Xint)%*%W^(1/2) 
+              V <- WXint%*%inv_tXint  
+              betas <- matrix(beta_int,length(beta_int),fold)
+              #betas_int <- betas_int - inv%*%t(Xint)%*%diag(1/(1-diag(V))*delta)
+              betas <- betas - inv_tXint*matrix((1/(1-diag(V))*delta),nrow(inv_tXint),ncol(inv_tXint),byrow=TRUE) 
+          }
+          X <- Xint   # nodig voor lin.pred
+      } 
+      else if (length(W) > 1)  #poisson/logistic regression 
+      {
+          diagW <- W                                                            #NB: W is just the diagonal
+          XWXlambda <- crossprod(matrix(sqrt(diagW),nrow(X),ncol(X))*X)       
+          diag(XWXlambda) <- diag(XWXlambda) + lambda2
+          inv_tX <- solve(XWXlambda,t(X))
+          WX <- matrix(diagW,nrow(X),ncol(X))*X                               
+          #inv <- solve(t(X)%*%W%*%X+diag(lambda))
+
+          if(fold < n) #kfold
+          {
+              betas <- matrix(0,m,fold)
+              
+              for(i in 1:fold)
+              {
+                  beta_k <- .getBeta2(WX,beta,groups,i,delta,inv_tX) 
+                  betas[,i] <- beta_k
+              }          
+          }
+          else #loocv
+          {
+              V <- WX%*%inv_tX  #forceSymmetric could be useful
+              betas <- matrix(beta,m,fold)
+              betas <- betas - inv_tX*matrix((1/(1-diag(V))*delta),nrow(inv_tX),ncol(inv_tX),byrow=TRUE) 
+      
+          }
+      } 
+      else  #linear regression 
+      {
+          XXlambda <- crossprod(X)
+          diag(XXlambda) <- diag(XXlambda) + lambda2
+          inv_tX <- solve(XXlambda,t(X))
+          
+          #inv <- solve(t(X)%*%X+diag(lambda))
+          
+          if(fold < n) #kfold
+          {
+              betas <- matrix(0,m,fold)
+              
+              for(i in 1:fold)
+              {
+                beta_k <- .getBetaLinear2(X,beta,groups,i,delta,inv_tX)
+                betas[,i] <- beta_k
+              }          
+          }
+          else #loocv
+          {
+              V <- X%*%inv_tX  
+              betas <- matrix(beta,m,fold)
+              betas <- betas - inv_tX*matrix((1/(1-diag(V))*delta),nrow(inv_tX),ncol(inv_tX),byrow=TRUE) 
+          }
+      }
+
+  }
+  else #use gamma
+  {
+      useP <- TRUE
+      P <- .makeP(X, lambda2)
+      PX <- P %*% t(X)
+      Pl <- P * matrix(sqrt(lambda2), nrow(P), ncol(P), byrow = TRUE)
+      gams <- .solve(tcrossprod(P), P %*% beta)  #initial gamma 
+      PlP <- tcrossprod(Pl)
+      
+      fullfit <- .ridge(beta = gams, Lambda = PlP, X = t(PX), fit = fit$fit)
+      gams <- fullfit$beta    #new gamma
+      fullfit$beta <- drop(crossprod(P, gams))  #prepare fullfit for return statement
+      names(fullfit$beta) <- names(beta)
+      
+      if(!fullfit$converged)
+      {
+        cvls <- -Inf
+        predictions <- NA
+        betas <- NA
+        return(list(cvl = sum(cvls), cvls=cvls, fit = fullfit, betas = betas, predictions = predictions)) 
+      }      
+      
+      linpreds <- fullfit$fit$lp   
+      delta <- fullfit$fit$residuals
+      W <- fullfit$fit$W
+      
+      #check which model you're in
+
+      if (is.list(W)) #cox regression
+      {
+          diagW <- W$diagW  #vector
+          G <- P
+          k <- nrow(G)
+          l <- ncol(G)
+
+          G <- cbind(c(1,rep(0,k)),rbind(rep(0,l),G))
+          tG <- t(G)
+          gamma_int <- c(0,gams)
+          Xint <- cbind(m,X) #NB, m ipv 1!      m=median(X)
+          #B <- Xint%*%tG
+          B <- tcrossprod(Xint,G)
+          #Atilde <- G%*%diag(c(0,lambda2))%*%tG 
+          Gl <- G * matrix(sqrt(c(0,lambda2)), nrow(G), ncol(G), byrow = TRUE)  
+          Atilde <- tcrossprod(Gl)
+          
+          BWB <- crossprod(matrix(sqrt(diagW),nrow(B),ncol(B))*B)
+          BWBlambda <- BWB + Atilde
+          inv_tB <- solve(BWBlambda,t(B))
+          WB <- matrix(diagW,nrow(B),ncol(B))*B
+          
+          #inv <- solve(t(B)%*%W%*%B+Atilde)
+          
+          if(fold < n) #kfold
+          {
+              betas <- matrix(0,(m+1),fold)   
+              
+              for(i in 1:fold)
+              {
+                gamma_k <- .getBeta2(WB,gamma_int,groups,i,delta,inv_tB)
+                beta_k <- tG %*% gamma_k
+                betas[,i] <- beta_k
+              } 
+          }
+          else #loocv
+          {
+              V <- WB %*% inv_tB  #forceSymmetric?
+              gammas_int <- matrix(gamma_int,length(gamma_int),fold)
+              gammas_int <- gammas_int - inv_tB*matrix((1/(1-diag(V))*delta),nrow(inv_tB),ncol(inv_tB),byrow=TRUE) 
+              betas <- tG %*% gammas_int
+          }
+          X <- Xint
+      } 
+      else if (length(W) > 1)  #poisson/logistic regression 
+      {
+          diagW <- W
+          G <- P
+          tG <- t(G)
+          B <- t(PX)
+          Atilde <- PlP
+          BWB <- crossprod(matrix(sqrt(diagW),nrow(B),ncol(B))*B)
+          BWBlambda <- BWB + Atilde
+          inv_tB <- solve(BWBlambda,t(B))
+          WB <- matrix(diagW,nrow(B),ncol(B))*B
+          #inv <- solve(t(B)%*%W%*%B+Atilde)
+          
+          if(fold < n) #kfold
+          {
+              betas <- matrix(0,m,fold)
+              
+              for(i in 1:fold)
+              {
+                gamma_k <- .getBeta2(WB,gams,groups,i,delta,inv_tB)
+                betas[,i] <- tG %*% gamma_k
+              }          
+          }
+          else #loocv
+          {
+              V <- WB %*% inv_tB  #forceSymmetric?
+              gammas <- matrix(gams,length(gams),fold)
+              gammas <- gammas - inv_tB*matrix((1/(1-diag(V))*delta),nrow(inv_tB),ncol(inv_tB),byrow=TRUE) 
+              betas <- tG %*% gammas      
+          }
+      } 
+      else  #linear regression    
+      {  
+          G <- P
+          tG <- t(G)
+          B <- t(PX)
+          Atilde <- PlP
+         
+          BBlambda <- crossprod(B) + Atilde
+          inv_tB <- solve(BBlambda,t(B))
+          #inv <- solve(PX%*%t(PX)+PlP)  
+    
+          if(fold < n) #kfold
+          {
+              betas <- matrix(0,m,fold)
+              
+              for(i in 1:fold)
+              {
+                  gamma_k <- .getBetaLinear2(B,gams,groups,i,delta,inv_tB)
+                  betas[,i] <- tG %*% gamma_k
+              }          
+          }
+          else #loocv
+          {
+              V <- B%*%inv_tB
+              gammas <- matrix(gams,length(gams),fold)
+              gammas <- gammas - inv_tB*matrix((1/(1-diag(V))*delta),nrow(inv_tB),ncol(inv_tB),byrow=TRUE)
+              betas <- tG %*% gammas
+          }
+      }      
+    
+  
+  }
+
+  # True cross-validation starts here
+  if (fold > 1) 
+  {
+    failed <- FALSE
+    predictions <- vector("list", fold)
+    cvls <- sapply(1:fold, function(i) 
+    {
+      if (!failed) 
+      {
+          leaveout <- (groups == i)
+          lin.pred <- X %*% betas[,i] #? 
+
+          if (save.predictions)
+          {
+            if (length(W)==1)   #linear model
+            {
+              y <- fullfit$fit$residuals + fullfit$fit$lp
+              rss <- drop(crossprod(y[!leaveout]-X[!leaveout,]%*%betas[,i]))
+              nr <- n - sum(leaveout)
+              predictions[[i]] <<- fit$prediction(lin.pred[leaveout], list(sigma2 = rss/nr), leaveout)           
+            } 
+            else
+            {
+              predictions[[i]] <<- fit$prediction(lin.pred[leaveout], fullfit$fit$nuisance, leaveout) #in cox: lin.pred contains intercept            
+            }
+          }
+          
+          out <- fit$cvl(lin.pred, leaveout)
+          
+          if (quit.if.failed && (is.na(out) || abs(out) == Inf || fullfit$converged == FALSE)) failed <<- TRUE   
+      } 
+      else 
+      {
+          out <- NA
+      }
+      
+      out
+      
+    })
+                                      
+    if (failed || any(is.na(cvls))) cvls <- -Inf
+    
+  } 
+  else 
+  {
+    cvls <- NA
+    predictions <- NA
+    betas <- NA
+  }
+
+  list(cvl = sum(cvls), cvls=cvls, fit = fullfit, betas = betas, predictions = predictions)
+}
+
+#only difference with getBeta2 is the weightmatrix W that does not occur in the linear model
+.getBetaLinear2 <- function(X,beta,groups,j,delta,inv_tX)
+{
+  Xj <- X[groups==j,]
+  inv_tXj <- inv_tX[,groups==j]
+  Imin <- -Xj%*%inv_tXj       #forceSymmetric
+  diag(Imin) <- diag(Imin+1)
+
+  betaj <- beta - inv_tXj%*%solve(Imin,delta[groups==j])      #Imin can be singular in some specific cases.. 
+  #betaj <- beta - inv%*%tXj%*%solve(I-Xj%*%inv%*%tXj)%*%delta[groups==j]
+  return(betaj)
+}
+
+.getBeta2 <- function(WX,beta,groups,j,delta,inv_tX) 
+{
+  WXj <- WX[groups==j,]
+  inv_tXj <- inv_tX[,groups==j]
+  Imin <- -WXj%*%inv_tXj    #forceSymmetric
+  diag(Imin) <- diag(Imin+1)
+
+  betaj <- beta - inv_tXj%*%solve(Imin,delta[groups==j])
+  return(betaj)
 }

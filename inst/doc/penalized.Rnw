@@ -14,7 +14,7 @@
 
 \title{L1 and L2 Penalized Regression Models}
 
-\author{Jelle Goeman}
+\author{Jelle Goeman\and Rosa Meijer}
 
 \begin{document}
 
@@ -100,10 +100,10 @@ It is possible to specify both \Rfunarg{lambda1} or \Rfunarg{lambda2}. In this c
 fit <- penalized(Surv(time,event)~DIAPH3+NUSAP1, data=nki70, lambda1=1, lambda2=1)
 @
 
-Sometimes it can be useful to have different values of \Rfunarg{lambda1} or \Rfunarg{lambda2} for different covariates. This can be done in \Rpackage{penalized} by specifying \Rfunarg{lambda1} or \Rfunarg{lambda2} as a vector. 
+Sometimes it can be useful to have different values of \Rfunarg{lambda1} or \Rfunarg{lambda2} for different covariates. This can be done in \Rpackage{penalized} by specifying \Rfunarg{lambda1} or \Rfunarg{lambda2} as a vector.
 
-<<vector lambda, results=hide>>= 
-fit <- penalized(Surv(time,event)~DIAPH3+NUSAP1, data=nki70, lambda2=c(1,2)) 
+<<vector lambda, results=hide>>=
+fit <- penalized(Surv(time,event)~DIAPH3+NUSAP1, data=nki70, lambda2=c(1,2))
 @
 
 
@@ -125,12 +125,12 @@ The \Rfunction{coefficients} function extracts the named vector of regression co
 coefficients(fit, "all")
 @
 
-To extract the loglikelihood of the fit and the evaluated penalty function, use 
+To extract the loglikelihood of the fit and the evaluated penalty function, use
 
-<<loglik_penalty>>= 
-loglik(fit) 
-penalty(fit) 
-@ 
+<<loglik_penalty>>=
+loglik(fit)
+penalty(fit)
+@
 
 The \Rfunction{loglik} function gives the loglikelihood without the penalty, and the \Rfunction{penalty} function gives the fitted penalty, i.e. for L1 \Robject{lambda1} times the sum of the absolute values of the fitted coefficients.
 
@@ -289,6 +289,8 @@ The function \Rfunction{cvl} calculates the cross-validated log likelihood for f
 
 It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation.
 
+In addition there is the argument \Rfunarg{approximate} (default value is \Robject{FALSE}). If its value is set to \Robject{TRUE}, instead of true cross-validation an approximation method is used that is much faster. This method is explained in more detail in the next subsection. When a linear model is fitted, the approximation method is no longer approximative but results in exact answers. For this reason, the package will automatically set the value of \Rfunarg{approximate} to \Robject{TRUE} in case of a linear model.
+
 The function \Rfunction{cvl} returns a names \Rclass{list} with four elements: \begin{description} \item[\Robject{cvl}] the cross-validated log likelihood. \item[\Robject{fold}] the fold allocation used; this may serve as input to a next call to \Rfunction{cvl} to ensure comparability. \item[\Robject{predictions}] the predictions made on each left-out subject. The format depends on the model used. In logistic regression this is just a vector of probabilities. In the Cox model this is a collection of predicted survival curves (a \Rclass{breslow} object). In the linear model this is a collection of predicted means and predicted standard deviations (the latter are the maximum penalized likelihood estimates of $\sigma^2$). \item[\Robject{fullfit}] the fit on the full data (a \Rclass{penfit} object) \end{description}
 
 <<cvl1,results=hide>>=
@@ -304,6 +306,36 @@ fit$fullfit
 fit <- cvl(Surv(time,event), nki70[,8:77], lambda1=2, fold=fit$fold)
 @
 
+\subsection{approximated cross-validation}
+
+To save time, one can choose to set the argument \Rfunarg{approximate} in the function \Rfunction{cvl} to \Robject{TRUE}. For now, this option is only available for ridge models, so models where the lasso penalty equals 0.
+
+In that case the cross-validated likelihood will not be calculated by leaving out one or a set of observation each time and refitting the model, but will be based on approximations. These approximations are based on a Taylor expansion around the estimate of the full model. Since refitting the model is no longer necessary, a lot of time can be saved in this way.
+
+The results are in most cases quite accurate, but the method tends to be a little too optimistic which results in slightly too high values of the corresponding \emph{cvl}. The method works best for large data sets and a resampling scheme with many folds.
+
+The same option can be chosen in \Rfunction{optL2} and \Rfunction{profL2} (see below). Here one must again be aware of the tendency to be a little too optimistic which will result in optimal penalty values that are a little smaller than the ones found by real cross-validation.
+
+In the following example, the cross-validated log-likelihood is calculated twice. First by using leave-one-out cross-validation, then by using the approximation method.
+
+<<cvlappr1,results=hide>>=
+fit1 <- cvl(Surv(time,event), nki70[,8:77], lambda2=10)
+@
+
+<<cvlappr2>>=
+fit1$cvl
+@
+
+<<cvlappr3,results=hide>>=
+fit2 <- cvl(Surv(time,event), nki70[,8:77], lambda2=10, approximate=TRUE)
+@
+
+<<cvlappr4>>=
+fit2$cvl
+@
+
+As we can see, the answers are very similar.
+
 
 \subsection{breslow objects} \label{breslow}
 
@@ -316,10 +348,10 @@ as.data.frame(basesurv(fit$fullfit))[1:10,]
 plot(fit$predictions)
 @
 
-\begin{figure} 
-<<breslowplot, fig=TRUE>>= 
-plot(fit$predictions) 
-@ 
+\begin{figure}
+<<breslowplot, fig=TRUE>>=
+plot(fit$predictions)
+@
 \end{figure}
 
 We can easily extract the 5 year cross-validated survival probabilities

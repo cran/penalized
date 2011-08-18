@@ -15,7 +15,7 @@ cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
     positive = FALSE, data,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
     startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
-    trace = TRUE)
+    trace = TRUE, approximate = FALSE)
 
 optL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
     base1, lambda2 = 0, positive = FALSE, data,
@@ -27,8 +27,8 @@ optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
     maxlambda2, base2, positive = FALSE, data,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
     startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
-    tol = .Machine$double.eps^0.25, trace = TRUE)
-
+    tol = .Machine$double.eps^0.25, trace = TRUE, approximate = FALSE)
+    
 profL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
     base1, lambda2 = 0, positive = FALSE, data,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
@@ -41,7 +41,7 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
     model = c("cox", "logistic", "linear", "poisson"), startbeta,
     startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
     steps = 100, minsteps = steps/2, log = TRUE, save.predictions = FALSE,
-    trace = TRUE, plot = FALSE)
+    trace = TRUE, plot = FALSE, approximate = FALSE)
 }
 
 \arguments{
@@ -86,6 +86,8 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 \item{save.predictions}{Controls whether or not to save cross-validated predictions for all values of lambda.}
 
 \item{trace}{If \code{TRUE}, prints progress information. Note that setting \code{trace=TRUE} may slow down the algorithm (but it often feels quicker)}
+
+\item{approximate}{If \code{TRUE}, the cross-validated likelihood values are approximated rather than fully calculated. Note that this option is only available for ridge models.}
     
 \item{plot}{If \code{TRUE}, makes a plot of cross-validated likelihood versus lambda.}    }
 

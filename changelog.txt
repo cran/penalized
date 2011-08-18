@@ -1,3 +1,9 @@
+0.9-37
+- argument "approximate" added to cvl, optL2 and profL2
+- minor changes in optL1,optL2,profL1,profL2 to aviod errors for 1-fold CV
+- approximate = TRUE standard option for linear model
+- onattach.R added with welcome message pointing to vignette
+
 0.9-36
 - more informative error if minlambda2 or maxlambda2 missing in profL2
 - made explicit in the documentation that positivity constraint only gives non-negativity

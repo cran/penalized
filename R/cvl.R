@@ -3,21 +3,21 @@
 ######################################
 cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, positive = FALSE, 
   data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold,  
-  epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE) {
+  epsilon = 1e-10, maxiter, standardize = FALSE, trace = TRUE, approximate = FALSE) {
 
   # Maximum number of iterations depends on the input
-  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0) && !positive) 25 else Inf
+  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0) && !any(positive)) 25 else Inf
 
   # call the general input checking function
   prep <- .checkinput(match.call(), parent.frame())
 
   # check for the presence of penalty parameters
-  if (ncol(prep$X) >= nrow(prep$X) && lambda1 == 0 && lambda2 == 0)
+  if (ncol(prep$X) >= nrow(prep$X) && all(lambda1 == 0) && all(lambda2 == 0))
     stop("High-dimensional data require a penalized model. Please supply lambda1 or lambda2.", call.=FALSE)
 
   # prepare the model
   fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)
-
+  
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
   pp <- ncol(prep$X) - pu
@@ -28,6 +28,9 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
   groups <- .getFolds(fold, n)
   names(groups) <- rownames(prep$X)
   fold <- max(groups)
+                                 
+  # choose the fastest way of computing in case of a linear model
+  if(prep$model == "linear" && fold>1 && all(lambda1==0) && !any(positive)) approximate = TRUE 
   
   # make vectors of lambda1 and lambda2
   if (length(lambda1) == 1)
@@ -38,14 +41,45 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
     uselambda2 <- lambda2 * prep$baselambda2
   else
     uselambda2 <- c(numeric(pu), lambda2) * prep$baselambda2
-    
-  res <- .cvl(prep$X, uselambda1, uselambda2,
+
+  if(approximate)
+  {
+    # check if lambda1 = 0
+    if (!all(lambda1 == 0))
+    stop("Approximation method only works for ridge penalty, so lambda1 can not differ from 0", call.=FALSE)    
+    # check if fold > 1
+    if(fold <= 1)
+    stop("Approximation method is not implemented for 1-fold cross-validation", call.=FALSE)
+    # check if positive = FALSE everywhere
+    if(any(positive))
+    stop("Approximation method can not be used in combination with positivity constraints", call.=FALSE)     
+            
+    res <- .cvlapprox(prep$X, uselambda1, uselambda2,
     positive = prep$positive, beta = prep$beta, fit=fit, groups=groups, 
     epsilon=epsilon, maxiter=maxiter, trace = trace, quit.if.failed = FALSE)
-  if (!is.na(res$cvl))
-    res$predictions <- .predictswitch(prep$model, res$predictions, groups)
+    if(is.na(res$cvl) || res$cvl==-Inf)   #==? 
+    {
+      res$predictions <- NA
+    }
+    else
+    {
+      res$predictions <- .predictswitch(prep$model, res$predictions, groups)
+    }
+  }
   else
-    res$predictions <- NA
+  {
+    res <- .cvl(prep$X, uselambda1, uselambda2,
+    positive = prep$positive, beta = prep$beta, fit=fit, groups=groups, 
+    epsilon=epsilon, maxiter=maxiter, trace = trace, quit.if.failed = FALSE)
+        if(is.na(res$cvl))
+    {
+      res$predictions <- NA
+    }
+    else
+    {
+      res$predictions <- .predictswitch(prep$model, res$predictions, groups)
+    }
+  }
 
   return(list(
     cvl = res$cvl,
@@ -82,6 +116,13 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, bas
   groups <- .getFolds(fold, n)
   names(groups) <- rownames(prep$X)
   fold <- max(groups)
+  
+  #check if fold=1 and save.predictions=TRUE at the same time
+  if(fold <= 1 && save.predictions)
+  {
+    warning("save.predictions is set to FALSE, because the number of folds equals 1")
+    save.predictions <- FALSE
+  }
 
   # make vectors of lambda1 and lambda2
   if (missing(base1)) {
@@ -206,17 +247,17 @@ profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, bas
 profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2,
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, 
   fold, epsilon = 1e-10, maxiter, standardize = FALSE, steps = 100, minsteps = steps/2, 
-  log = TRUE, save.predictions = FALSE, trace = TRUE, plot = FALSE) {
+  log = TRUE, save.predictions = FALSE, trace = TRUE, plot = FALSE, approximate = FALSE) {
 
   # Maximum number of iterations depends on the input
-  if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
+  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0) && !any(positive)) 25 else Inf
 
   # call the general input checking function
   prep <- .checkinput(match.call(), parent.frame())
 
   # prepare the model
   fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)
-
+  
   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
   pp <- ncol(prep$X) - pu
@@ -238,6 +279,16 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
   groups <- .getFolds(fold, n)
   names(groups) <- rownames(prep$X)
   fold <- max(groups)
+  
+  # choose the fastest way of computing in case of a linear model
+  if(prep$model == "linear" && fold>1 && all(lambda1==0) && !any(positive)) approximate = TRUE    
+  
+  #check if fold=1 and save.predictions=TRUE at the same time
+  if(fold <= 1 && save.predictions)
+  {
+    warning("save.predictions is set to FALSE, because the number of folds equals 1")
+    save.predictions <- FALSE
+  }
 
   # Find the sequence from maxlambda2 to minlambda2
   if (missing(minlambda2)) 
@@ -279,10 +330,30 @@ profL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, ma
       cat("lambda=", rellambda, "\t")
       flush.console()
     }
-    out <- .cvl(prep$X, uselambda1, rellambda*baselambda2,
-      positive = prep$positive, beta = beta, fit=fit, groups=groups, 
-      epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, 
-      quit.if.failed=FALSE, save.predictions = save.predictions)
+    if(approximate)
+    {
+      # check if lambda1 = 0
+      if (!all(lambda1 == 0))
+      stop("Approximation method only works for ridge penalty, so lambda1 can not differ from 0", call.=FALSE)
+      # check if fold > 1
+      if(fold <= 1)
+      stop("Approximation method is not implemented for 1-fold cross-validation", call.=FALSE)
+      # check if positive = FALSE everywhere
+      if(any(positive))
+      stop("Approximation method can not be used in combination with positivity constraints", call.=FALSE)            
+    
+      out <- .cvlapprox(prep$X, uselambda1, rellambda*baselambda2,
+        positive = prep$positive, beta = beta, fit=fit, groups=groups, 
+        epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, 
+        quit.if.failed=FALSE, save.predictions = save.predictions)
+    }
+    else
+    {
+      out <- .cvl(prep$X, uselambda1, rellambda*baselambda2,
+        positive = prep$positive, beta = beta, fit=fit, groups=groups, 
+        epsilon=epsilon, maxiter=maxiter, trace = trace, betas = betas, 
+        quit.if.failed=FALSE, save.predictions = save.predictions)
+    }    
     if (trace) if (fold > 1) cat("cvl=", out$cvl, "\n") else cat("\n")
     beta <- out$fit$beta
     betas <- out$betas
@@ -358,6 +429,10 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, base
   groups <- .getFolds(fold, n)
   names(groups) <- rownames(prep$X)
   fold <- max(groups)
+  
+  # check if fold > 1
+  if(fold <= 1)
+  stop("Method is not implemented for 1-fold cross-validation", call.=FALSE)  
 
   # find the maxlambda1 and minlambda1
   if (missing(maxlambda1)) {
@@ -435,10 +510,10 @@ optL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, base
 optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2,
   positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, 
   fold, epsilon = 1e-10, maxiter, standardize = FALSE, tol = .Machine$double.eps^0.25, 
-  trace = TRUE) {
+  trace = TRUE, approximate = FALSE) {
                                                                   
   # maximum number of iterations depends on the input
-  if (missing(maxiter)) maxiter <- if (lambda1 == 0 && !positive) 25 else Inf
+  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0) && !any(positive)) 25 else Inf
 
   # call the general input checking function
   prep <- .checkinput(match.call(), parent.frame())
@@ -467,6 +542,13 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
   groups <- .getFolds(fold, n)
   names(groups) <- rownames(prep$X)
   fold <- max(groups)
+  
+  # check if fold > 1
+  if(fold <= 1)
+  stop("Method is not implemented for 1-fold cross-validation", call.=FALSE)
+  
+  # choose the fastest way of computing in case of a linear model
+  if(prep$model == "linear" && fold>1 && all(lambda1==0) && !any(positive)) approximate = TRUE   
 
   # benchmark: cvl at infinite penalty
   thiscvlinf <- function() {
@@ -506,9 +588,26 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
     if (rellambda == Inf) 
       out <- thiscvlinf()
     else {
-      out <- .cvl(prep$X, uselambda1, rellambda*baselambda2,
-        positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
-        maxiter=maxiter, trace = trace, betas = betas)
+       if(approximate)
+       {
+          # check if lambda1 = 0            
+          if (!all(lambda1 == 0))
+          stop("Approximation method only works for ridge penalty, so lambda1 can not differ from 0", call.=FALSE)
+          # check if positive = FALSE everywhere
+          if(any(positive))
+          stop("Approximation method can not be used in combination with positivity constraints", call.=FALSE)               
+
+            out <- .cvlapprox(prep$X, uselambda1, rellambda*baselambda2,
+            positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
+            maxiter=maxiter, trace = trace, betas = betas)                                                      
+        }
+        else
+        {
+            out <- .cvl(prep$X, uselambda1, rellambda*baselambda2,
+            positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
+            maxiter=maxiter, trace = trace, betas = betas)
+        }
+
       if (out$cvl > - Inf) {
         beta <<- out$fit$beta
         if (is.null(betas) && !is.null(out$fit$betas)) {
