@@ -499,7 +499,7 @@
   qrP <- qr(t(P))  # not efficient?
   if (qrP$rank < nrow(P)) {
     qR <- qr.R(qrP)
-    keep <- colnames(qR)[sort.list(abs(diag(qR)), decr=T)[1:qrP$rank]]
+    keep <- colnames(qR)[sort.list(abs(diag(qR)), decreasing=TRUE)[1:qrP$rank]]
     P <- P[keep,]
   }
   colnames(P) <- NULL
@@ -549,6 +549,11 @@
   m <- ncol(X)
 
   fold <- max(groups)
+
+  if(fold==n)   #if loocv, make sure vector "groups" is ordered
+  {
+    groups <- c(1:n)
+  }
 
   useP <- FALSE
   if(m<=n)  #use beta
@@ -852,8 +857,8 @@
 #only difference with getBeta2 is the weightmatrix W that does not occur in the linear model
 .getBetaLinear2 <- function(X,beta,groups,j,delta,inv_tX)
 {
-  Xj <- X[groups==j,]
-  inv_tXj <- inv_tX[,groups==j]
+  Xj <- X[groups==j,,drop=FALSE]
+  inv_tXj <- inv_tX[,groups==j,drop=FALSE]
   Imin <- -Xj%*%inv_tXj       #forceSymmetric
   diag(Imin) <- diag(Imin+1)
 
@@ -864,8 +869,8 @@
 
 .getBeta2 <- function(WX,beta,groups,j,delta,inv_tX) 
 {
-  WXj <- WX[groups==j,]
-  inv_tXj <- inv_tX[,groups==j]
+  WXj <- WX[groups==j,,drop=FALSE]
+  inv_tXj <- inv_tX[,groups==j,,drop=FALSE]
   Imin <- -WXj%*%inv_tXj    #forceSymmetric
   diag(Imin) <- diag(Imin+1)
 

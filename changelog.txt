@@ -1,3 +1,9 @@
+0.9-38
+- fixed a problem in .coxmerge arising when censored observations were present at time 0 (thanks to Thierry Picot for the bug report)
+- fixed cross-validated partial likelihood for k<n-fold
+- changed start-up message to use packageStartupMessage().
+- moved vignette to vignettes folder
+
 0.9-37
 - argument "approximate" added to cvl, optL2 and profL2
 - minor changes in optL1,optL2,profL1,profL2 to aviod errors for 1-fold CV

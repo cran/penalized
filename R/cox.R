@@ -113,18 +113,26 @@
     ws <- exp(lp)
     somw <- apply(Riskset, 2, function(rr) sum(ws[rr]))
     cvls <- numeric(length(leftout))
-    for (k in which(leftout)) {
-      pij <- ws[k] / somw
-      if (status[k] == 1) {
-        dk <- which(whichd == k)
-        cvls[k] <- sum(log(1 - pij[Riskset[k,] & (seq_along(dtimes) != dk)])) + log(pij[dk])
-      } else {
-        cvls[k] <- sum(log(1 - pij[Riskset[k,]]))
+    if (sum(leftout) == 1) { # leave-one-out
+      for (k in which(leftout)) {
+        pij <- ws[k] / somw
+        if (status[k] == 1) {
+          dk <- which(whichd == k)
+          cvls[k] <- sum(log(1 - pij[Riskset[k,] & (seq_along(dtimes) != dk)])) + log(pij[dk])
+        } else {
+          cvls[k] <- sum(log(1 - pij[Riskset[k,]]))
+        }
       }
+      return(sum(cvls[leftout]))
+    } else {  # k-fold
+      PLall <- sum(log(ws[whichd] / somw))
+      newsomw <- apply(Riskset, 2, function(rr) sum(ws[rr & !leftout]))
+      newwhichd <- whichd[!(whichd %in% which(leftout))]
+      PLrest <- sum(log(ws[newwhichd] / newsomw[!(whichd %in% which(leftout))]))
+      return(PLall-PLrest)
     }
-    return(sum(cvls[leftout]))
   }
-
+  
   # cross-validated predictions
   prediction <- function(lp, nuisance, which) {
     if (!is.null(offset)) lp <- lp + offset
@@ -157,6 +165,8 @@
     res <- matrix(NA, nrow(pred@curves), length(times))
     res[,times %in% time(pred)] <- pred@curves
     # We interpolate all NAs except in the tail
+    startnas <- is.na(res[,1])
+    if (any(startnas)) res[startnas,1] <- 1
     endnas <- rev(cumsum(is.na(rev(res[1,])))==1:ncol(res))
     ready <- !any(is.na(res[1,!endnas]))
     while (!ready) {
