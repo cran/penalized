@@ -112,9 +112,14 @@
         else
           strata <- strata(eval(attr(unpenalized, "variables"), data, environment(unpenalized))[strata.nrs2], shortlabel=TRUE)
         unpenalized <- unpenalized[-strata.nrs]
-      } else strata <- NULL
+      } else 
+        strata <- NULL
       attr(unpenalized, "intercept") <- 1
-    } else strata <- NULL
+      # prevent problems in case of only unpenalized = ~strata() only
+      if ((attr(unpenalized, "response") == 0) && (length(attr(unpenalized, "term.labels")) == 0)) 
+        unpenalized <- terms(response ~ 1)
+    } else 
+      strata <- NULL
     unpenalized <- model.matrix(unpenalized, data)
     if (model == "cox") 
       unpenalized <- unpenalized[,-1, drop=FALSE]

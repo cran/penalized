@@ -64,7 +64,8 @@
       loglik <- NA
 
     # The weights matrix
-    Pij <- outer(ws, breslows) * Riskset
+    Pij <- outer(ws, breslows) 
+    Pij[!Riskset] <- 0
     W <- list(P = Pij, diagW = breslow * ws)        # construct: W = diag(diagW) - P %*% t(P)
 
     # The fitted baseline(s)

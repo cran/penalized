@@ -1,3 +1,8 @@
+0.9-39
+- fixed Inf * 0 problem in cox.R (thanks to Levi Waldron for the bug report)
+- fixed problem in case unpenalized = ~strata() without further covariates (thanks to Holger Schwender for the bug report)
+- added strata example to vignette
+
 0.9-38
 - fixed a problem in .coxmerge arising when censored observations were present at time 0 (thanks to Thierry Picot for the bug report)
 - fixed cross-validated partial likelihood for k<n-fold

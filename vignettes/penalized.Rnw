@@ -16,6 +16,8 @@
 
 \author{Jelle Goeman\and Rosa Meijer}
 
+\date{Package version \Sexpr{packageDescription("penalized")$Version}\\Date: \today}
+
 \begin{document}
 
 \maketitle \tableofcontents \newpage
@@ -177,6 +179,10 @@ This adds estrogen receptor status as an unpenalized covariate. Note in the seco
 In linear and logistic regression the intercept is by default never penalized. The use of an intercept can be suppressed with \Robject{penalized = $\tilde{}$0}. The intercept is always removed from the penalized model matrix, unless the penalized model consists of only an intercept.
 
 It is possible to include an offset term in the model. Use the \Rfunction{offset} function in the \Rfunarg{unpenalized} argument, which must then be of \Rfunarg{formula} type. The Cox model implementation allows \Rfunction{strata} terms.
+
+<<strata,results=hide>>=
+fit <- penalized(Surv(time,event)~strata(ER), nki70[,8:77], lambda2=1)
+@
 
 
 \subsection{factors}
