@@ -3,15 +3,16 @@
 
 \title{Penalized regression}
 
-\description{Fitting generalized linear models with L1 (lasso)
+\description{Fitting generalized linear models with L1 (lasso and fused lasso)
 and/or L2 (ridge) penalties, or a combination of the two.}
 
 \usage{
 
-penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
-    positive = FALSE, data, model = c("cox", "logistic", "linear",
-    "poisson"), startbeta, startgamma, steps = 1, epsilon = 1e-10,
-    maxiter, standardize = FALSE, trace = TRUE)
+penalized (response, penalized, unpenalized, lambda1=0, 
+  lambda2=0, positive = FALSE, data, fusedl=FALSE,
+  model = c("cox", "logistic", "linear", "poisson"), 
+  startbeta, startgamma, steps =1, epsilon = 1e-10, 
+  maxiter, standardize = FALSE, trace = TRUE)
 
 }
 
@@ -27,6 +28,8 @@ penalized (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
 \item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be non-negative. If a logical vector with the length of the number of covariates in \code{penalized}, constrains the estimated regression coefficients of a subset of the penalized covariates to be non-negative.}
 
 \item{data}{A \code{data.frame} used to evaluate \code{response}, and the terms of  \code{penalized} or \code{unpenalized} when these have been specified as a  \code{\link[stats:formula]{formula}} object.}
+
+\item{fusedl}{If \code{TRUE} or a vector, the penalization method used is fused lasso. The value for \code{lambda1} is used as the tuning parameter for L1 penalization on the coefficients and the value for \code{lambda2} is used as the tuning parameter for L1 penalization on the differences of the coefficients. Default value is \code{FALSE}.}
 
 \item{model}{The model to be used. If missing, the model will be guessed from the \code{response} input.}
 
@@ -81,11 +84,16 @@ pen <- penalized(Surv(time, event), penalized = ~ER+Age+Diam+N+Grade,
 
 # using steps
 pen <- penalized(Surv(time, event), penalized = nki70[,8:77],
-    data = nki70, lambda1 = 1, steps = 20)
+    data = nki70, lambda1 = 1,steps = 20)
 plotpath(pen)
-}
 
 
+# A fused lasso fit predicting survival
+pen <- penalized(Surv(time, event), penalized = nki70[,8:77], data = nki70, 
+     lambda1 = 1, lambda2 = 2, fusedl = TRUE)
+plot(coefficients(pen, "all"),type="l",xlab = "probes",ylab = "coefficient value")
+plot(predict(pen,penalized=nki70[,8:77]))
+ }
 
 \keyword{multivariate}
 \keyword{regression} 

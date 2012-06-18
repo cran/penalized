@@ -1,12 +1,12 @@
 ####################################
 # Fits the penalized regression model
 ####################################                                    
-penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, positive = FALSE, data, 
+penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, positive = FALSE, data, fusedl=FALSE,  
   model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, steps =1, epsilon = 1e-10, 
   maxiter, standardize = FALSE, trace = TRUE) {
 
   # Maximum number of iterations depends on the input
-  if (missing(maxiter)) maxiter <- if (all(lambda1 == 0) && !positive) 25 else Inf
+  if (missing(maxiter)) maxiter <- if (lambda1 == 0 && lambda2 == 0 && !positive) 25 else Inf
 
   # Park and Hastie type steps?
   if (steps == "Park" || steps == "park") {
@@ -24,10 +24,12 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   # prepare the model
   fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)$fit
   
-  # retrieve the dimensions for convenience
+   # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
   pp <- ncol(prep$X) - pu
   n <- nrow(prep$X)
+  nr <- nrow(prep$X)
+  fusedl <- prep$fusedl
 
   # make weights for lambda1 that is a vector
   if (length(lambda1) == pp && (!all(lambda1==0))) {
@@ -40,7 +42,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     lambda2 <- c(numeric(pu), lambda2)
 
   # If a steps argument is given, determine where to start
-  if (park || steps > 1) {
+  if (park || steps > 1 && fusedl == FALSE) {
     if (pu > 0)
       lp <- drop(prep$X[,1:pu,drop=FALSE] %*% prep$nullgamma)
     else 
@@ -74,7 +76,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   while (!ready) {
     ready <- (rellambda1 == lambda1)
     i <- i+1
-  
+    if(!fusedl){
     if (rellambda1 != 0 || any(prep$positive)) {
       if (all(lambda2 == 0)) {
         out <- .steplasso(beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
@@ -104,10 +106,18 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
           maxiter = maxiter)
       }
     }
+   }
+   
+   if(fusedl){
+       out<- .flasso(beta = beta, lambda1 = rellambda1 * wl1 * prep$baselambda1,
+        lambda2 = lambda2 * prep$baselambda2, chr = prep$chr, positive = prep$positive, X = prep$X,
+        fit = fit, trace = trace, epsilon = epsilon, maxiter = maxiter)
+      } 
     if (trace) cat("\n")
     beta <- out$beta
     
     if (!ready) {
+      if(!fusedl){
       if (park) {
         newpark <- .park(beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
             lambda2 = 0, positive = prep$positive, X = prep$X, fit = out$fit)
@@ -123,17 +133,21 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
         rellambda1 <- lambda1s[i+1]
         beta <- out$beta
       }
-    }
+    } else {rellambda1 <- lambda1s[i+1]
+            beta <- out$beta}
+   }
+   
+    
     
     outs[[i]] <- out
   }
-                                    
+                               
   # put the output in a penfit object
   if (length(lambda2)>1)
     lambda2 <- lambda2[pu+1:pp]
   outs <- sapply(1:i, function(nr) {
     thislambda1 <- lambda1s[[nr]] * ifelse(length(wl1)>1, wl1[pu+1:pp], wl1)
-    .makepenfit(outs[[nr]], pu, prep$model, thislambda1, lambda2, 
+    .makepenfit(outs[[nr]], pu, fusedl = fusedl, prep$model, thislambda1, lambda2, 
       prep$orthogonalizer, prep$weights, prep$formula)
   })
 

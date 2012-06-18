@@ -1,6 +1,6 @@
 %\VignetteIndexEntry{Penalized user guide}
 
-\documentclass[a4paper]{article}
+\documentclass[a4paper,12pt]{article}
 \usepackage{natbib}
 \bibliographystyle{chicago}
 
@@ -14,7 +14,7 @@
 
 \title{L1 and L2 Penalized Regression Models}
 
-\author{Jelle Goeman\and Rosa Meijer}
+\author{Jelle Goeman \and Rosa Meijer \and Nimisha Chaturvedi}
 
 \date{Package version \Sexpr{packageDescription("penalized")$Version}\\Date: \today}
 
@@ -30,13 +30,13 @@ To cite the package \Rpackage{penalized}, please cite Goeman, J. J., L1 penalize
 
 This short note explains the use of the \Rpackage{penalized} package. The package is designed for penalized estimation in generalized linear models. The lasso and elastic net algorithm that it implements is described in \cite{Goeman2010}.
 
-The supported models at this moment are linear regression, logistic regression, poisson regression and the Cox proportional hazards model, but others are likely to be included in the future. As to penalties, the package allows an L1 absolute value (``lasso'') penalty \citep{Tibshirani1996, Tibshirani1997}, an L2 quadratic (``ridge'') penalty \citep{Hoerl1970, Cessie1992, Verweij1994}, or a combination of the two \citep[the ``naive elastic net'' of][]{Zou2005}. The package also includes facilities for likelihood cross-validation and for optimization of the tuning parameter.
+The supported models at this moment are linear regression, logistic regression, poisson regression and the Cox proportional hazards model, but others are likely to be included in the future. As to penalties, the package allows an L1 absolute value (``lasso'') penalty \cite{Tibshirani1996, Tibshirani1997}, an L2 quadratic (``ridge'') penalty \citep{Hoerl1970, Cessie1992, Verweij1994}, or a combination of the two \citep[the ``naive elastic net'' of][]{Zou2005}. It is also possible to have a \Rfunarg{fused lasso} penalty with L1 absolute value (``lasso'') penalty on the coefficients and their differences \cite{Tibshirani,Tibshirani2007}. The package also includes facilities for likelihood cross-validation and for optimization of the tuning parameter.
 
-L1 and L2 penalized estimation methods shrink the estimates of the regression coefficients towards zero relative to the maximum likelihood estimates. The purpose of this shrinkage is to prevent overfit arising due to either collinearity of the covariates or high-dimensionality. Although both methods are shrinkage methods, the effects of L1 and L2 penalization are quite different in practice. Applying an L2 penalty tends to result in all small but non-zero regression coefficients, whereas applying an L1 penalty tends to result in many regression coefficients shrunk exactly to zero and a few other regression coefficients with comparatively little shrinkage. Combining L1 and L2 penalties tends to give a result in between, with fewer regression coefficients set to zero than in a pure L1 setting, and more shrinkage of the other coefficients. The amount of shrinkage is determined by tuning parameters $\lambda_1$ and $\lambda_2$. A value of zero always means no shrinkage (= maximum likelihood estimation) and a value of infinity means infinite shrinkage (= setting all regression coefficients to zero). For more details about the methods, please refer to the above-mentioned papers.
+L1 and L2 penalized estimation methods shrink the estimates of the regression coefficients towards zero relative to the maximum likelihood estimates. The purpose of this shrinkage is to prevent overfit arising due to either collinearity of the covariates or high-dimensionality. Although both methods are shrinkage methods, the effects of L1 and L2 penalization are quite different in practice. Applying an L2 penalty tends to result in all small but non-zero regression coefficients, whereas applying an L1 penalty tends to result in many regression coefficients shrunk exactly to zero and a few other regression coefficients with comparatively little shrinkage. Combining L1 and L2 penalties tends to give a result in between, with fewer regression coefficients set to zero than in a pure L1 setting, and more shrinkage of the other coefficients. The \Rfunarg{fused lasso} penalty, an extension of the lasso penalty, encourages sparsity of the coefficients and their differences by penalizing the L1-norm for both of them at the same time, thus producing sparse and piecewise constant stretches of non-zero coefficients. The amount of shrinkage is determined by tuning parameters $\lambda_1$ and $\lambda_2$. A value of zero always means no shrinkage (= maximum likelihood estimation) and a value of infinity means infinite shrinkage (= setting all regression coefficients to zero). For more details about the methods, please refer to the above-mentioned papers.
 
 It is important to note that shrinkage methods are generally not invariant to the relative scaling of the covariates. Before fitting a model, it is prudent to consider if the covariates already have a natural scaling relative to each other or whether they should be standardized.
 
-The main algorithm for L1 penalized estimation (lasso and elastic net) that used in this package is documented in \cite{Goeman2010}. It has been combined with ideas from \cite{Eilers2001} and \cite{Houwelingen2006} for efficient L2 penalized estimation.
+The main algorithm for L1 penalized estimation (lasso, elastic net) that used in this package is documented in \cite{Goeman2010}. It has been combined with ideas from \cite{Eilers2001} and \cite{Houwelingen2006} for efficient L2 penalized estimation. The algorithm used for fused lasso penalized estimation is described in Chaturvedi (2012)
 
 <<options, echo=FALSE>>=
 options(continue = "  ")
@@ -123,7 +123,7 @@ See \Robject{help(penfit)} for more information on \Rclass{penfit} objects and S
 
 The \Rfunction{coefficients} function extracts the named vector of regression coefficients. It has an extra second argument \Rfunarg{which} that can be used to specify which coefficients are of interest. Possible values of \Rfunarg{which} are \Robject{nonzero} (the default) for extracting all non-zero coefficients, \Robject{all} for all coefficients, and \Robject{penalized} and \Rfunarg{unpenalized} for only the penalized or unpenalized ones.
 
-<<coefficients>>=
+<<coefficients,results=hide>>=
 coefficients(fit, "all")
 @
 
@@ -202,7 +202,7 @@ The \Rfunarg{response} argument may also be also be specified as a \Rclass{facto
 
 \subsection{fitting in steps}
 
-In some cases it may be interesting to visualize the effect of changing the tuning parameter \Rfunarg{lambda1} or \Rfunarg{lambda2} on the values of the fitted regression coefficients. This can be done using the function argument \Rfunarg{steps} in combination with the \Rfunction{plotpath} function. At this moment, this functionality is only available for visualizing the effect of \Rfunarg{lambda1}.
+In some cases it may be interesting to visualize the effect of changing the tuning parameter \Rfunarg{lambda1} or \Rfunarg{lambda2} on the values of the fitted regression coefficients. This can be done using the function argument \Rfunarg{steps} in combination with the \Rfunction{plotpath} function. At this moment, this functionality is only available for visualizing the effect of \Rfunarg{lambda1} (not for\Rfunarg{fused lasso} estimation).
 
 When using the \Rfunarg{steps} argument, the function starts fitting the model at the maximal value of $\lambda_1$, that is the smallest value that shrinks all regression coefficients to zero. From that value it continues fitting the model for \Rfunarg{steps} successively decreasing values of $\lambda_1$ until the specified value of \Rfunarg{lambda1} is reached.
 
@@ -240,10 +240,6 @@ To add a positivity restriction to the regression coefficients of all penalized 
 fit <- penalized(Surv(time,event), nki70[,8:77], positive=TRUE)
 @
 
-<<positivecoefficients>>=
-coefficients(fit)
-@
-
 \begin{figure}
 <<positivestepsplot, fig=TRUE, results=hide>>=
 fit <- penalized(Surv(time,event), nki70[,8:77], positive=TRUE,
@@ -252,12 +248,81 @@ plotpath(fit)
 @
 \end{figure}
 
+<<positivecoefficients>>=
+coefficients(fit)
+@
+
 It is also possible to constrain only part of the regression coefficients to be non-negative by giving the \Rfunarg{positive} argument as a logical vector.
 
 <<partpositive, results=hide>>=
 coef(penalized(Surv(time,event), nki70[,8:16], positive=c(F,rep(T,8))))
 @
 
+\subsection{fused lasso}
+
+For problems involving features that can be ordered in some meaningful way, it might be useful to take into account the information about their spatial structure while estimating the coefficients. For example, copy number data exhibit spatial correlation along the genome. This suggests that feature selection should take genomic location into account for producing more interpretable results for copy number based classifiers. Fused lasso takes the genomic location into account by putting a L1 penalty on the coefficients as well as on their differences. It, thus produces sparse results with local constancy of the coefficient profile.
+Fot estimating using  \Rfunarg{fused lasso} one can use the basic \Rfunarg{penalized} function of the package with the function argument \Rfunarg{fusedl} set to \Robject{TRUE}. The argument \Rfunarg{fusedl} can take values in two form: logical or a vector. For example in case of copy number data if the information about the genomic location is available then \Rfunarg{fusedl} can be given as an input, a vector of these locations.
+If the function argument \Rfunarg{fusedl} is set to \Robject{TRUE} or it is a vector then the \Rfunarg{penalized} function performs \Rfunarg{fused lasso} penalized estimation for a fixed value of $\lambda_1$ and $\lambda_2$. Note that for \Rfunarg{fused lasso} estimation, the value for $\lambda_2$ given in the function is used for putting L1 penalty on the differences of the coefficients. We demonstrate the fused lasso feature of the penalized function by applying it on a simulated dataset with binomial response. 
+We generate a data set with 100 samples and 70 probes, with mean equal to 0 and variance equal to 0.5. 
+
+<<fused lasso, results=hide>>=
+ X <- matrix(0,70,100)
+  for (i in 1:100){
+     X[1:70,i] <- rnorm(70,mean=0,sd=0.5)      
+   }
+ colnames(X) = as.character (1:ncol(X))
+  rownames(X) = as.character (1:nrow(X))
+@
+
+Out of these 100 samples, 50 are selected randomly for getting aberrations in the region 30:40. The mean for the aberrated region is taken to be -0.7 and variance 0.5.
+ 
+<<fused lasso, results=hide>>=
+ a <- sample(1:ncol(X),50,prob=rep(0.5,length(1:ncol(X))))
+ for (i in 1:50){
+      X[30:40,a[i]]<-rnorm(length(30:40),mean = -0.7 ,sd=0.5)         
+    }
+@
+
+We generate the probabilities of the samples being 1 or 0, by using beta equal to -1 in logistic model.
+    
+<<fused lasso, results=hide>>=
+    Xbeta <- rnorm(100, mean = 0, sd = 0.5)
+    Xbeta[a] <- rnorm (length(a) , mean = -0.7 , sd = 0.5)
+
+    beta <- numeric(100)
+    beta [1:length(beta)] <- -1 
+
+   responsep <- numeric(100)
+  
+ for(i in 1:100){
+     coeff <- -beta[i] * Xbeta[i]
+     responsep[i] <- 1/(1+exp(coeff))          
+   }
+
+  X <- t(X)
+    response=responsep
+      for(i in 1:100){
+      response[i] <- sample(0:1 , size = 1  , prob = c((1-responsep[i]),responsep[i]))
+  }
+@
+
+For estimating the coefficients using fused lasso, the \Rfunarg{flasso} argument in the \Rfunarg{penalized} function can take two forms. If it is logical then the genomic location (for example chromosome number in copy number data) information becomes 1 for every probe. Otherwise if the information is available then it can be given as a vector to the \Rfunarg{flasso} argument.
+
+<<fused lasso, results=hide>>=
+fit <- penalized(response, X, lambda1 = 2, lambda2=2,fusedl=TRUE)
+@
+
+\begin{figure}
+<<fusedlassocoeffplot, fig=TRUE,results=hide>>=
+fit <- penalized(response, X, lambda1 = 2, lambda2=3,fusedl=TRUE)
+plot(coefficients(fit,"all")[-1],main = "fused lasso", col="red",xlab = "probes",ylab = "coefficients",type="l")
+@
+\end{figure}
+
+<<fused lasso, results=hide>>=
+chr = c(rep(1,30),rep(2,20),rep(3,10),rep(4,10))
+fit <- penalized(response, X, lambda1 = 2, lambda2=2,fusedl=chr)
+@
 
 \section{Pretesting}
 
@@ -293,9 +358,9 @@ Five functions are available for calculating the cross-validated log likelihood 
 
 The function \Rfunction{cvl} calculates the cross-validated log likelihood for fixed values of $\lambda_1$ and $\lambda_2$.
 
-It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation.
+It accepts the same arguments as \Rfunction{penalized} (except \Rfunarg{steps}: see \Rfunction{profL1} below) as well as the \Rfunarg{fold} argument. This will usually be a single number $k$ to indicate $k$-fold cross-validation. In that case, the allocation of the subjects to the folds is random. Alternatively, the precise allocation of the subjects into the folds can be specified by giving \Rfunarg{fold} as a vector of the length of the number of subjects with values form 1 to $k$, each indicating the fold allocation of the corresponding subject. The default is to do leave-one-out cross-validation. For having cross-validated fused lasso estimates, one should set the argument \Rfunarg{fusedl} to \Robject{TRUE}.
 
-In addition there is the argument \Rfunarg{approximate} (default value is \Robject{FALSE}). If its value is set to \Robject{TRUE}, instead of true cross-validation an approximation method is used that is much faster. This method is explained in more detail in the next subsection. When a linear model is fitted, the approximation method is no longer approximative but results in exact answers. For this reason, the package will automatically set the value of \Rfunarg{approximate} to \Robject{TRUE} in case of a linear model.
+In addition there is the argument \Rfunarg{approximate} (default value is \Robject{FALSE}). If its value is set to \Robject{TRUE}, instead of true cross-validation an approximation method is used that is much faster. This method is explained in more detail in the next subsection. When a linear model is fitted, the approximation method is no longer approximative but results in exact answers. For this reason, the package will automatically set the value of \Rfunarg{approximate} to \Robject{TRUE} in case of a linear model. This argument does not works for fused lasso cross-validation.
 
 The function \Rfunction{cvl} returns a names \Rclass{list} with four elements: \begin{description} \item[\Robject{cvl}] the cross-validated log likelihood. \item[\Robject{fold}] the fold allocation used; this may serve as input to a next call to \Rfunction{cvl} to ensure comparability. \item[\Robject{predictions}] the predictions made on each left-out subject. The format depends on the model used. In logistic regression this is just a vector of probabilities. In the Cox model this is a collection of predicted survival curves (a \Rclass{breslow} object). In the linear model this is a collection of predicted means and predicted standard deviations (the latter are the maximum penalized likelihood estimates of $\sigma^2$). \item[\Robject{fullfit}] the fit on the full data (a \Rclass{penfit} object) \end{description}
 
@@ -385,8 +450,8 @@ It is also possible in these functions to set \Robject{fold = 1}. This will caus
 The profiles can be plotted using the output of \Rfunction{profL1} and \Rfunction{profL2} or directly using the \Rfunarg{plot} arguments of these functions.
 
 <<prof,results=hide>>=
-fit1 <- profL1(Surv(time,event), nki70[,50:70], fold=10, plot=TRUE)
-fit2 <- profL2(Surv(time,event), nki70[,50:70], fold=fit1$fold,
+fit1 <- profL1(Surv(time,event), nki70[,50:70],fold=10, plot=TRUE)
+fit2 <- profL2(Surv(time,event), nki70[,50:70],fold=fit1$fold,
     minl = 0.01, maxl = 1000)
 plot(fit2$lambda, fit2$cvl, type="l", log="x")
 @

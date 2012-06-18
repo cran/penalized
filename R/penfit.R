@@ -21,16 +21,18 @@ setClass("penfit",
 )
 
 # creation method for a penfit object 
-.makepenfit <- function(object, unpenalized, model, lambda1, lambda2, orthogonalizer, weights, formula) {
+.makepenfit <- function(object, unpenalized, model, lambda1, lambda2, fusedl, orthogonalizer, weights, formula) {
   out <- new("penfit")
                                               
-  object$beta <- object$beta / weights
+  if(!fusedl){
+  object$beta <- object$beta / weights}
 
   beta <- object$beta[unpenalized + seq_len(length(object$beta) - unpenalized)]
   gamma <- object$beta[seq_len(unpenalized)] - drop(orthogonalizer %*% beta)
    
   out@unpenalized <- gamma
   out@penalized <- beta
+
 
   out@residuals <- object$fit$residuals
   out@fitted <- object$fit$fitted
@@ -53,7 +55,6 @@ setClass("penfit",
   
   out@lambda1 <- lambda1
   out@lambda2 <- lambda2
-  
   out@weights <- weights
   
   out
@@ -114,6 +115,8 @@ setGeneric("linear.predictors", function(object, ...) standardGeneric("linear.pr
 setMethod("linear.predictors", "penfit", function(object, ...) {
   object@lin.pred
 })
+
+
 
 # extracts the fitted values
 setMethod("fitted.values", "penfit", function(object, ...) {

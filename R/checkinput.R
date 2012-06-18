@@ -11,7 +11,10 @@
   missing <- function(str) !str %in% names(call)
 
   # determine the response
-  if (!missing("data")) data <- input("data") else data <- NULL
+  if (!missing("data")) {
+     data <- input("data")
+       } else {data <- NULL}
+  
   response <- input.data("response")
   if (is(response, "formula")) {
     formula.response <- response
@@ -22,6 +25,9 @@
   } else {
     formula.response <- NULL
   }
+  
+  ##determine whether to perform fused lasso or not
+  fusedl <- if (missing("fusedl")){fusedl <- FALSE} else {fusedl <- input("fusedl")}
 
   # determine the model if missing
   if (missing("model")) {
@@ -49,8 +55,8 @@
 
   # determine penalized and unpenalized
   if (!missing("penalized")) {
-    penalized <- input.data("penalized")
-  } else {
+     penalized <- input("penalized")
+       } else {
     if (!is.null(formula.response)) {
       penalized <- formula.response
       formula.response <- NULL
@@ -59,6 +65,7 @@
   }
   if (!missing("unpenalized")) {
     unpenalized <- input.data("unpenalized")
+    
   } else {
     if (!is.null(formula.response)) {
       unpenalized <- formula.response
@@ -231,23 +238,50 @@
   } else {
     orthogonalizer <- matrix(,0,ncol(penalized))
   }
+  
+  ##getchr
+  
+
+    if(is.logical(fusedl)){
+      if(fusedl){
+     if(ncol(unpenalized)>0){
+             chr = c(rep(0,ncol(unpenalized)),rep(1,ncol(penalized)))
+             names(chr) = c(colnames(unpenalized),colnames(penalized))
+   }else{chr = rep(1,ncol(penalized))
+        names(chr) = colnames(penalized)}
+    } else {chr = rep(0,ncol(penalized))}
+    } else if(!is.logical(fusedl)) {
+               if(ncol(unpenalized)>0){
+               chr = as.numeric(fusedl)
+               chr = c(rep(0,ncol(unpenalized)),chr)
+             names(chr) = c(colnames(unpenalized),colnames(penalized))
+   }else {names(chr) = colnames(penalized)}
+    }
+
+ 
 
   # Join penalized and unpenalized together
   X <- cbind(unpenalized, penalized)
   beta <- c(startgamma, startbeta)
 
   # stabilize/standardize
-  vars <- apply(X,2,var) * (n-1)/n
-  vars[vars == 0] <- 1
-  sds <- sqrt(vars)
-  X <- X / matrix(sds, nrow(X), ncol(X), byrow=T)
-  standardize <- if (missing("standardize")) FALSE else input("standardize")
-  beta[beta != 0] <- beta[beta != 0] * sds[beta != 0]
-  nullgamma <- nullgamma * sds[1:length(nullgamma)]
+  standardize <- if (missing("standardize")){ FALSE } else {input("standardize")}
+  fusedl <- if (is.logical(fusedl)){fusedl <- fusedl} else {fusedl <- TRUE}
   
-  # find baselambda1 and baselambda2
+
+  
+    vars <- apply(X,2,var) * (n-1)/n
+    vars[vars == 0] <- 1
+    sds <- sqrt(vars)
+
+ if(is.logical(fusedl) && !fusedl){
+    beta[beta != 0] <- beta[beta != 0] * sds[beta != 0]
+    nullgamma <- nullgamma * sds[1:length(nullgamma)]
+    X <- X / matrix(sds, nrow(X), ncol(X), byrow=T)
+
+ # find baselambda1 and baselambda2
   # This lambda1 and lambda2 for unit input lambda1=1 and lambda2=1
-  if (standardize) {
+ if (standardize) {
     baselambda1 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
     baselambda2 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
   } else {
@@ -255,8 +289,15 @@
     baselambda1 <- c(numeric(ncol(unpenalized)), 1/sds[sel])
     baselambda2 <- c(numeric(ncol(unpenalized)), 1/vars[sel])
   }
+}  else if(is.logical(fusedl) && fusedl){baselambda1 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
+         baselambda2 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
+         }
+              
+
 
   return(list(
+    fusedl = fusedl,
+    chr = chr, 
     response = response,
     X = X, 
     beta = beta, 

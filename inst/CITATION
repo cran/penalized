@@ -1,7 +1,7 @@
 citHeader("To cite the penalized package in publications use:")
 
 citEntry(entry="Manual",
-    title = "Penalized: L1 (lasso) and L2 (ridge) penalized estimation in GLMs and in the Cox model",
+    title = "Penalized: L1 (lasso and fused lasso) and L2 (ridge) penalized estimation in GLMs and in the Cox model",
     author = personList(as.person("J. J. Goeman")),
     year = substring(packageDescription("penalized")$Date,1,4),
     note = paste("R package version", packageDescription("penalized")$version),

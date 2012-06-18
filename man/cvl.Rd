@@ -7,41 +7,38 @@
 
 \title{Cross-validated penalized regression}
 
-\description{Cross-validating generalized linear models with L1 (lasso) and/or L2 (ridge) penalties, using likelihood cross-validation.}
+\description{Cross-validating generalized linear models with L1 (lasso or fused lasso) and/or L2 (ridge)  penalties, using likelihood cross-validation.}
 
 \usage{
 
-cvl (response, penalized, unpenalized, lambda1 = 0, lambda2 = 0,
-    positive = FALSE, data,
-    model = c("cox", "logistic", "linear", "poisson"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
+cvl (response, penalized, unpenalized, lambda1 = 0, lambda2= 0, positive = FALSE, 
+    fusedl = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), 
+    startbeta, startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
     trace = TRUE, approximate = FALSE)
 
-optL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
-    base1, lambda2 = 0, positive = FALSE, data,
-    model = c("cox", "logistic", "linear", "poisson"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter = Inf,
-    standardize = FALSE, tol = .Machine$double.eps^0.25, trace = TRUE)
+optL1 (response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0, 
+  fusedl = FALSE, positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), 
+  startbeta, startgamma, fold, epsilon = 1e-10, maxiter = Inf, 
+  standardize = FALSE, tol = .Machine$double.eps^0.25, 
+  trace = TRUE)
 
-optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
-    maxlambda2, base2, positive = FALSE, data,
-    model = c("cox", "logistic", "linear", "poisson"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
-    tol = .Machine$double.eps^0.25, trace = TRUE, approximate = FALSE)
+optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2, 
+fusedl = FALSE ,positive = FALSE, data, 
+  model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, 
+  fold, epsilon = 1e-10, maxiter, standardize = FALSE, tol = .Machine$double.eps^0.25, 
+  trace = TRUE, approximate = FALSE)
     
-profL1 (response, penalized, unpenalized, minlambda1, maxlambda1,
-    base1, lambda2 = 0, positive = FALSE, data,
-    model = c("cox", "logistic", "linear", "poisson"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter = Inf,
-    standardize = FALSE, steps = 100, minsteps = steps/2, log = FALSE,
-    save.predictions = FALSE, trace = TRUE, plot = FALSE)
+profL1 (response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0,
+  fusedl = FALSE,positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), 
+  startbeta, startgamma, fold, epsilon = 1e-10, maxiter = Inf, standardize = FALSE, 
+  steps = 100, minsteps = steps/2, log = FALSE, save.predictions = FALSE, 
+  trace = TRUE, plot = FALSE)
 
-profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
-    maxlambda2, base2, positive = FALSE, data,
-    model = c("cox", "logistic", "linear", "poisson"), startbeta,
-    startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE,
-    steps = 100, minsteps = steps/2, log = TRUE, save.predictions = FALSE,
-    trace = TRUE, plot = FALSE, approximate = FALSE)
+profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2, 
+ fusedl = FALSE,positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), 
+  startbeta, startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
+  steps = 100, minsteps = steps/2, log = TRUE, save.predictions = FALSE, 
+  trace = TRUE, plot = FALSE, approximate = FALSE)
 }
 
 \arguments{
@@ -53,9 +50,11 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2,
 
 \item{lambda1, lambda2}{The fixed values of the tuning parameters for L1 and L2 penalization. Each must be either a single positive numbers or a vector with length equal to the number of covariates in \code{penalized} argument. In the latter case, each covariate is given its own penalty weight.}
 
-\item{minlambda1, minlambda2, maxlambda1, maxlambda2}{The values of the tuning parameters for L1 or L2 penalization between which the cross-validated likelihood is to be profiled or optimized.}
+\item{minlambda1, minlambda2, maxlambda1, maxlambda2}{The values of the tuning parameters for L1 or L2 penalization between which the cross-validated likelihood is to be profiled or optimized. For fused lasso penalty \code{minlambda2} and \code{maxlambda2} are the tuning parameters for L1 penalty on the differences of the coefficients between which the cross-validated likelihood is to be optimized. }
 
 \item{base1, base2}{An optional vector of length equal to the number of covariates in penalized. If supplied, profiling or optimization is performed between \code{base1*minlambda1} and \code{base1*maxlambda1}; analogous for \code{base2}.}
+
+\item{fusedl}{If \code{TRUE} or a vector, the penalization method used is fused lasso. The value for \code{lambda1} is used as the tuning parameter for L1 penalization on the coefficients and the value for \code{lambda2} is used as the tuning parameter for L1 penalization on the differences of the coefficients. Default value is \code{FALSE}.}
 
 \item{positive}{If \code{TRUE}, constrains the estimated regression coefficients of all penalized covariates to be non-negative. If a logical vector with the length of the number of covariates in \code{penalized}, constrains the estimated regression coefficients of a subset of the penalized covariates to be non-negative.}
 
