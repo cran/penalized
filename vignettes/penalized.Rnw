@@ -134,7 +134,7 @@ loglik(fit)
 penalty(fit)
 @
 
-The \Rfunction{loglik} function gives the loglikelihood without the penalty, and the \Rfunction{penalty} function gives the fitted penalty, i.e. for L1 \Robject{lambda1} times the sum of the absolute values of the fitted coefficients.
+The \Rfunction{loglik} function gives the loglikelihood without the penalty, and the \Rfunction{penalty} function gives the fitted penalty, i.e. for L1 \Robject{lambda1} times the sum of the absolute values of the fitted penalized coefficients, and for L2 it is 0.5 times \Robject{lambda1} times the sum of squared penalized coefficients.
 
 The \Rclass{penfit} object can also be used to generate predictions for new data using the \Rfunction{predict} function. Pretending that the first three subjects in the \Robject{nki70} data are new subjects, we can find their predicted survival curves with either of
 
@@ -262,41 +262,41 @@ coef(penalized(Surv(time,event), nki70[,8:16], positive=c(F,rep(T,8))))
 
 For problems involving features that can be ordered in some meaningful way, it might be useful to take into account the information about their spatial structure while estimating the coefficients. For example, copy number data exhibit spatial correlation along the genome. This suggests that feature selection should take genomic location into account for producing more interpretable results for copy number based classifiers. Fused lasso takes the genomic location into account by putting a L1 penalty on the coefficients as well as on their differences. It, thus produces sparse results with local constancy of the coefficient profile.
 Fot estimating using  \Rfunarg{fused lasso} one can use the basic \Rfunarg{penalized} function of the package with the function argument \Rfunarg{fusedl} set to \Robject{TRUE}. The argument \Rfunarg{fusedl} can take values in two form: logical or a vector. For example in case of copy number data if the information about the genomic location is available then \Rfunarg{fusedl} can be given as an input, a vector of these locations.
-If the function argument \Rfunarg{fusedl} is set to \Robject{TRUE} or it is a vector then the \Rfunarg{penalized} function performs \Rfunarg{fused lasso} penalized estimation for a fixed value of $\lambda_1$ and $\lambda_2$. Note that for \Rfunarg{fused lasso} estimation, the value for $\lambda_2$ given in the function is used for putting L1 penalty on the differences of the coefficients. We demonstrate the fused lasso feature of the penalized function by applying it on a simulated dataset with binomial response. 
-We generate a data set with 100 samples and 70 probes, with mean equal to 0 and variance equal to 0.5. 
+If the function argument \Rfunarg{fusedl} is set to \Robject{TRUE} or it is a vector then the \Rfunarg{penalized} function performs \Rfunarg{fused lasso} penalized estimation for a fixed value of $\lambda_1$ and $\lambda_2$. Note that for \Rfunarg{fused lasso} estimation, the value for $\lambda_2$ given in the function is used for putting L1 penalty on the differences of the coefficients. We demonstrate the fused lasso feature of the penalized function by applying it on a simulated dataset with binomial response.
+We generate a data set with 100 samples and 70 probes, with mean equal to 0 and variance equal to 0.5.
 
 <<fused lasso, results=hide>>=
  X <- matrix(0,70,100)
   for (i in 1:100){
-     X[1:70,i] <- rnorm(70,mean=0,sd=0.5)      
+     X[1:70,i] <- rnorm(70,mean=0,sd=0.5)
    }
  colnames(X) = as.character (1:ncol(X))
   rownames(X) = as.character (1:nrow(X))
 @
 
 Out of these 100 samples, 50 are selected randomly for getting aberrations in the region 30:40. The mean for the aberrated region is taken to be -0.7 and variance 0.5.
- 
+
 <<fused lasso, results=hide>>=
  a <- sample(1:ncol(X),50,prob=rep(0.5,length(1:ncol(X))))
  for (i in 1:50){
-      X[30:40,a[i]]<-rnorm(length(30:40),mean = -0.7 ,sd=0.5)         
+      X[30:40,a[i]]<-rnorm(length(30:40),mean = -0.7 ,sd=0.5)
     }
 @
 
 We generate the probabilities of the samples being 1 or 0, by using beta equal to -1 in logistic model.
-    
+
 <<fused lasso, results=hide>>=
     Xbeta <- rnorm(100, mean = 0, sd = 0.5)
     Xbeta[a] <- rnorm (length(a) , mean = -0.7 , sd = 0.5)
 
     beta <- numeric(100)
-    beta [1:length(beta)] <- -1 
+    beta [1:length(beta)] <- -1
 
    responsep <- numeric(100)
-  
+
  for(i in 1:100){
      coeff <- -beta[i] * Xbeta[i]
-     responsep[i] <- 1/(1+exp(coeff))          
+     responsep[i] <- 1/(1+exp(coeff))
    }
 
   X <- t(X)

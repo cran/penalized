@@ -62,6 +62,7 @@
       loglik <- -sum(ws * breslow) + sum(log(breslows)) + sum(lp[status==1])
     else
       loglik <- NA
+    if (loglik==-Inf) loglik <- NA
 
     # The weights matrix
     Pij <- outer(ws, breslows) 

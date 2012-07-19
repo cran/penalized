@@ -581,7 +581,7 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
       null <- list()
       null.lp <- numeric(n)
       names(null.lp) <- rownames(prep$X)
-      null$cvl <- fit$cvl(numeric(n), !logical(n))
+      null$cvl <- do.call(sum, lapply(1:fold, function(ff) fit$cvl(numeric(n), groups == ff)))
       null$fit <- list()
       null$fit$beta <- c(numeric(pu+pp))
       null$fit$penalty <- c(L1 = 0, L2 = 0)

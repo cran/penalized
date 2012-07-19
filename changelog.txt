@@ -1,3 +1,10 @@
+0.9-41
+- Fixed wrong calculation of cvl at infinite penalty in optL2 for Cox.
+- fixed error message in case of –Inf loglikelihood in the cox model.
+
+0.9-40
+- added functionality for fused lasso
+
 0.9-39
 - fixed Inf * 0 problem in cox.R (thanks to Levi Waldron for the bug report)
 - fixed problem in case unpenalized = ~strata() without further covariates (thanks to Holger Schwender for the bug report)
