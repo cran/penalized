@@ -82,13 +82,13 @@
 
   # coerce unpenalized into a matrix and find the offset term
   offset <- NULL
+  strata <- NULL
   if (is.data.frame(unpenalized) || is.vector(unpenalized)) {
     if (all(sapply(unpenalized, is.numeric))) {
       unpenalized <- as.matrix(unpenalized)
     } else {
       stop("argument \"unpenalized\" could not be coerced into a matrix")
     }
-    strata <- NULL
   }
   if (is(unpenalized, "formula")) {
     formula.input$unpenalized <- unpenalized
@@ -119,14 +119,12 @@
         else
           strata <- strata(eval(attr(unpenalized, "variables"), data, environment(unpenalized))[strata.nrs2], shortlabel=TRUE)
         unpenalized <- unpenalized[-strata.nrs]
-      } else 
-        strata <- NULL
+      } 
       attr(unpenalized, "intercept") <- 1
       # prevent problems in case of only unpenalized = ~strata() only
       if ((attr(unpenalized, "response") == 0) && (length(attr(unpenalized, "term.labels")) == 0)) 
         unpenalized <- terms(response ~ 1)
-    } else 
-      strata <- NULL
+    }
     unpenalized <- model.matrix(unpenalized, data)
     if (model == "cox") 
       unpenalized <- unpenalized[,-1, drop=FALSE]
@@ -258,8 +256,6 @@
    }else {names(chr) = colnames(penalized)}
     }
 
- 
-
   # Join penalized and unpenalized together
   X <- cbind(unpenalized, penalized)
   beta <- c(startgamma, startbeta)
@@ -279,9 +275,9 @@
     nullgamma <- nullgamma * sds[1:length(nullgamma)]
     X <- X / matrix(sds, nrow(X), ncol(X), byrow=T)
 
- # find baselambda1 and baselambda2
+  # find baselambda1 and baselambda2
   # This lambda1 and lambda2 for unit input lambda1=1 and lambda2=1
- if (standardize) {
+  if (standardize) {
     baselambda1 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
     baselambda2 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
   } else {
@@ -293,8 +289,6 @@
          baselambda2 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
          }
               
-
-
   return(list(
     fusedl = fusedl,
     chr = chr, 

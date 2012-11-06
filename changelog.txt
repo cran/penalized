@@ -1,3 +1,7 @@
+0.9-42
+- Fixed error with NA loglikelihood in the Cox model introduced in version 41.
+- Fixed error "Error in strata[status == 1] : object of type 'closure' is not subsettable" (thanks to Ilari Scheinin for the bug report)
+
 0.9-41
 - Fixed wrong calculation of cvl at infinite penalty in optL2 for Cox.
 - fixed error message in case of –Inf loglikelihood in the cox model.

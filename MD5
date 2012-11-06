@@ -1,11 +1,11 @@
-7cb0ea9924c2822f04a261485afb0f75 *DESCRIPTION
+e2581e0087ae13a300d6b09f38fa1cf8 *DESCRIPTION
 ac667a83fd17748c30f5fcb161d4fae9 *NAMESPACE
 56bc6942c7f610f67c97860b2e2e3c2b *R/Brent.R
 d3d03b68b5101565aa1efa6b2c2cc546 *R/breslow.R
-63eb93a20c796b0c02ab2b255fa6c29d *R/checkinput.R
+61d52783160988bf879bae3f74148281 *R/checkinput.R
 7904faede697941be26022a250c2191a *R/contrasts.R
 767017bf4f1a907a5511b9b19e8b8d35 *R/core.R
-8932dc07941e868c1883e12d5add70f9 *R/cox.R
+42b1280c14d76365cd856bd73e33b1df *R/cox.R
 f1db1c5e1879e7443dde23cfcaaa8578 *R/cvl.R
 73393ee89cea8a6cf01a5b05689f06ee *R/linear.R
 9db939f81fe9f4fc4fabd73895c45762 *R/logit.R
@@ -14,7 +14,7 @@ b6c7d008fa2f629cfc18163efcf270d2 *R/onattach.R
 c3f863f0054878cbddaf4494fed164d5 *R/penfit.R
 247c9f51a7b26fa96b35972a747b9dea *R/plotpath.R
 18ad6a53fc6c0426b72c6d7b9b980d6b *R/poisson.R
-27be998164ab11dcff93903f1ac6cba0 *changelog.txt
+e22d162caa0dd458944cc2d7b6344c0b *changelog.txt
 4d4625f3d53faf8c303f67d8f1a53801 *data/nki70.RData
 12925b5ee3831a57d45ae6b353eb400e *inst/CITATION
 22b6d2094e99e5543356c986c024e452 *inst/doc/penalized.Rnw
