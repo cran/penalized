@@ -137,7 +137,7 @@
   
   # cross-validated predictions
   prediction <- function(lp, nuisance, which) {
-    if (!is.null(offset)) lp <- lp + offset
+    if (!is.null(offset)) lp <- lp + offset[which]
     out <- nuisance$baseline()
     out@curves <- out@curves[strata[which],,drop=FALSE]
     out@curves <- out@curves ^ matrix(exp(lp), nrow(out@curves), ncol(out@curves))

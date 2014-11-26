@@ -242,9 +242,9 @@ fit <- penalized(Surv(time,event), nki70[,8:77], positive=TRUE)
 
 \begin{figure}
 <<positivestepsplot, fig=TRUE, results=hide>>=
-fit <- penalized(Surv(time,event), nki70[,8:77], positive=TRUE,
+fit0 <- penalized(Surv(time,event), nki70[,8:77], positive=TRUE,
     steps=50)
-plotpath(fit)
+plotpath(fit0)
 @
 \end{figure}
 

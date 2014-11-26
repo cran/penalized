@@ -1,3 +1,5 @@
+import(methods)
+
 importFrom(survival, Surv, coxph, basehaz, strata, untangle.specials)
 
 importFrom(stats, coefficients, coef, fitted, fitted.values, residuals, time, weights, predict)

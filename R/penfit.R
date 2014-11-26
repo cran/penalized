@@ -173,16 +173,17 @@ setMethod("loglik", "penfit", function(object, ...) {
 
 # predicts on new data
 setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
-                                                          
+                                                         
   # determine defaults
+  has.offset <- length(attr(terms(object@formula$unpenalized), 'offset')) != 0
   if (missing(unpenalized)) {
-    if (length(object@unpenalized) == 0)
+    if (length(object@unpenalized) == 0 && !has.offset)
       unpenalized <- ~0
-    else if (length(object@unpenalized) == 1 && object@model != "cox")
+    else if (length(object@unpenalized) == 1 && object@model != "cox" && !has.offset)
       unpenalized <- ~1
     else if (!is.null(object@formula$unpenalized))
       unpenalized <- object@formula$unpenalized
-    else 
+    else  
       stop("argument \"unpenalized\" is missing.")
   }
   if (missing(data)) data <- NULL
@@ -199,7 +200,7 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
   if (is(unpenalized, "formula")) {
     if(is.null(data)) data <- as.data.frame(matrix(,nrow(penalized),0))
     offset <- model.offset(model.frame(unpenalized, data=data))
-    unpenalized <- terms(unpenalized)
+    unpenalized <- terms(unpenalized, specials='strata')
     if (is.null(offset)) offset <- 0
     # suppress intercept if necessary
     if (object@model == "cox") {
@@ -207,7 +208,7 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
         strata <- untangle.specials(unpenalized, "strata", 1)
         strata.nrs <- strata$terms                            # indices of the strata variables in the terms object
         strata.nrs2 <- attr(unpenalized, "specials")$strata   # indices of the strata variables in attr(unpenalized, "variables")
-        strata <- strata(attr(unpenalized, "variables")[strata.nrs2], shortlabel=TRUE)
+        strata <- eval(parse(text=attr(unpenalized, "term.labels")[strata.nrs]),data)
         unpenalized <- unpenalized[-strata.nrs]
       } else strata <- NULL
       attr(unpenalized, "intercept") <- 1

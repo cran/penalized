@@ -1,3 +1,15 @@
+0.9-45
+- minor changes to DESCRIPTION
+
+0.9-44
+- fixed error in predict penfit.R in the presence of an offset term
+- .ridge takes a half Newton-Raphson step if likelihood decreases otherwise
+
+0.9-43
+- changed default minsteps in profL1.
+- fixed error when setting col when plotting breslow obect
+- fixed error in predict in cox.R in the presence of an offset term
+
 0.9-42
 - Fixed error with NA loglikelihood in the Cox model introduced in version 41.
 - Fixed error "Error in strata[status == 1] : object of type 'closure' is not subsettable" (thanks to Ilari Scheinin for the bug report)

@@ -296,22 +296,52 @@
 .ridge <- function(beta, eta, Lambda, X, fit, trace = FALSE, epsilon = 1e-8, maxiter = 25) {
 
   if (missing(eta)) eta <- drop(X %*% beta)
-
+  localfit <- fit(eta)
+  
   iter <- 0
   oldLL <- -Inf
   finished <- FALSE
 
   while (!finished)
   {
+    iter <- iter + 1
+    if (trace) {
+      cat(iter)
+      flush.console()
+    }
+    if (is.matrix(Lambda)) {
+      grad <- crossprod(X, localfit$residuals) - Lambda %*% beta
+    } else {
+      grad <- crossprod(X, localfit$residuals) - Lambda * beta
+    }
+    if (is.list(localfit$W)) {
+      XdW <- X * matrix(sqrt(localfit$W$diagW), nrow(X), ncol(X))
+      Hess <-  -crossprod(XdW) + crossprod(crossprod(localfit$W$P, X))
+    } else if (length(localfit$W) > 1) {
+      XW <- X * matrix(sqrt(localfit$W), nrow(X), ncol(X))
+      Hess <- -crossprod(XW) 
+    } else {  
+      Hess <- -crossprod(X)
+    }
+    if (is.matrix(Lambda)) {
+      Hess <- Hess - Lambda
+    } else {
+      diag(Hess) <- diag(Hess) - Lambda
+    }
+    shg <- drop(.solve(Hess, grad))
+    beta <- beta - shg       
+    eta <- drop(X %*% beta)
+
+    if (trace) cat(rep("\b", trunc(log10(iter))+1), sep ="")
+    
     localfit <- fit(eta)
     if (is.na(localfit$loglik) || iter == maxiter) {
       if (trace) {
         if (iter > 0) cat(rep("\b", trunc(log10(iter))+1), sep ="")
         warning("Model does not converge: please increase lambda.", call.=FALSE)
       }
-      converged <- FALSE
       break
-    }
+    } 
     if (is.matrix(Lambda)) {
       penalty <- as.numeric(0.5 * sum(beta * (Lambda %*% beta)))
     } else {
@@ -320,49 +350,24 @@
     LL <- localfit$loglik - penalty
     
     # Check convergence
-    finished <- ( 2 * abs(LL - oldLL) / (2 * abs(LL) + 0.1) < epsilon ) | (iter >= maxiter)
-    oldLL <- LL
-    
-    if (!finished) {
-      iter <- iter + 1
-      if (trace) {
-        cat(iter)
-        flush.console()
-      }
-      if (is.matrix(Lambda)) {
-        grad <- crossprod(X, localfit$residuals) - Lambda %*% beta
-      } else {
-        grad <- crossprod(X, localfit$residuals) - Lambda * beta
-      }
-      if (is.list(localfit$W)) {
-        XdW <- X * matrix(sqrt(localfit$W$diagW), nrow(X), ncol(X))
-        Hess <-  -crossprod(XdW) + crossprod(crossprod(localfit$W$P, X))
-      } else if (length(localfit$W) > 1) {
-        XW <- X * matrix(sqrt(localfit$W), nrow(X), ncol(X))
-        Hess <- -crossprod(XW) 
-      } else {  
-        Hess <- -crossprod(X)
-      }
-      if (is.matrix(Lambda)) {
-        Hess <- Hess - Lambda
-      } else {
-        diag(Hess) <- diag(Hess) - Lambda
-      }
-      shg <- drop(.solve(Hess, grad))
-      beta <- beta - shg       
+    finished <- ( 2 * abs(LL - oldLL) / (2 * abs(LL) + 0.1) < epsilon ) 
+    half.step <- (LL < oldLL)
+    if (half.step) {
+      beta <- beta + 0.5 * shg
       eta <- drop(X %*% beta)
+      localfit <- fit(eta)
       if (is.matrix(Lambda)) {
         penalty <- as.numeric(0.5 * sum(beta * (Lambda %*% beta)))
       } else {
         penalty <- as.numeric(0.5 * sum(Lambda * beta * beta))
       }
-      if (trace) cat(rep("\b", trunc(log10(iter))+1), sep ="")
-    } else {
-      converged <- (iter < maxiter)
+      LL <- localfit$loglik - penalty
     }
+    oldLL <- LL
   }
+  
 
-  return(list(beta = beta, penalty = c(L1 = 0, L2 = penalty), fit = localfit, iterations = iter, converged = converged))
+  return(list(beta = beta, penalty = c(L1 = 0, L2 = penalty), fit = localfit, iterations = iter, converged = finished))
 }
 
 
@@ -915,7 +920,6 @@
   
   free <- (lambda1 == 0 & lambda2==0) & !positive
 
-
 # initialize
   
   LL <- -Inf
@@ -923,9 +927,9 @@
   converged = FALSE
   active <- !logical(m)
 
-  if(free[1]){direc=numeric(length(beta)-1)}
-  if(!free[1]){direc=numeric(length(beta))}
-  if(all(free)&& (length(free)==1)){direc=numeric(1)}
+  if(any(free)){direc=numeric(length(free[-which(free)]))}
+  if(!any(free)){direc=numeric(length(beta))}
+  if(all(free)){direc=numeric(length(free))}
 
   actd = (diff(direc))!=0
   checkd = matrix(0,1,2)
@@ -942,24 +946,21 @@
   cumsteps <- 0
   iter <- 0
  #iterate
- if (trace) cat("# nonzero coefficients:", m,"\n")
 
 while(!finish){
         
            nzb = (beta!=0)
-           if(free[1]){direc=numeric(length(beta)-1)}
-           if(!free[1]){direc=numeric(length(beta))}
-           if(all(free)&& (length(free)==1)){direc=numeric(1)}
+            if(any(free)){direc=numeric(length(free[-which(free)]))}
+            if(!any(free)){direc=numeric(length(beta))}
+            if(all(free)){direc=numeric(length(free))}
     # calculate the local likelihood fit
-
-  if (newfit) {
-
+  
+if (newfit) {
         activeX <- X[,nzb, drop=FALSE]
         linpred <- drop(activeX %*% beta[nzb])
         lp=linpred
         localfit=fit(lp)
-
-    # Check for divergence
+ # Check for divergence
       if (is.na(localfit$loglik)) {
         if (trace) {
           cat(rep("\b", trunc(log10(nvar))+1), sep ="")
@@ -968,104 +969,92 @@ while(!finish){
         converged <- FALSE
         break
       }
-
     grad <- drop(crossprod(X,localfit$residuals))
     oldLL <- LL
     oldpenalty <- penalty
     LL <- localfit$loglik
-    oldbeta=beta
-    oldlambda2=lambda2
     penalty1=sum(lambda1[active]*abs(beta[active]))
     penalty2 = 0
-
-   if((chr[1] !=0 && length(table(chr))<=1) || (chr[1] ==0 && length(table(chr))<=2)){
+  
+if((!any(chr==0) && length(table(chr))<=1) || (any(chr ==0) && length(table(chr))<=2)){
       penalty2= sum(lambda2[1:(length(lambda2)-1)]*abs(((diff(beta)))))
       penalty=penalty1+penalty2
       finishedLL <- (2 * abs(LL - oldLL) / (2 * abs(LL - penalty) + 0.1) < epsilon)
       finishedpen <- (2 * abs(penalty - oldpenalty) / (2 * abs(LL - penalty) + 0.1) < epsilon)
       cumsteps <- 0
     }
-if((chr[1] !=0 && length(table(chr))>1) || (chr[1] ==0 && length(table(chr))>2)){
-       if(chr[1]==0){ 
-      chrn=chr[-1]}
-       if(chr[1]!=0){chrn=chr}
-     for (chri in 1:length((as.numeric(names(table(chrn)))))){
-      if(free[1]){
-      beta=oldbeta[-1]
-      lambda2=oldlambda2[-1]}
-      
-      if(!free[1]){
-      beta=oldbeta
-      lambda2=oldlambda2}
 
-    
-      beta = beta[which(chrn==(as.numeric(names(table(chrn))))[chri])]
-      lambda2 = lambda2[which(chrn==(as.numeric(names(table(chrn))))[chri])]
-      penalty21= sum(lambda2[1:(length(lambda2)-1)]*abs(((diff(beta)))))
+if((!any(chr==0) && length(table(chr))>1) || (any(chr==0) && length(table(chr))>2)){
+     chrn=chr[!free]
+      
+     for (chri in 1:length((as.numeric(names(table(chrn)))))){
+      betac=beta[!free]
+      lambda2c=lambda2[!free]
+      beta1.1 = betac[which(chrn==(as.numeric(names(table(chrn))))[chri])]
+      lambda2.1 = lambda2c[which(chrn==(as.numeric(names(table(chrn))))[chri])]
+      penalty21= sum(lambda2.1[1:(length(lambda2.1)-1)]*abs(((diff(beta1.1)))))
       penalty2= penalty2 + penalty21
       }
-      beta=oldbeta
-      lambda2=oldlambda2
+  
       penalty <- penalty1 + penalty2
-      
       finishedLL <- (2 * abs(LL - oldLL) / (2 * abs(LL - penalty) + 0.1) < epsilon)
       finishedpen <- (2 * abs(penalty - oldpenalty) / (2 * abs(LL - penalty) + 0.1) < epsilon)
       cumsteps <- 0
     }
 }
 
+
+
     
 # Calculate the penalized gradient from the likelihood gradient
     ###Initialize###
-     
-     oldfree=free
-     oldgrad=grad
-     oldbeta=beta
-     oldlambda2=lambda2
-     oldlambda1=lambda1
-     oldnzb=nzb
-     oldpositive=positive
-     olddirec=direc
-     oldchr=chr
+   
      
 
-    
     #####  Core ########################
-    
-if(chr[1]==0){ 
-      chrn=chr[-1]}
-       if(chr[1]!=0){chrn=chr}
+chrn=chr[!free]
 
-       gdir <- getdirec(free=free,chr=chrn,grad=grad,nzb=nzb,beta=beta,lambda1=lambda1,lambda2=lambda2,positive=positive,direc=direc)
-          direc=gdir$direc
-          beta=gdir$beta
-          positive=gdir$positive
-          nzb=gdir$nzb
-           free=gdir$free
-           lambda1=gdir$lambda1
-           lambda2=gdir$lambda2
-           grad=gdir$grad
+if(!(all(free))){
 
-     olddirec=direc
+       gradc=grad[!free]
+       nzbc=nzb[!free]
+       betac=beta[!free]
+       lambda1c=lambda1[!free]
+       lambda2c=lambda2[!free]
+       positivec=positive[!free]
+
+   for (chri in 1:length((as.numeric(names(table(chrn)))))){
+
+     beta.1 = betac[which(chrn==(as.numeric(names(table(chrn))))[chri])]
+     grad.1 = gradc[which(chrn==(as.numeric(names(table(chrn))))[chri])]
+     lambda1.1 = lambda1c[which(chrn==(as.numeric(names(table(chrn))))[chri])]
+     lambda2.1 = lambda2c[which(chrn==(as.numeric(names(table(chrn))))[chri])]
+     nzb.1 = nzbc[which(chrn==(as.numeric(names(table(chrn))))[chri])]
+     positive.1 = positivec[which(chrn==(as.numeric(names(table(chrn))))[chri])]
+
+     gdir <- getdirec(grad=grad.1,nzb=nzb.1,beta=beta.1,lambda1=lambda1.1,lambda2=lambda2.1,positive=positive.1)
+     direc[which(chrn==(as.numeric(names(table(chrn))))[chri])] = gdir$direc_i
+
+        }
+
+
+     if(any(free)){direc=c(grad[which(free)],direc)}
+}  else {direc=grad}
+
+
+
      oldcheckd = checkd
      oldactive=active
      active= direc!=0 | nzb
-     
 
-     
-    
-    
-     if(chr[1]==0){
-     checkd = nonZero(direc[-1])
-     actd = (diff(direc[-1]))!= 0}
-
-     if(chr[1]!=0){
-     checkd = nonZero(direc)
-     actd = (diff(direc))!= 0}
+   
+     checkd = nonZero(direc[!free])
+     actd = (diff(direc[!free]))!= 0
 
 
      activdir=direc[active]
      activbeta=beta[active]
+
 
 # check if retaining the old fit of the model does more harm than good
     oldnvar <- nvar
@@ -1081,66 +1070,26 @@ if(chr[1]==0){
     finishednvar <- (!any(xor(active, oldactive)) &&  length(checkd)==length(oldcheckd))
     }
 
-    finishedn <- !any(xor(active, oldactive)) 
-    if(free[1]){
+    finishedn <- !any(xor(active, oldactive))
+    if(any(free)){
     finish <- (finishedLL && finishedn && finishedpen) || (all(activdir == 0)) || (iter == maxiter)}
-    if(!free[1]){
+    if(!any(free)){
     finish <- (finishedLL && finishedn && finishedpen) || (all(activdir == 0)) || (iter == maxiter)}
+
 
   if (!finish) {
       iter <- iter+1
   
-        if (tryNR){
-              
-   
-                 NRm=nonZero(beta)
-                 if(any((beta==0) & active)){
-                    NRact=which((beta==0) & active)
-                    NRm=rbind(NRm,cbind(NRact,NRact))
-                    }
-                 NRM=rbind(NRm,c(0,0))
-                 NR_X=matrix(0,nrow=nrow(X),ncol=sum(active))
-                 NRb=beta[active]
-                 NR_X = as.matrix(X[,active])
-                                  
+      
+              if (tryNR){
+             NRs<- tryNRstep(beta=beta,direc=direc,active=active,X=X,newfit=newfit,localfit=localfit)
+             beta = NRs$beta
+             newfit = NRs$newfit
+             NRfailed = NRs$NRfailed
+           }
 
-                 if (is.list(localfit$W)) {
-                   XdW <- NR_X * matrix(sqrt(localfit$W$diagW), nrow(NR_X), ncol(NR_X))
-                   hessian <- -crossprod(XdW) + crossprod(crossprod(localfit$W$P, NR_X))
-                   } else if (length(localfit$W) > 1) {
-                   XW <- NR_X * matrix(sqrt(localfit$W), nrow(NR_X), ncol(NR_X))
-                   hessian <- -crossprod(XW)
-                   } else {
-                   hessian <- -crossprod(NR_X)
-                   }
-                   NRbeta <- NRb - drop(.solve(hessian, direc[active]))
-                   newbeta=numeric(length(beta))
-                   newbeta[active] = NRbeta
-                   NRfailed <- !all(sign(newbeta[beta!=0]) == sign(beta[beta!=0]))
-          if (!NRfailed) {
-            NR_X=matrix(0,nrow=nrow(X),ncol=(nrow(NRM)-1))
-                 NRb=beta[NRM[-(nrow(NRM)),1]]
-                 for (ik in 1:(nrow(NRM)-1)){if(NRM[ik,1]==NRM[ik,2]){
-                   NR_X[,ik]=X[,NRM[ik,1]]}
-                   else{NR_X[,ik]=rowSums(X[,NRM[ik,1]:NRM[ik,2]])}
-                  }
-                 NR_X=as.matrix(NR_X)
-          if (is.list(localfit$W)) {
-                   XdW <- NR_X * matrix(sqrt(localfit$W$diagW), nrow(NR_X), ncol(NR_X))
-                   hessian <- -crossprod(XdW) + crossprod(crossprod(localfit$W$P, NR_X))
-                   } else if (length(localfit$W) > 1) {
-                   XW <- NR_X * matrix(sqrt(localfit$W), nrow(NR_X), ncol(NR_X))
-                   hessian <- -crossprod(XW)
-                   } else {
-                   hessian <- -crossprod(NR_X)
-                   }
-                   NRbeta <- NRb - drop(.solve(hessian, direc[NRM[-(nrow(NRM)),1]]))
-                   newbeta=numeric(length(beta))
-                   for (ki in 1:(nrow(NRM)-1)){newbeta[NRM[ki,1]:NRM[ki,2]]=NRbeta[ki]}
-                   beta=newbeta
-          newfit <- TRUE
-        }
-     }
+        
+               
 
 
  if (!tryNR || NRfailed) {
@@ -1157,6 +1106,7 @@ if(chr[1]==0){
            topt <- 1 / curve
        }
        
+ 
 
         # how far can we go in the calculated direction before finding a new zero?
         tedge <- numeric(length(beta))
@@ -1193,6 +1143,7 @@ if(chr[1]==0){
 
           } else {
           beta[active] <- activbeta + (topt - cumsteps) * activdir
+          #if(iter<=1){tryNR <- (cumsteps == 0) && finishednvar && !NRfailed && nvar < m}else{tryNR <- (cumsteps == 0)&& !NRfailed && nvar < n}
           tryNR <- (cumsteps == 0) && !NRfailed && finishednvar && nvar < m
           newfit <- TRUE
           }
@@ -1204,11 +1155,8 @@ if(chr[1]==0){
   else {
       converged <- (iter < maxiter)
       }
-  if (trace) {
-      cat("# nonzero coefficients:", nvar,"\n")
-      flush.console()
-    }
 
+ 
      
      }
 
@@ -1255,58 +1203,21 @@ nonZero <- function(inp)
 }
 #########################################
 
+
 ###################################
 
-getdirec <- function(free,chr,grad,nzb,beta,lambda1,lambda2,positive,direc){
-     oldfree=free
-     oldgrad=grad
-     oldbeta=beta
-     oldlambda2=lambda2
-     oldlambda1=lambda1
-     oldnzb=nzb
-     oldpositive=positive
-
-if(!(all(free))){
-    for (chri in 1:length((as.numeric(names(table(chr)))))){
-     if(oldfree[1]){
-     grad=oldgrad[-1]
-     nzb=oldnzb[-1]
-     beta=oldbeta[-1]
-     free=oldfree[-1]
-     lambda1=oldlambda1[-1]
-     lambda2=oldlambda2[-1]
-     positive=positive[-1]}
-
-     if(!oldfree[1]){grad=oldgrad
-     nzb=oldnzb
-     beta=oldbeta
-     free=oldfree
-     lambda1=oldlambda1
-     lambda2=oldlambda2
-     positive=oldpositive}
+getdirec <- function(grad,nzb,beta,lambda1,lambda2,positive){
 
 
-     beta = beta[which(chr==(as.numeric(names(table(chr))))[chri])]
-     grad = grad[which(chr==(as.numeric(names(table(chr))))[chri])]
-     lambda1 = lambda1[which(chr==(as.numeric(names(table(chr))))[chri])]
-     lambda2 = lambda2[which(chr==(as.numeric(names(table(chr))))[chri])]
-     nzb = nzb[which(chr==(as.numeric(names(table(chr))))[chri])]
-     free = free[which(chr==(as.numeric(names(table(chr))))[chri])]
-     positive = positive[which(chr==(as.numeric(names(table(chr))))[chri])]
 
-
-    
-    
     #####################
     #####  Core ########################
     direc_i=numeric(length(beta))
-    
+     i=1
      vmax = 0
      lam1 <-  lam2 <- P_grad<-cu_g <-numeric(length(beta))
      oldvmax = vmax
      olddirec_i=direc_i
-     direc.chr=numeric(length(beta))
-     i=1
      if(any(nzb)){
     nz <- nonZero(beta)
               nz=rbind(nz,c(0,0))
@@ -1317,10 +1228,10 @@ if(!(all(free))){
                 lam1[nz[ik,1]]=lambda1[nz[ik,1]]*sign(beta[nz[ik,1]])
                if(nz[ik,1]==1){
                    lam2[nz[ik,1]]=-lambda2[nz[ik,1]]*sign(beta[nz[ik,1]+1]-beta[nz[ik,1]])*-1
-               } 
+               }
                if(nz[ik,1]==length(beta)){
                    lam2[nz[ik,1]]=-lambda2[nz[ik,1]]*sign(beta[nz[ik,1]]-beta[nz[ik,1]-1])
-               } 
+               }
                if(nz[ik,1]!=1 && nz[ik,1]!=length(beta)){
                lam2[nz[ik,1]]=((-lambda2[nz[ik,1]]*sign(beta[nz[ik,1]]-beta[nz[ik,1]-1]))-(lambda2[nz[ik,1]]*sign(beta[nz[ik,1]+1]-beta[nz[ik,1]])*-1))
                               }
@@ -1332,10 +1243,10 @@ if(!(all(free))){
                      }
                    if(nz[ik,1]!=1 && nz[ik,2]==length(beta) ){
                    lam2[nz[ik,1]:nz[ik,2]]=(-lambda2[nz[ik,1]]*sign(beta[nz[ik,1]]-beta[nz[ik,1]-1]))/(length(nz[ik,1]:nz[ik,2]))
-                   } 
+                   }
                    if(nz[ik,2]==length(beta) && nz[ik,1]==1 ){
                    lam2[nz[ik,1]:nz[ik,2]]=0
-                   } 
+                   }
                    if(nz[ik,2]!=length(beta) & nz[ik,1]!=1){
                    lam2[nz[ik,1]:nz[ik,2]]=(((-lambda2[nz[ik,1]]*sign(beta[nz[ik,1]]-beta[nz[ik,1]-1]))-(lambda2[nz[ik,1]]*sign(beta[nz[ik,2]+1]-beta[nz[ik,1]])*-1)))/(length(nz[ik,1]:nz[ik,2]))
                     }
@@ -1344,31 +1255,24 @@ if(!(all(free))){
                  }
  direc_i= P_grad - lam1 + lam2
  olddirec_i=direc_i
- 
+
 
   while(i<length(beta)){
-      
       lam1_1 <- lam1_2  <- lam2_1 <- lam2_2 <-cu_g1 <- cu_g2 <- P_grad1 <- P_grad2<-numeric(length(beta))
        direc_i <- numeric(length(beta))
        direc_i= P_grad - lam1 + lam2
-      
-         if(free[i]){
-           direc[i]=grad[i]
-           i=i+1}
-           
+
+       
+
   ######## Penalized Gradient for nonzero coefficients##################
-  if(!free[i] && i<length(beta)){
-      
+  if(i<length(beta)){
+
       if(nzb[i]){
        nzb_m=c(nzb[i:length(beta)],F)
        m=which(diff(nzb_m)==-1)
        m=i+(m-1)
        m=m[1]
-      if(any(free[i:m])){
-       nzb_m=c(nzb[i:which(free)[1]-1],F)
-       m=which(diff(nzb_m)==-1)
-       m=i+(m-1)
-       m=m[1]}                                #############gives the length of the non-zero stretch######
+                                  #############gives the length of the non-zero stretch######
       if(i==length(nzb)){m=length(nzb)}
       betam=beta[i:m]
         if(sum(diff(betam))==0){j=m}
@@ -1377,24 +1281,20 @@ if(!(all(free))){
            j=i+(j-1)
            j=j[1]}
            m=j
- 
+
     }
-    
+
     if(!nzb[i]){
-          
+
             nzb_mo=c(nzb[i:length(beta)],T)
             mo1=which(diff(nzb_mo)==1)[1]
             mo1=i+(mo1-1)
-          if(any(free[i:mo1])){
-            nzb_mo=c(nzb[i:which(free)[1]-1],T)
-            mo=which(diff(nzb_mo)==1)[1]
-            m=i+(mo-1)}                    ##########length of coefficients with value equal to zero#################
-          if(!(any(free[i:mo1]))){m=mo1}
+            m=mo1
 
             if(i==length(nzb)){m=length(beta)}
-       
+
           }
-          
+
       P_grad1=P_grad
       lam1_1=lam1
       lam2_1=lam2
@@ -1403,7 +1303,7 @@ if(!(all(free))){
       lam2_1[i:m]=0
 
 if((length(i:m)==1) && (!nzb[i]) ){
-   
+
     P_grad1[m]=grad[m]
        lam1_1[m]=lambda1[m]*sign(grad[m])
       if(m!=length(beta)){
@@ -1429,13 +1329,13 @@ if((length(i:m)==1) && (!nzb[i]) ){
        if(m==length(beta)){
            if(beta[m-1]!=0){
            lam2_1[m]=-lambda2[m]*sign(beta[m]-beta[m-1])
-              } 
+              }
            if(beta[m-1]==0){
            lam2_1[m]=-lambda2[m]*sign(grad[m]-0)
            }
           }
         }
-   
+
 
  if(length(i:m)!=1){
      if(nzb[i]) {
@@ -1458,18 +1358,18 @@ if((length(i:m)==1) && (!nzb[i]) ){
       if (m!=length(beta)){
        lam2_1[i:m]=((-lambda2[i:m]*sign(P_grad2[i:m]-P_grad1[i:m])*-1))/P[i:m]
        lam2_1[m]=(-lambda2[m]*sign(beta[m+1]-beta[m])*-1)/(P[m])
-       } 
+       }
        if(m==length(beta)){
        lam2_1[i:m]=(-lambda2[i:m]*sign(P_grad2[i:m]-P_grad1[i:m])*-1)/P[i:m]
        lam2_1[m]=0
-       } 
+       }
        }
 
       if(i!=1){
        if(m!=length(beta)){
          lam2_1[i:m]=((-lambda2[i:m]*sign(beta[i]-beta[i-1])-(lambda2[i:m]*sign(P_grad2[i:m]-P_grad1[i:m])*-1)))/P[i:m]
          lam2_1[m]=(-lambda2[m]*sign(beta[i]-beta[i-1]) - (lambda2[m]*sign(beta[m+1]-beta[i])*-1))/(P[m])
-         } 
+         }
        if(m==length(beta)){
          lam2_1[i:m]=((-lambda2[i:m]*sign(beta[i]-beta[i-1])-(lambda2[i:m]*sign(P_grad2[i:m]-P_grad1[i:m])*-1)))/P[i:m]
          lam2_1[m]=(-lambda2[m]*sign(beta[i]-beta[i-1]))/(P[m])
@@ -1479,23 +1379,23 @@ if((length(i:m)==1) && (!nzb[i]) ){
      if(m!=length(beta)){
         lam2_2[i:m]=((-lambda2[i:m]*sign(P_grad2[i:m]-P_grad1[i:m])-(lambda2[i:m]*sign(beta[m+1]-beta[i])*-1)))/(P[m]-P[i:m])
         lam2_2[m]=0
-        } 
+        }
      if(m==length(beta)){
         lam2_2[i:m]=(-lambda2[i:m]*sign(P_grad2[i:m]-P_grad1[i:m]))/(P[m]-P[i:m])
         lam2_2[m]=0
       }
           #####################################################
-     
+
       lam1_1[i:m] =(lambda1[i:m]*sign(P_grad1[i:m]))
       lam1_2[i:m]=(lambda1[i:m]*sign(P_grad2[i:m]))
       lam1_2[m]=0
-      }       
-      
+      }
+
 
 #######################################################################
 
   if(!nzb[i]){
-      
+
       cu_g1=P_grad
       cu_g1[i:m]=cumsum(grad[i:m])
       cu_g2=numeric(length(cu_g1))
@@ -1514,7 +1414,7 @@ if((length(i:m)==1) && (!nzb[i]) ){
       if (m!=length(beta)){
                          lam2_1[i:m]= (-lambda2[i:m]*sign(0-P_grad1[i:m])*-1)/P[i:m]
                          lam2_1[m]=(-lambda2[m]*sign(beta[m+1]-beta[m])*-1)/(P[m])
-                        } 
+                        }
                        if(m==length(beta)){
                        lam2_1[i:m]= (-lambda2[i:m]*sign(0-P_grad1[i:m])*-1)/P[i:m]
                        lam2_1[m]=0
@@ -1526,21 +1426,21 @@ if((length(i:m)==1) && (!nzb[i]) ){
                  if(beta[i-1]==0){
                   lam2_1[i:m]=(-lambda2[i:m]*sign(P_grad1[i:m]-0)- (lambda2[i:m]*sign(0-P_grad1[i:m])*-1))/P[i:m]
                   lam2_1[m]=(-lambda2[m]*sign(P_grad1[m]-0))/(P[m])
-                  } 
+                  }
                   if(beta[i-1]!=0){
                   lam2_1[i:m]=((-lambda2[i:m]*(sign(beta[i:m]-beta[i-1])))- (lambda2[i:m]*sign(0-P_grad1[i:m])*-1))/P[i:m]
                   lam2_1[m]=(-lambda2[m]*(sign(beta[m]-beta[i-1])))/(P[m])
                   }
-                 }  
+                 }
                if(m != length(beta)){
                  if(beta[m+1]==0 & beta[i-1]==0){
                    lam2_1[i:m]=((-lambda2[i:m]*(sign(P_grad1[i:m]-0)))- (lambda2[i:m]*sign(0-P_grad1[i:m])*-1))/P[i:m]
                    lam2_1[m]= lam2_1[m]/P[m]
-                   } 
+                   }
                    if(beta[m+1]==0 & beta[i-1]!=0){
                    lam2_1[i:m]=((-lambda2[i:m]*(sign(beta[i:m]-beta[i-1])))- (lambda2[i:m]*sign(0-P_grad1[i:m])*-1))/P[i:m]
                    lam2_1[m]= lam2_1[m]/P[m]
-                   } 
+                   }
                    if(beta[m+1]!=0 & beta[i-1]==0){
                    lam2_1[i:m]=((-lambda2[i:m]*(sign(P_grad1[i:m]-0)))- (lambda2[i:m]*sign(0-P_grad1[i:m])*-1))/P[i:m]
                    lam2_1[m]= ((-lambda2[m]*(sign(P_grad1[m]-0)))- (lambda2[m]*sign(beta[m+1]-beta[m])*-1))/P[m]
@@ -1555,14 +1455,14 @@ if((length(i:m)==1) && (!nzb[i]) ){
 
               }
                          lam1_1[i:m]=(lambda1[i:m]*sign(P_grad1[i:m]))
-             
+
         }
- 
+
 
        }
-       
+
      if(nzb[i] && (length(i:m)!=1)){
-      
+
       direc1_1=numeric(length(cu_g1))
       direc1_2=numeric(length(cu_g2))
 
@@ -1587,27 +1487,27 @@ if((length(i:m)==1) && (!nzb[i]) ){
       if(length(test2)==1){
       if (test2==m){
       direc_j[i:test2,test2]=(direc1_1)[test2]
-      } 
+      }
       if (test2!=m){
       direc_j[i:test2,test2]=(direc1_1)[test2]
       direc_j[(test2+1):m,test2]=(direc1_2)[test2]
       }
       }
-      norm1=numeric(ncol(direc_j))
-      for(il in 1:(ncol(direc_j))){norm1[il]=sqrt(sum(t(direc_j[,il])*direc_j[,il]))}
+      norm1 <- apply(direc_j,2,function(il){sqrt(sum(t(il)*il))})
       vmax2=max(norm1)
+
 
       direc_i[i:m]=direc_j[(i:m),which(norm1==vmax2)]
       if(which(vmax2==norm1)==m){vmax=0}
       if(which(vmax2==norm1)!=m){
-      vmax= sqrt(sum(t(direc_i)*direc_i)) } 
-      }     
-      }        
+      vmax= sqrt(sum(t(direc_i)*direc_i)) }
+      }
+      }
   if(!nzb[i]){
               if(length(i:m)!=1){
               lam=numeric(length(lam1_1))
                lam=((lam1_1)-(lam2_1))
-               
+
                 if(any((P_grad1[i:m]*sign(P_grad1[i:m]))>(lam[i:m]*sign(P_grad1[i:m])))){
                  d_i = which((P_grad1[i:m]*sign(P_grad1[i:m]))>(lam[i:m]*sign(P_grad1[i:m])))
                  direc1_1= P_grad1 - lam1_1 + lam2_1
@@ -1616,19 +1516,18 @@ if((length(i:m)==1) && (!nzb[i]) ){
                  for(im in 1:length(d_i)){
                  direc_j[1:d_i[im],d_i[im]]=((P_grad1[i:m])[d_i[im]]-((lam1_1[i:m])[d_i[im]])+((lam2_1[i:m])[d_i[im]]))
                  }
-                 norm_d=numeric(ncol(direc_j))
-                 for(il in 1:ncol(direc_j)){norm_d[il]=sqrt(sum(t(direc_j[,il])*direc_j[,il]))}
+                 norm_d <- apply(direc_j,2,function(il){sqrt(sum(t(il)*il))})
                  vmax1=max(norm_d)
                  direc1_1[i:m]=direc_j[,which(norm_d==vmax1)]
                  direc_i[i:m]=direc1_1[i:m]
 
-                 vmax = sqrt(sum(t(direc_i)*direc_i))  
-                            
+                 vmax = sqrt(sum(t(direc_i)*direc_i))
+
                  }
-              
+
               }
              if(length(i:m)==1){
-                   
+
                    if((grad[m]*sign(grad[m]))>(lam1_1[m]-lam2_1[m])*sign(grad[m])){
                       direc_i[m]=grad[m] - lam1_1[m] + lam2_1[m]
                        vmax= sqrt(sum(t(direc_i)*direc_i))
@@ -1642,7 +1541,7 @@ if((length(i:m)==1) && (!nzb[i]) ){
 
                       olddirec_i=direc_i
                       oldvmax=vmax
-                      
+
           if(nzb[i]){
                      if(length(i:m)==1){io=i+1}
                             if(length(i:m)!=1){
@@ -1650,34 +1549,77 @@ if((length(i:m)==1) && (!nzb[i]) ){
                                   if(j!=m){io=j+1}
                                               }
                                        i=io  } else {i=i+1}
-                                       
+
 
          }
 }
 
 
-          direc.chr[!free]=direc_i[!free]
-     direc[which(chr==(as.numeric(names(table(chr))))[chri])] = direc.chr
 
-   }
-     free=oldfree
-     beta=oldbeta
-     lambda1=oldlambda1
-     lambda2=oldlambda2
-     grad=oldgrad
-     nzb=oldnzb
-     positive=oldpositive
 
-     if(free[1]){direc=c(grad[1],direc)}
-     if(!free[1]){direc=direc}
-}
-    if((all(free))){direc=grad}
-    
-     
 
-    return(list(direc = direc, beta = beta, free=free , lambda1=lambda1,lambda2=lambda2,grad=grad,nzb=nzb,positive=positive  ))
+
+    return(list(direc_i = direc_i))
 
 }
 
 ######################################
+
+######################################
+
+
+ tryNRstep <- function (beta = beta,direc=direc,active=active,X=X,localfit=localfit,newfit=newfit)   {
+
+ NRm=nonZero(beta)
+                 if(any((beta==0) & active)){
+                    NRact=which((beta==0) & active)
+                    NRm=rbind(NRm,cbind(NRact,NRact))
+                    }
+                 NRM=rbind(NRm,c(0,0))
+                 NR_X=matrix(0,nrow=nrow(X),ncol=sum(active))
+                 NRb=beta[active]
+                 NR_X = as.matrix(X[,active])
+
+
+                 if (is.list(localfit$W)) {
+                   XdW <- NR_X * matrix(sqrt(localfit$W$diagW), nrow(NR_X), ncol(NR_X))
+                   hessian <- -crossprod(XdW) + crossprod(crossprod(localfit$W$P, NR_X))
+                   } else if (length(localfit$W) > 1) {
+                   XW <- NR_X * matrix(sqrt(localfit$W), nrow(NR_X), ncol(NR_X))
+                   hessian <- -crossprod(XW)
+                   } else {
+                   hessian <- -crossprod(NR_X)
+                   }
+                   NRbeta <- NRb - drop(.solve(hessian, direc[active]))
+                   newbeta=numeric(length(beta))
+                   newbeta[active] = NRbeta
+                   NRfailed <- !all(sign(newbeta[beta!=0]) == sign(beta[beta!=0]))
+          if (!NRfailed) {
+            NR_X=matrix(0,nrow=nrow(X),ncol=(nrow(NRM)-1))
+                 NRb=beta[NRM[-(nrow(NRM)),1]]
+                 for (ik in 1:(nrow(NRM)-1)){if(NRM[ik,1]==NRM[ik,2]){
+                   NR_X[,ik]=X[,NRM[ik,1]]}
+                   else{NR_X[,ik]=rowSums(X[,NRM[ik,1]:NRM[ik,2]])}
+                  }
+                 NR_X=as.matrix(NR_X)
+          if (is.list(localfit$W)) {
+                   XdW <- NR_X * matrix(sqrt(localfit$W$diagW), nrow(NR_X), ncol(NR_X))
+                   hessian <- -crossprod(XdW) + crossprod(crossprod(localfit$W$P, NR_X))
+                   } else if (length(localfit$W) > 1) {
+                   XW <- NR_X * matrix(sqrt(localfit$W), nrow(NR_X), ncol(NR_X))
+                   hessian <- -crossprod(XW)
+                   } else {
+                   hessian <- -crossprod(NR_X)
+                   }
+                   NRbeta <- NRb - drop(.solve(hessian, direc[NRM[-(nrow(NRM)),1]]))
+                   newbeta=numeric(length(beta))
+                   for (ki in 1:(nrow(NRM)-1)){newbeta[NRM[ki,1]:NRM[ki,2]]=NRbeta[ki]}
+                   beta=newbeta
+          newfit <- TRUE
+        }
+        return(list(beta=beta,newfit=newfit,NRfailed = NRfailed))
+
+        }
+
+##############################################
 

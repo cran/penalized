@@ -17,9 +17,9 @@ cvl (response, penalized, unpenalized, lambda1 = 0, lambda2= 0, positive = FALSE
     trace = TRUE, approximate = FALSE)
 
 optL1 (response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0, 
-  fusedl = FALSE, positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), 
-  startbeta, startgamma, fold, epsilon = 1e-10, maxiter = Inf, 
-  standardize = FALSE, tol = .Machine$double.eps^0.25, 
+  fusedl = FALSE, positive = FALSE, data, 
+  model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold, 
+  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, tol = .Machine$double.eps^0.25, 
   trace = TRUE)
 
 optL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2, 
@@ -29,16 +29,16 @@ fusedl = FALSE ,positive = FALSE, data,
   trace = TRUE, approximate = FALSE)
     
 profL1 (response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0,
-  fusedl = FALSE,positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), 
-  startbeta, startgamma, fold, epsilon = 1e-10, maxiter = Inf, standardize = FALSE, 
-  steps = 100, minsteps = steps/2, log = FALSE, save.predictions = FALSE, 
-  trace = TRUE, plot = FALSE)
+  fusedl = FALSE,positive = FALSE, data, 
+  model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold, 
+  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, steps = 100, minsteps = steps/4, 
+  log = FALSE, save.predictions = FALSE, trace = TRUE, plot = FALSE)
 
 profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2, 
- fusedl = FALSE,positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"), 
-  startbeta, startgamma, fold, epsilon = 1e-10, maxiter, standardize = FALSE, 
-  steps = 100, minsteps = steps/2, log = TRUE, save.predictions = FALSE, 
-  trace = TRUE, plot = FALSE, approximate = FALSE)
+  fusedl = FALSE,positive = FALSE, data, 
+  model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold, 
+  epsilon = 1e-10, maxiter, standardize = FALSE, steps = 100, minsteps = steps/2, 
+  log = TRUE, save.predictions = FALSE, trace = TRUE, plot = FALSE, approximate = FALSE)
 }
 
 \arguments{
@@ -122,13 +122,13 @@ data(nki70)
 attach(nki70)
 
 # Finding an optimal cross-validated likelihood
-opt <- optL1(Surv(time, event), penalized = nki70[,8:77], fold = 10)
+opt <- optL1(Surv(time, event), penalized = nki70[,8:77], fold = 5)
 coefficients(opt$fullfit)
 plot(opt$predictions)
 
 # Plotting the profile of the cross-validated likelihood
 prof <- profL1(Surv(time, event), penalized = nki70[,8:77],
-    fold = opt$fold, steps=20)
+    fold = opt$fold, steps=10)
 plot(prof$lambda, prof$cvl, type="l")
 plotpath(prof$fullfit)
 }
