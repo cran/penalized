@@ -70,7 +70,7 @@ profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, b
 
 \item{epsilon}{The convergence criterion. As in \code{\link[stats:glm.control]{glm}}. Convergence is judged separately on the likelihood and on the penalty.}
 
-\item{maxiter}{The maximum number of iterations allowed. Set by default at 25 when only an L2 penalty is present, infinite otherwise.}
+\item{maxiter}{The maximum number of iterations allowed in each fitting of the model. Set by default at 25 when only an L2 penalty is present, infinite otherwise.}
 
 \item{standardize}{If \code{TRUE}, standardizes all penalized covariates to unit central L2-norm before applying penalization.}
 

@@ -2,9 +2,16 @@ import(methods)
 
 importFrom(survival, Surv, coxph, basehaz, strata, untangle.specials)
 
-importFrom(stats, coefficients, coef, fitted, fitted.values, residuals, time, weights, predict)
+importFrom(stats, coefficients, coef, fitted, fitted.values, residuals, time, weights, predict, 
+     "binomial", "contr.treatment", "glm", "lm",
+     "model.frame", "model.matrix", "model.offset", "poisson",
+     "terms", "var")
 
-importFrom(graphics, plot)
+importFrom("grDevices", "rainbow")
+
+importFrom("graphics", "plot", "axis", "lines", "matplot", "par", "strwidth")
+
+importFrom("utils", "flush.console")
 
 exportClasses(penfit, breslow)
 

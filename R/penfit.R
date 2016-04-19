@@ -173,16 +173,16 @@ setMethod("loglik", "penfit", function(object, ...) {
 
 # predicts on new data
 setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
-                                                         
+                                                        
   # determine defaults
   has.offset <- length(attr(terms(object@formula$unpenalized), 'offset')) != 0
   if (missing(unpenalized)) {
     if (length(object@unpenalized) == 0 && !has.offset)
       unpenalized <- ~0
-    else if (length(object@unpenalized) == 1 && object@model != "cox" && !has.offset)
-      unpenalized <- ~1
     else if (!is.null(object@formula$unpenalized))
       unpenalized <- object@formula$unpenalized
+    else if (length(object@unpenalized) == 1 && object@model != "cox" && !has.offset)
+      unpenalized <- ~1
     else  
       stop("argument \"unpenalized\" is missing.")
   }

@@ -1,14 +1,14 @@
 Package: penalized
-Version: 0.9-45
-Date: 2014-11-26
-Title: L1 (lasso and fused lasso) and L2 (ridge) penalized estimation
-        in GLMs and in the Cox model
+Version: 0.9-46
+Date: 2016-04-18
+Title: L1 (Lasso and Fused Lasso) and L2 (Ridge) Penalized Estimation
+        in GLMs and in the Cox Model
 Author: Jelle Goeman, Rosa Meijer, Nimisha Chaturvedi
-Maintainer: Jelle Goeman <jelle.goeman@radboudumc.nl>
+Maintainer: Jelle Goeman <j.j.goeman@lumc.nl>
 Depends: R (>= 2.10.0), survival, methods
 Imports:
 Suggests: globaltest
-Description: A package for fitting possibly high dimensional penalized
+Description: Fitting possibly high dimensional penalized
         regression models. The penalty structure can be any combination
         of an L1 penalty (lasso and fused lasso), an L2 penalty (ridge) and a
         positivity constraint on the regression coefficients. The
@@ -22,6 +22,6 @@ Collate: onattach.R penfit.R breslow.R penalized.R core.R checkinput.R
         poisson.R
 LazyLoad: yes
 Repository: CRAN
-Date/Publication: 2014-12-19 17:57:52
-Packaged: 2014-12-15 15:29:51 UTC; Jelle
+Date/Publication: 2016-04-19 00:50:25
+Packaged: 2016-04-18 11:50:07 UTC; jjgoeman
 NeedsCompilation: no

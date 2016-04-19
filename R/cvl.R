@@ -618,8 +618,8 @@ optL2 <- function(response, penalized, unpenalized, lambda1 = 0, minlambda2, max
           stop("Approximation method can not be used in combination with positivity constraints", call.=FALSE)               
 
             out <- .cvlapprox(prep$X, uselambda1, rellambda*baselambda2,
-            positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
-            maxiter=maxiter, trace = trace, betas = betas)                                                      
+              positive = prep$positive, beta = beta, fit=fit, groups=groups, epsilon=epsilon, 
+              maxiter=maxiter, trace = trace, betas = betas)                                                      
         }
         else
         {

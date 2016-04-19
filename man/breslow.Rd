@@ -13,6 +13,7 @@
 \alias{time,breslow-method}
 \alias{survival}
 \alias{survival,breslow-method}
+\alias{[,breslow,ANY,ANY,ANY-method}
 
 
 \title{Breslow estimator object}
