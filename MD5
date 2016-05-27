@@ -1,6 +1,6 @@
-77968bb7e349562cc127b91a8f0b9eef *ChangeLog
-32c4638abf7496fbb484f803d813dd12 *DESCRIPTION
-fa2f65211a0e3270ef5acb8e7d36413a *NAMESPACE
+6e98ff98b9d6456780af24533a7e3bc7 *ChangeLog
+8763d13d63d5c0dff39d0eacd9f97473 *DESCRIPTION
+1c7e4b2fc2b2473a98bb832b9d08f737 *NAMESPACE
 56bc6942c7f610f67c97860b2e2e3c2b *R/Brent.R
 f72fa2437cea8f65a4389928c3b90dcb *R/breslow.R
 61d52783160988bf879bae3f74148281 *R/checkinput.R
@@ -12,7 +12,7 @@ a39153782d7f67fc48dee3ea64410d36 *R/cvl.R
 9db939f81fe9f4fc4fabd73895c45762 *R/logit.R
 b6c7d008fa2f629cfc18163efcf270d2 *R/onattach.R
 4a86f60a9d159025ab763bc1e750d258 *R/penalized.R
-887baebd33340a35b58761746686f3e2 *R/penfit.R
+8efc613bce365d76ab1413278b183a28 *R/penfit.R
 247c9f51a7b26fa96b35972a747b9dea *R/plotpath.R
 18ad6a53fc6c0426b72c6d7b9b980d6b *R/poisson.R
 da204b336864118ec9cdab0ab347d3d7 *build/vignette.rds
@@ -20,7 +20,7 @@ da204b336864118ec9cdab0ab347d3d7 *build/vignette.rds
 13491a355edfabfdaf3c5774a0119633 *inst/CITATION
 24532bfe37b08038ebc499cba2677885 *inst/doc/penalized.R
 3696c96ea4a109f18a690cce2e951593 *inst/doc/penalized.Rnw
-76d0fd3b09b1b8febde80385c3760ab3 *inst/doc/penalized.pdf
+ed59f7752cc9ea3100de57346e757bd2 *inst/doc/penalized.pdf
 a2d0cf82392532244d77c9a85cf90ccc *man/breslow.Rd
 858040bfe34df9998b169568b02fa4ba *man/contrasts.Rd
 8909552298e9e48037826b62521accba *man/cvl.Rd

@@ -173,16 +173,16 @@ setMethod("loglik", "penfit", function(object, ...) {
 
 # predicts on new data
 setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
-                                                        
+                                                       
   # determine defaults
   has.offset <- length(attr(terms(object@formula$unpenalized), 'offset')) != 0
   if (missing(unpenalized)) {
     if (length(object@unpenalized) == 0 && !has.offset)
       unpenalized <- ~0
+    else if (length(object@unpenalized) == 1 && object@model != "cox" && !has.offset && attr(terms(object@formula$unpenalized), 'intercept')==1)
+      unpenalized <- ~1
     else if (!is.null(object@formula$unpenalized))
       unpenalized <- object@formula$unpenalized
-    else if (length(object@unpenalized) == 1 && object@model != "cox" && !has.offset)
-      unpenalized <- ~1
     else  
       stop("argument \"unpenalized\" is missing.")
   }
@@ -236,18 +236,22 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
     oldcontrasts <- unlist(options("contrasts"))
     options(contrasts = c(unordered = "contr.none", ordered = "contr.diff"))
     penalized <- terms(penalized, data=data)
+    if (length(penalized)==3) {
+      penalized[[2]] <- NULL
+      penalized <- terms(formula(penalized, data=data))
+    }
     # suppress intercept
     attr(penalized, "intercept") <- 1
     penalized <- model.matrix(penalized, data)
     if (has.intercept) penalized <- penalized[,-1,drop=FALSE]
     options(contrasts = oldcontrasts)
   }
-  
+
+      
   # find n
   n <- max(nrow(penalized), nrow(unpenalized))
   if (nrow(penalized) != nrow(unpenalized))
     stop("row counts of \"penalized\", \"unpenalized\" and/or \"data\" do not match")
-
   # check if dimensions and names match
   if (length(object@penalized) != ncol(penalized))
     stop("the dimension of \"penalized\" does not match the fitted model object")

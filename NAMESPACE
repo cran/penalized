@@ -5,7 +5,7 @@ importFrom(survival, Surv, coxph, basehaz, strata, untangle.specials)
 importFrom(stats, coefficients, coef, fitted, fitted.values, residuals, time, weights, predict, 
      "binomial", "contr.treatment", "glm", "lm",
      "model.frame", "model.matrix", "model.offset", "poisson",
-     "terms", "var")
+     "terms", "var", "formula")
 
 importFrom("grDevices", "rainbow")
 
