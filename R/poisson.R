@@ -1,5 +1,5 @@
 .poissonfit <- function(response, offset) {
- 
+
   # Finds local gradient and subject weights
   fit <- function(lp, leftout) {
 
@@ -7,7 +7,7 @@
       response <- response[!leftout]
       offset <- offset[!leftout]
     }
-    
+
     lp0 <- lp
     if (!is.null(offset)) lp <- lp + offset
     lambda <- exp(lp)
@@ -20,7 +20,7 @@
     loglik <- sum(response * log(lambda)) - sum(lambda) - sum(lfactorial(response))
     if (!is.na(loglik) && (loglik == - Inf)) loglik <- NA
 
-    return(list(residuals = residuals, loglik = loglik, W = ws, lp = lp, lp0 = lp0, fitted = lambda, nuisance = list()))
+    return(list(residuals = residuals, loglik = loglik, W = list("diagW" = ws, "P" = matrix()), lp = lp, lp0 = lp0, fitted = lambda, nuisance = list()))
   }
 
   cvl <- function(lp, leftout) {

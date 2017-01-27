@@ -4,25 +4,25 @@ opt.brent <- function(f, interval, lower = min(interval),
 
   zeps <- 1e-10
   cgold <- 0.5 * (3 - sqrt(5))
-  
+
   e <- 0
   a <- ifelse(lower < upper, lower, upper)
   b <- ifelse(lower < upper, upper, lower)
-  
+
   x <- w <- v <- lower + cgold * (upper - lower)
   fw <- fv <- fx <- ifelse(maximum, -f(x, ...), f(x,...))
-  
+
   finished <- FALSE
   iter <- 0
   while (!finished) {
     iter <- iter + 1
-    
+
     xm <- 0.5 * (a+b)
     tol1 <- tol * abs(x) + zeps
     tol2 <- 2 * tol1
-    
+
     finished <- (abs(x-xm) <= (tol2 - 0.5*(b-a)))
-    
+
     if (!finished) {
       if (abs(e) > tol1) {
         r <- (x-w) * (fx-fv)
@@ -46,10 +46,10 @@ opt.brent <- function(f, interval, lower = min(interval),
           e <- ifelse(x >= xm, a-x, b-x)
           d <- cgold * e
       }
-      
+
       u <- ifelse(abs(d) >= tol1, x + d, x + ifelse(tol1 >= 0, d, -d))
       fu <- ifelse(maximum, -f(u,...), f(u,...))
-      
+
       if (fu <= fx) {
         if (u >= x) a <- x else b <- x
         v <- w; w <- x; x <- u
@@ -77,13 +77,13 @@ root.brent <- function(f, interval, lower = min(interval),
   a <- ifelse(lower < upper, lower, upper)
   b <- ifelse(lower < upper, upper, lower)
   c <- b
-  
+
   fa <- f(a,...)
   fb <- f(b,...)
   fc <- fb
-  
+
   finished <- FALSE
-  
+
   while (!finished) {
     if ((fb>0 && fc>0) || (fb<0 && fc<0)) {
       c <- a
@@ -100,9 +100,9 @@ root.brent <- function(f, interval, lower = min(interval),
     }
     tol1 <- 2 * eps * abs(b) + .5 * tol
     xm <- 0.5 * (c-b)
-    
+
     finished <- (abs(xm) <= tol1 || fb == 0)
-    
+
     if (!finished) {
       if (abs(e) >= tol1 && abs(fa) > abs(fb)) {
         s <- fb/fa
@@ -131,10 +131,10 @@ root.brent <- function(f, interval, lower = min(interval),
         d <- xm
         e <- d
       }
-      
+
       a <- b
       fa <- fb
-      
+
       if (abs(d) > tol1)
         b <- b + d
       else
@@ -143,7 +143,7 @@ root.brent <- function(f, interval, lower = min(interval),
     }
     list(root = b, value = fb)
   }
-  
-  
+
+
 
 }

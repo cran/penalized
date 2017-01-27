@@ -2,12 +2,12 @@
 
   # Finds local gradient and subject weights
   fit <- function(lp, leftout) {
-                       
+
     if (!missing(leftout)) {
       response <- response[!leftout]
       offset <- offset[!leftout]
     }
-    
+
     lp0 <- lp
     if (!is.null(offset)) lp <- lp + offset
     explp <- exp(lp)
@@ -20,10 +20,10 @@
     # The loglikelihood
     # loglik <- sum(log(probs[response == 1])) + sum(log(1-probs[response == 0]))
     loglik <- sum(lp[response==1] - log(1+explp[response==1])) + sum(-lp[response==0] - log(1+1/explp[response==0]))
-    
+
     if (!is.na(loglik) && (loglik == -Inf)) loglik <- NA
 
-    return(list(residuals = residuals, loglik = loglik, W = ws, lp = lp, lp0 = lp0, fitted = probs, nuisance = list()))
+    return(list(residuals = residuals, loglik = loglik, W = list("diagW" = ws, "P" = matrix()), lp = lp, lp0 = lp0, fitted = probs, nuisance = list()))
   }
 
   # cross-validated likelihood

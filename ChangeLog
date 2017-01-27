@@ -1,3 +1,10 @@
+0.9-49
+- Parts of the package rewritten in C++ by Matthew Lueder
+
+0.9-48
+- Fixed error in profL2 in case unpenalized =~0 (Thanks to Shixiao Cui for the bug report)
+- Fixed error in predict when using a matrix in unpenalized (thanks to Pilipp Deutsch for the bug report)
+
 0.9-47
 - fixed error in predict arising from earlier fix (Thanks to Bernd Bischl for the bug report)
 - made addition of response column in data not nessary for predict (Thanks to Bernd Bischl for the bug report)

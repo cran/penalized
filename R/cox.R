@@ -25,11 +25,9 @@
     strata <- factor(rep("baseline", nrow(response)))
     dstrata <- strata[status==1]
   }
-  
 
   # Finds local gradient and subject weights
   fit <- function(lp, leftout) {
-
     if (!missing(leftout)) {
       status <- status[!leftout]
       time <- time[!leftout]
@@ -40,34 +38,14 @@
       Riskset <- Riskset[!leftout, !dleftout]
       offset <- offset[!leftout]
     }
-    
-    lp0 <- lp
-    if (!is.null(offset)) lp <- lp + offset
-    ws <- drop(exp(lp))
-    if (any(ws == Inf | ws == 0)) {
-      ws <- 1e-10 + 1e10 * status
-      exploded <- TRUE
+
+    if (!is.null(offset)) {
+        #coxFit = CoxFitCpp( lp + offset, status, Riskset )
+        coxFit = .Call('penalized_CoxFitCpp', PACKAGE = 'penalized', lp + offset, status, Riskset)
     } else {
-      exploded <- FALSE
+        #coxFit = CoxFitCpp( lp, status, Riskset )
+        coxFit = .Call('penalized_CoxFitCpp', PACKAGE = 'penalized', lp, status, Riskset)
     }
-
-    breslows <- drop(1 / ws %*% Riskset)
-    breslow <- drop(Riskset %*% breslows)
-
-    # The martingale residuals
-    residuals <- status - breslow * ws
-
-    # The loglikelihood
-    if (!exploded)
-      loglik <- -sum(ws * breslow) + sum(log(breslows)) + sum(lp[status==1])
-    else
-      loglik <- NA
-    if (is.na(loglik) || loglik==-Inf) loglik <- NA
-
-    # The weights matrix
-    Pij <- outer(ws, breslows) 
-    Pij[!Riskset] <- 0
-    W <- list(P = Pij, diagW = breslow * ws)        # construct: W = diag(diagW) - P %*% t(P)
 
     # The fitted baseline(s)
     baseline <- function() {
@@ -76,7 +54,7 @@
         stratumdtimes <- sortlistdtimes[dstrata == stratum]
         if (length(stratumdtimes) > 0) {
           sdtimes <- dtimes[stratumdtimes]
-          basecumhaz <- cumsum(breslows[stratumdtimes])
+          basecumhaz <- cumsum(coxFit$breslows[stratumdtimes])
           uniquetimes <- c(TRUE, as.logical(sapply(seq_along(sdtimes)[-length(sdtimes)], function(i) sdtimes[i] != sdtimes[i+1])))
           basesurv <- exp(-basecumhaz[uniquetimes])
           if (max(dtimes) < max(time)) {
@@ -94,7 +72,7 @@
           basetimes <- 0
           basesurv <- 1
         }
-    
+
         baseline <- new("breslow")
         baseline@time <- basetimes
         baseline@curves <- matrix(basesurv,1,byrow=TRUE)
@@ -105,7 +83,15 @@
       .coxmerge(baselines, groups)
     }
 
-    return(list(residuals = residuals, loglik = loglik, W = W, lp = lp, lp0 = lp0, fitted = exp(lp), nuisance = list(baseline = baseline)))
+    # Format and add to return list
+    coxFit$residuals = drop(coxFit$residuals)
+    coxFit$lp = drop(coxFit$lp)
+    coxFit$W$diagW = drop(coxFit$W$diagW)
+    coxFit$fitted = drop(coxFit$fitted)
+    coxFit$lp0 = lp
+    coxFit$nuisance = list(baseline = baseline)
+
+    return(coxFit)
   }
 
   #cross-validated likelihood
@@ -134,7 +120,7 @@
       return(PLall-PLrest)
     }
   }
-  
+
   # cross-validated predictions
   prediction <- function(lp, nuisance, which) {
     if (!is.null(offset)) lp <- lp + offset[which]
@@ -143,6 +129,9 @@
     out@curves <- out@curves ^ matrix(exp(lp), nrow(out@curves), ncol(out@curves))
     out
   }
+
+  # Allows fit function to be fully written in c++
+  # fitInput <- list("status" = status, "Riskset" = Riskset, "whichd" = whichd)
 
   return(list(fit = fit, cvl = cvl, prediction = prediction))
 }
@@ -187,5 +176,3 @@
   rownames(out@curves) <- names(groups)
   out
 }
-
-

@@ -1,8 +1,8 @@
 ####################################
 # Fits the penalized regression model
-####################################                                    
-penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, positive = FALSE, data, fusedl=FALSE,  
-  model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, steps =1, epsilon = 1e-10, 
+####################################
+penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, positive = FALSE, data, fusedl=FALSE,
+  model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, steps =1, epsilon = 1e-10,
   maxiter, standardize = FALSE, trace = TRUE) {
 
   # Maximum number of iterations depends on the input
@@ -23,7 +23,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
 
   # prepare the model
   fit <- .modelswitch(prep$model, prep$response, prep$offset, prep$strata)$fit
-  
+
    # retrieve the dimensions for convenience
   pu <- length(prep$nullgamma)
   pp <- ncol(prep$X) - pu
@@ -45,7 +45,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   if (park || steps > 1 && fusedl == FALSE) {
     if (pu > 0)
       lp <- drop(prep$X[,1:pu,drop=FALSE] %*% prep$nullgamma)
-    else 
+    else
       lp <- numeric(n)
     chck <- (wl1 > 0) & c(rep(FALSE, pu), rep(TRUE, pp))
     gradient <- drop(crossprod(prep$X[,chck,drop=FALSE], fit(lp)$residuals))
@@ -68,6 +68,7 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
 
   # fit the model for all lambdas
   beta <- prep$beta
+
   louts <- if (park) 4*pp else length(lambda1s)
   outs <- vector("list", louts)
   rellambda1 <- lambda1s[1]
@@ -79,12 +80,12 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     if(!fusedl){
     if (rellambda1 != 0 || any(prep$positive)) {
       if (all(lambda2 == 0)) {
-        out <- .steplasso(beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
-          lambda2 = 0, positive = prep$positive, X = prep$X, fit = fit, trace = trace, 
+        out <- .steplasso( beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
+          lambda2 = 0, positive = prep$positive, X = prep$X, fit = fit, trace = trace,
           epsilon = epsilon, maxiter = maxiter)
       } else {
         out <- .lasso(beta = beta, lambda = rellambda1 * wl1 * prep$baselambda1,
-          lambda2 = lambda2 * prep$baselambda2, positive = prep$positive, X = prep$X, 
+          lambda2 = lambda2 * prep$baselambda2, positive = prep$positive, X = prep$X,
           fit = fit, trace = trace, epsilon = epsilon, maxiter = maxiter)
       }
     } else {
@@ -92,30 +93,30 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
         P <- .makeP(prep$X, lambda2 * prep$baselambda2)
         gams <- .solve(crossprod(t(P)), P %*% beta)
         PX <- P %*% t(prep$X)
-        Pl <- P * matrix(sqrt(lambda2 * prep$baselambda2), nrow(P), ncol(P), 
+        Pl <- P * matrix(sqrt(lambda2 * prep$baselambda2), nrow(P), ncol(P),
           byrow = TRUE)
         PlP <- crossprod(t(Pl))
         # Do ridge regression on gamma
-        out <- .ridge(beta = gams, Lambda = PlP, X = t(PX), fit = fit, 
+        out <- .ridge(beta = gams, Lambda = PlP, X = t(PX), fit = fit,
           trace = trace, epsilon = epsilon, maxiter = maxiter)
         # and transform back
-        out$beta <- drop(crossprod(P, out$beta)) 
+        out$beta <- drop(crossprod(P, out$beta))
       } else {
-        out <- .ridge(beta = beta, Lambda = lambda2 * prep$baselambda2, 
-          X = prep$X, fit = fit, trace = trace, epsilon = epsilon, 
+        out <- .ridge(beta = beta, Lambda = lambda2 * prep$baselambda2,
+          X = prep$X, fit = fit, trace = trace, epsilon = epsilon,
           maxiter = maxiter)
       }
     }
    }
-   
+
    if(fusedl){
        out<- .flasso(beta = beta, lambda1 = rellambda1 * wl1 * prep$baselambda1,
         lambda2 = lambda2 * prep$baselambda2, chr = prep$chr, positive = prep$positive, X = prep$X,
         fit = fit, trace = trace, epsilon = epsilon, maxiter = maxiter)
-      } 
+      }
     if (trace) cat("\n")
     beta <- out$beta
-    
+
     if (!ready) {
       if(!fusedl){
       if (park) {
@@ -136,28 +137,23 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
     } else {rellambda1 <- lambda1s[i+1]
             beta <- out$beta}
    }
-   
-    
-    
+
+
+
     outs[[i]] <- out
   }
-                               
+
   # put the output in a penfit object
   if (length(lambda2)>1)
     lambda2 <- lambda2[pu+1:pp]
   outs <- sapply(1:i, function(nr) {
     thislambda1 <- lambda1s[[nr]] * ifelse(length(wl1)>1, wl1[pu+1:pp], wl1)
-    .makepenfit(outs[[nr]], pu, fusedl = fusedl, prep$model, thislambda1, lambda2, 
-      prep$orthogonalizer, prep$weights, prep$formula)
+    .makepenfit(outs[[nr]], pu, fusedl = fusedl, prep$model, thislambda1, lambda2,
+      prep$orthogonalizer, prep$weights, prep$formula, rownames(prep$X))
   })
 
-  if(length(outs)==1) 
+  if(length(outs)==1)
     outs <- outs[[1]]
 
   outs
 }
-
-
-
-
-

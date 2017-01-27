@@ -17,7 +17,7 @@
     if (missing(leftout)) n <- length(lp) else n <- sum(!leftout)
     loglik <- (-n/2) * (log(2*pi/n) + 1 + log(ss + .Machine$double.xmin))
 
-    return(list(residuals = residuals, loglik = loglik, W = 1, lp = lp, lp0 = lp0, fitted = lp, nuisance = list(sigma2 = ss/n)))
+    return(list(residuals = residuals, loglik = loglik, W = list("diagW" = numeric(), "P" = matrix()), lp = lp, lp0 = lp0, fitted = lp, nuisance = list(sigma2 = ss/n)))
   }
 
   # cross-validated likelihood
@@ -29,7 +29,7 @@
 
     return(-(sum(leftout)/2) * log(2*pi*sigma2) - ss / (2*sigma2))
   }
-  
+
   prediction <- function(lp, nuisance, which) {
     if (!is.null(offset)) lp <- lp + offset[which]
     out <- cbind(mu = lp, sigma2 = nuisance$sigma2)
@@ -45,7 +45,7 @@
   out <- drop(cbind(mu = lp, sigma2 = nuisance$sigma2))
   out
 }
-  
+
 
 # merges predicted means and variances
 .lmmerge <- function(predictions, groups) {

@@ -3,7 +3,7 @@
 # the functions penalized, cvl, profL1, profL2, optL1 and optL2.
 ########################################################
 .checkinput <- function(call, env) {
-                      
+
   # Functions to extract the original input variables
   call <- as.list(call)
   input <- function(str) eval(call[[str]], env)
@@ -14,7 +14,7 @@
   if (!missing("data")) {
      data <- input("data")
        } else {data <- NULL}
-  
+
   response <- input.data("response")
   if (is(response, "formula")) {
     formula.response <- response
@@ -25,7 +25,7 @@
   } else {
     formula.response <- NULL
   }
-  
+
   ##determine whether to perform fused lasso or not
   fusedl <- if (missing("fusedl")){fusedl <- FALSE} else {fusedl <- input("fusedl")}
 
@@ -38,14 +38,14 @@
   } else {
     model <- match.arg(input("model"), c("cox", "logistic", "linear", "poisson"))
   }
-  
+
   # coerce factor response to 0,1
   if (is.factor(response)) {
     if (length(levels(response)) != 2)
       stop("response has ", length(levels(response)), " levels. Only two-level factor response supported.")
     response <- response != levels(response)[1]
   }
-    
+
   # check positivity of survival response
   if (is(response, "Surv") && any(as.vector(response) < 0))
     stop("negative survival times")
@@ -65,7 +65,7 @@
   }
   if (!missing("unpenalized")) {
     unpenalized <- input.data("unpenalized")
-    
+
   } else {
     if (!is.null(formula.response)) {
       unpenalized <- formula.response
@@ -93,7 +93,7 @@
   if (is(unpenalized, "formula")) {
     formula.input$unpenalized <- unpenalized
     if (missing("data")) {
-      tup <- terms(unpenalized, specials = "strata") 
+      tup <- terms(unpenalized, specials = "strata")
       # prevent problems for input ~1 or ~0:
       if ((attr(tup, "response") == 0) && (length(attr(tup, "term.labels")) == 0)) {
         if (attr(tup, "intercept") == 1)
@@ -119,14 +119,14 @@
         else
           strata <- strata(eval(attr(unpenalized, "variables"), data, environment(unpenalized))[strata.nrs2], shortlabel=TRUE)
         unpenalized <- unpenalized[-strata.nrs]
-      } 
+      }
       attr(unpenalized, "intercept") <- 1
       # prevent problems in case of only unpenalized = ~strata() only
-      if ((attr(unpenalized, "response") == 0) && (length(attr(unpenalized, "term.labels")) == 0)) 
+      if ((attr(unpenalized, "response") == 0) && (length(attr(unpenalized, "term.labels")) == 0))
         unpenalized <- terms(response ~ 1)
     }
     unpenalized <- model.matrix(unpenalized, data)
-    if (model == "cox") 
+    if (model == "cox")
       unpenalized <- unpenalized[,-1, drop=FALSE]
   }
 
@@ -146,7 +146,7 @@
     else
       penalized <- terms(penalized, data=data)
     # prevent problems for input ~1 or ~0:
-    if (length(attr(penalized, "term.labels")) == 0) 
+    if (length(attr(penalized, "term.labels")) == 0)
       penalized <- terms(response ~ 1)
     attr(penalized, "intercept") <- 1
     penalized <- model.matrix(penalized, data)
@@ -161,7 +161,7 @@
   # check dimensions of response, penalized and unpenalized
   if (model == "cox") {
     if (attr(response, "type") == "right")
-      n <- length(response)/2 
+      n <- length(response)/2
     else if (attr(response, "type") == "counting")
       n <- length(response)/3
   } else {
@@ -236,24 +236,24 @@
   } else {
     orthogonalizer <- matrix(,0,ncol(penalized))
   }
-  
+
   ##getchr
-  
+
 
     if(is.logical(fusedl)){
       if(fusedl){
-     if(ncol(unpenalized)>0){
-             chr = c(rep(0,ncol(unpenalized)),rep(1,ncol(penalized)))
-             names(chr) = c(colnames(unpenalized),colnames(penalized))
-   }else{chr = rep(1,ncol(penalized))
-        names(chr) = colnames(penalized)}
-    } else {chr = rep(0,ncol(penalized))}
+        if(ncol(unpenalized)>0){
+          chr = c(rep(0,ncol(unpenalized)),rep(1,ncol(penalized)))
+          names(chr) = c(colnames(unpenalized),colnames(penalized))
+        }else{chr = rep(1,ncol(penalized))
+          names(chr) = colnames(penalized)}
+      } else {chr = rep(0,ncol(penalized))}
     } else if(!is.logical(fusedl)) {
-               if(ncol(unpenalized)>0){
-               chr = as.numeric(fusedl)
-               chr = c(rep(0,ncol(unpenalized)),chr)
-             names(chr) = c(colnames(unpenalized),colnames(penalized))
-   }else {names(chr) = colnames(penalized)}
+      if(ncol(unpenalized)>0){
+        chr = as.numeric(fusedl)
+        chr = c(rep(0,ncol(unpenalized)),chr)
+        names(chr) = c(colnames(unpenalized),colnames(penalized))
+      }else {names(chr) = colnames(penalized)}
     }
 
   # Join penalized and unpenalized together
@@ -263,9 +263,9 @@
   # stabilize/standardize
   standardize <- if (missing("standardize")){ FALSE } else {input("standardize")}
   fusedl <- if (is.logical(fusedl)){fusedl <- fusedl} else {fusedl <- TRUE}
-  
 
-  
+
+
     vars <- apply(X,2,var) * (n-1)/n
     vars[vars == 0] <- 1
     sds <- sqrt(vars)
@@ -288,19 +288,19 @@
 }  else if(is.logical(fusedl) && fusedl){baselambda1 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
          baselambda2 <- c(numeric(ncol(unpenalized)), rep(1, ncol(penalized)))
          }
-              
+
   return(list(
     fusedl = fusedl,
-    chr = chr, 
+    chr = chr,
     response = response,
-    X = X, 
-    beta = beta, 
-    weights = sds, 
+    X = X,
+    beta = beta,
+    weights = sds,
     baselambda1 = baselambda1,
     baselambda2 = baselambda2,
     positive = positive,
-    orthogonalizer = orthogonalizer, 
-    model = model, 
+    orthogonalizer = orthogonalizer,
+    model = model,
     nullgamma = nullgamma,
     offset = offset,
     strata = strata,
@@ -310,16 +310,16 @@
 
 # Switch functions to choose the appropriate function for a specific model
 .modelswitch <- function(model, response, offset, strata) {
-  switch(model,
-    cox = .coxfit(response, offset, strata),
-    logistic = .logitfit(response, offset),
-    linear = .lmfit(response, offset),
-    poisson = .poissonfit(response, offset)
-  )
+    switch(model,
+      cox = .coxfit(response, offset, strata),
+      logistic = .logitfit(response, offset),
+      linear = .lmfit(response, offset),
+      poisson = .poissonfit(response, offset)
+    )
 }
 
 .predictswitch <- function(model, predictions, groups) {
-  switch(model, 
+  switch(model,
     cox = .coxmerge(predictions, groups),
     logistic = .logitmerge(predictions, groups),
     linear = .lmmerge(predictions, groups),
