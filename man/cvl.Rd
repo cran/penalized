@@ -31,7 +31,7 @@ fusedl = FALSE ,positive = FALSE, data,
 profL1 (response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0,
   fusedl = FALSE,positive = FALSE, data, 
   model = c("cox", "logistic", "linear", "poisson"), startbeta, startgamma, fold, 
-  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, steps = 100, minsteps = steps/4, 
+  epsilon = 1e-10, maxiter = Inf, standardize = FALSE, steps = 100, minsteps = steps/3, 
   log = FALSE, save.predictions = FALSE, trace = TRUE, plot = FALSE)
 
 profL2 (response, penalized, unpenalized, lambda1 = 0, minlambda2, maxlambda2, base2, 

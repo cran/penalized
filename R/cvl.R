@@ -102,7 +102,7 @@ cvl <- function(response, penalized, unpenalized, lambda1 = 0, lambda2= 0, posit
 profL1 <- function(response, penalized, unpenalized, minlambda1, maxlambda1, base1, lambda2 = 0,
   fusedl = FALSE,positive = FALSE, data, model = c("cox", "logistic", "linear", "poisson"),
   startbeta, startgamma, fold, epsilon = 1e-10, maxiter = Inf, standardize = FALSE, steps = 100,
-  minsteps = steps/4, log = FALSE, save.predictions = FALSE, trace = TRUE, plot = FALSE) {
+  minsteps = steps/3, log = FALSE, save.predictions = FALSE, trace = TRUE, plot = FALSE) {
 
   # call the general input checking function
   prep <- .checkinput(match.call(), parent.frame())

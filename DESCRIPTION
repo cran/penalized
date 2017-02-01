@@ -1,6 +1,6 @@
 Package: penalized
-Version: 0.9-49
-Date: 2017-01-25
+Version: 0.9-50
+Date: 2017-02-01
 Title: L1 (Lasso and Fused Lasso) and L2 (Ridge) Penalized Estimation
         in GLMs and in the Cox Model
 Author: Jelle Goeman, Rosa Meijer, Nimisha Chaturvedi, Matthew Lueder
@@ -24,5 +24,5 @@ Collate: onattach.R penfit.R breslow.R penalized.R core.R checkinput.R
         poisson.R
 LazyLoad: yes
 Repository: CRAN
-Date/Publication: 2017-01-27 10:18:32
-Packaged: 2017-01-26 15:03:52 UTC; jjgoeman
+Date/Publication: 2017-02-01 16:12:10
+Packaged: 2017-02-01 11:15:33 UTC; jjgoeman

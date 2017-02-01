@@ -47,7 +47,8 @@ Rcpp::List CoxFitCpp(   const arma::rowvec& lp, const arma::irowvec&  status,
                                 Rcpp::Named("loglik") = loglik,
                                 Rcpp::Named("W") = W,
                                 Rcpp::Named("lp") = lp,
-                                Rcpp::Named("fitted") = ws
+                                Rcpp::Named("fitted") = ws,
+                                Rcpp::Named("breslows") = breslows
                                 );
 }
 

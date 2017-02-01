@@ -1,3 +1,7 @@
+0.9-50
+- Fixed bug with baseline hazard returning NA
+- increased minsteps default in profL1
+
 0.9-49
 - Parts of the package rewritten in C++ by Matthew Lueder
 

@@ -253,8 +253,7 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
       if (has.intercept) penalized <- penalized[,-1,drop=FALSE]
       options(contrasts = oldcontrasts)
     }
-    
-    
+
     # find n
     n <- max(nrow(penalized), nrow(unpenalized))
     if (nrow(penalized) != nrow(unpenalized))
@@ -279,7 +278,7 @@ setMethod("predict", "penfit", function(object, penalized, unpenalized, data) {
     
     # find the linear predictors
     lp <- offset + drop(penalized %*% object@penalized) + drop(unpenalized %*% object@unpenalized)
-    
+
     # find the predictions
     predictions <- switch(object@model,
                           cox = .coxpredict(lp, object@nuisance, strata),

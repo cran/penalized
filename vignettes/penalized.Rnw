@@ -19,6 +19,7 @@
 \date{Package version \Sexpr{packageDescription("penalized")$Version}\\Date: \today}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \maketitle \tableofcontents \newpage
 
