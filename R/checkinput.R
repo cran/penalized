@@ -159,14 +159,7 @@
     stop("missing values in \"penalized\" argument")
 
   # check dimensions of response, penalized and unpenalized
-  if (model == "cox") {
-    if (attr(response, "type") == "right")
-      n <- length(response)/2
-    else if (attr(response, "type") == "counting")
-      n <- length(response)/3
-  } else {
-    n <- length(response)
-  }
+  n <- length(response)
   if (nrow(penalized) != n) {
     stop("the length of \"response\" (",n, ") does not match the row count of \"penalized\" (", nrow(penalized), ")")
   }

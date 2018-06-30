@@ -19,6 +19,7 @@
 \date{Package version \Sexpr{packageDescription("penalized")$Version}\\Date: \today}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \maketitle \tableofcontents \newpage
 
@@ -335,7 +336,7 @@ biocLite("globaltest")
 
 The interface of \Rpackage{globaltest} is very similar to the interface of \Rpackage{penalized}. To test for any evidence of association in the \Robject{nki70} data, say
 
-<<globaltest>>=
+<<globaltest, eval=FALSE>>=
 library(globaltest)
 gt(Surv(time,event), nki70[,8:77])
 @
