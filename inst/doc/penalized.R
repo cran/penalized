@@ -228,8 +228,8 @@ fit <- penalized(response, X, lambda1 = 2, lambda2=2,fusedl=chr)
 ###################################################
 ### code chunk number 31: globaltest (eval = FALSE)
 ###################################################
-## library(globaltest)
-## gt(Surv(time,event), nki70[,8:77])
+## if (require(globaltest)) 
+##   gt(Surv(time,event), nki70[,8:77])
 
 
 ###################################################

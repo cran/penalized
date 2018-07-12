@@ -118,7 +118,6 @@ void _Lasso( arma::vec& beta, const arma::vec& lambda,
                 penalty2 = 0;
             }
 
-
             penalty = penalty1 + penalty2;
             finishedLL = (2 * std::fabs(LL - oldLL) / (2 * std::fabs(LL - penalty) + 0.1) < epsilon);
             finishedpen = (2 * std::fabs(penalty - oldPenalty) / (2 * std::fabs(LL - penalty) + 0.1) < epsilon);
@@ -175,7 +174,7 @@ void _Lasso( arma::vec& beta, const arma::vec& lambda,
                         arma::mat gamsB = (P * activeBeta);
                         gams = SolveCpp( gamsA, gamsB );
                         PX = P * activeX.t();
-
+						
                         arma::mat Pl(P.n_rows, P.n_cols);
                         Pl.each_row() = arma::sqrt(lambda2.elem(activeElem)).t();
                         Pl = P % Pl;
@@ -210,7 +209,6 @@ void _Lasso( arma::vec& beta, const arma::vec& lambda,
                     arma::mat shg = SolveCpp( hessian, Pgrad );
                     gams = gams - shg;
                     NRbeta = P.t() * gams;
-
                 }
                 else
                 {
@@ -273,7 +271,7 @@ void _Lasso( arma::vec& beta, const arma::vec& lambda,
                         }
                         else
                         {
-                            curve = Sum( arma::square(Xdir) % diagW ) / Sum( arma::square(activeDir) );
+							curve = Sum( arma::square(Xdir) % diagW.t() ) / Sum( arma::square(activeDir) );
                         }
                     }
                     else
@@ -296,7 +294,7 @@ void _Lasso( arma::vec& beta, const arma::vec& lambda,
                 tedge.elem( arma::find(tedge <= 0) ).fill(2 * topt);
                 tedge.elem( arma::find(_free > 0) ).fill(2 * topt);
                 double mintedge = arma::min(tedge);
-
+				
                 // recalculate beta
                 if (mintedge + cumsteps < topt)
                 {

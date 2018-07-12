@@ -1,3 +1,8 @@
+0.9-51
+- Fixed bug with non-compatible matrices
+- update to incorporate new length.Surv
+- made globaltest use conditional
+
 0.9-50
 - Fixed bug with baseline hazard returning NA
 - increased minsteps default in profL1
@@ -35,7 +40,7 @@
 
 0.9-41
 - Fixed wrong calculation of cvl at infinite penalty in optL2 for Cox.
-- fixed error message in case of –Inf loglikelihood in the cox model.
+- fixed error message in case of ?Inf loglikelihood in the cox model.
 
 0.9-40
 - added functionality for fused lasso
@@ -91,7 +96,7 @@
 - added check for missing values in penalized argument
 - added fitted() as synonym of fitted.values
 - fixed bug "Error in strata[status == 1] : object of type 'closure' is not subsettable" (Thanks to Melania Pintilie for pointing this out)
-- fixed bug in step="Park" in logistic regression (Thanks to Hélène rousseau for pointing this out)
+- fixed bug in step="Park" in logistic regression (Thanks to H?l?ne rousseau for pointing this out)
 - added warning using steps if lambda1 is greater than maximal lambda1
 
 0.9-30
