@@ -8,16 +8,16 @@ Check these declarations against the C/Fortran source code.
 */
 
 /* .Call calls */
-extern SEXP penalized_CoxFitCpp(SEXP, SEXP, SEXP);
-extern SEXP penalized_Lasso(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP penalized_Ridge(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP penalized_StepLasso(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _penalized_CoxFitCpp(SEXP, SEXP, SEXP);
+extern SEXP _penalized_Lasso(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _penalized_Ridge(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _penalized_StepLasso(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
-  {"penalized_CoxFitCpp", (DL_FUNC) &penalized_CoxFitCpp, 3},
-  {"penalized_Lasso",     (DL_FUNC) &penalized_Lasso,     9},
-  {"penalized_Ridge",     (DL_FUNC) &penalized_Ridge,     9},
-  {"penalized_StepLasso", (DL_FUNC) &penalized_StepLasso, 9},
+  {"penalized_CoxFitCpp", (DL_FUNC) &_penalized_CoxFitCpp, 3},
+  {"penalized_Lasso",     (DL_FUNC) &_penalized_Lasso,     9},
+  {"penalized_Ridge",     (DL_FUNC) &_penalized_Ridge,     9},
+  {"penalized_StepLasso", (DL_FUNC) &_penalized_StepLasso, 9},
   {NULL, NULL, 0}
 };
 

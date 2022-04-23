@@ -33,7 +33,7 @@ inline arma::mat Outer( T1 const& A, T2 const& B )
         }
     }
     return prod;
-};
+}
 
 inline arma::mat SolveCpp( arma::mat& A, arma::mat& B )
 {
@@ -41,7 +41,7 @@ inline arma::mat SolveCpp( arma::mat& A, arma::mat& B )
     Rcpp::Function solve = ns[".solve"];
     return Rcpp::as<arma::mat>( solve( Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(A)),
         Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(B)) ) );
-};
+}
 
 
 inline arma::mat makeP( const arma::mat& X, const arma::vec& lambda2,
@@ -101,4 +101,4 @@ inline arma::mat makeP( const arma::mat& X, const arma::vec& lambda2,
     }
 
     return P;
-};
+}

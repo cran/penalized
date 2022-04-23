@@ -6,7 +6,8 @@ penalized <- function(response, penalized, unpenalized, lambda1=0, lambda2=0, po
   maxiter, standardize = FALSE, trace = TRUE) {
 
   # Maximum number of iterations depends on the input
-  if (missing(maxiter)) maxiter <- if (lambda1 == 0 && lambda2 == 0 && !positive) 25 else Inf
+  if (missing(maxiter)) 
+    maxiter <- if (all(lambda1 == 0) && !any(positive)) 25 else Inf
 
   # Park and Hastie type steps?
   if (steps == "Park" || steps == "park") {
