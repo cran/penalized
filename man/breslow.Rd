@@ -24,7 +24,7 @@
   \describe{
     \item{\code{time}:}{Object of class "vector". The time points at which the function starts, jumps or ends.}
     \item{\code{curves}:}{Object of class "matrix". The values of the curve at each time point.
-      Note that the function is left-continuous. Curves are stored as a matrix of dimension (\# curves) x (\# timepoints).}
+      Note that the function is left-continuous. Curves are stored as a matrix of dimension (curves x timepoints).}
   }
 }
 

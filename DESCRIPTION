@@ -1,9 +1,21 @@
 Package: penalized
-Version: 0.9-52
-Date: 2022-04-23
+Version: 0.9-53
+Date: 2025-10-02
 Title: L1 (Lasso and Fused Lasso) and L2 (Ridge) Penalized Estimation
         in GLMs and in the Cox Model
-Author: Jelle Goeman, Rosa Meijer, Nimisha Chaturvedi, Matthew Lueder
+Authors@R: c(person(given = "Jelle",
+                      family = "Goeman",
+                      role = c("aut", "cre"),
+                      email = "j.j.goeman@lumc.nl"),
+               person(given = "Rosa",
+                      family = "Meijer",
+                      role = "aut"),
+               person(given = "Nimisha",
+                      family = "Chaturvedi",
+                      role = "aut"),
+               person(given = "Matthew",
+                      family = "Lueder",
+                      role = "aut"))
 Maintainer: Jelle Goeman <j.j.goeman@lumc.nl>
 Depends: R (>= 2.10.0), survival, methods
 Imports: Rcpp
@@ -21,9 +33,13 @@ License: GPL (>= 2)
 NeedsCompilation: yes
 Collate: onattach.R penfit.R breslow.R penalized.R core.R checkinput.R
         cvl.R contrasts.R Brent.R plotpath.R cox.R logit.R linear.R
-        poisson.R
+        poisson.R RcppExports.R
 LazyLoad: yes
 Repository: CRAN
-Date/Publication: 2022-04-23 14:10:02 UTC
-Packaged: 2022-04-23 13:13:33 UTC; jelle
+Date/Publication: 2025-10-02 14:00:02 UTC
+Packaged: 2025-10-02 13:04:12 UTC; jjgoeman
 RoxygenNote: 7.1.1
+Author: Jelle Goeman [aut, cre],
+  Rosa Meijer [aut],
+  Nimisha Chaturvedi [aut],
+  Matthew Lueder [aut]

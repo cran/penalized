@@ -1,3 +1,6 @@
+0.9-53
+- updated Rcpp dependence
+
 0.9-52
 - fixed input check for maxiter (vector logicals)
 - reactivated globaltest in vignette
